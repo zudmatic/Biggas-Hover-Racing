@@ -1,0 +1,62 @@
+034 / RUINS CIRCUIT
+Circuito de carreras low-poly entre ruinas brutalistas, vegetación y agua.
+
+CONTENIDO
+models/034_ruins_circuit_v01.glb: geometría visible, materiales PBR y marcadores.
+models/034_ruins_circuit_COLLIDERS.glb: superficie de pista y dos parapetos separados.
+sources/034_ruins_circuit_v01.blend: escena editable organizada en colecciones, cámaras y luces.
+previews/: vista general, vista superior, reverso y detalles.
+data/gameplay.json: parrilla para 8 vehículos y 16 checkpoints ordenados.
+data/route_gltf.json: 484 puntos del recorrido, dirección y distancia acumulada.
+data/route_blender.json: recorrido equivalente con ejes de Blender.
+scripts/: construcción procedural reproducible y render.
+
+TRAZADO
+Una única vuelta cerrada de aproximadamente 795.43 metros.
+Ancho útil de asfalto: 12 metros. Hombros y parapetos quedan fuera de ese ancho.
+Dos rectas elevadas, curva circular de unos 270 grados, curvas en S y horquillas.
+Elevación suavizada; pendiente máxima aproximada 13.64 por ciento.
+Radio mínimo de centro de pista aproximado 10.93 metros: las horquillas requieren frenada.
+Salida/meta coincidentes, damero, parrilla de ocho, semáforo, flechas, carteles y control de carrera.
+La referencia se interpretó para eliminar conexiones ambiguas y hacer un único recorrido continuo.
+
+ESCALA Y EJES
+1 unidad = 1 metro. Blender: Z arriba. GLB y route_gltf.json: Y arriba.
+Conversión: (X,Y,Z) Blender -> (X,Z,-Y) GLB.
+Origen del mapa en el centro del conjunto, no sobre la pista.
+El nivel de agua principal queda a Z=1.5m en Blender; terreno/roca se extienden debajo.
+Los spawns incluyen un pequeño desplazamiento vertical: adaptar al pivote de cada vehículo.
+
+INTEGRACIÓN EN EL JUEGO
+Importar el GLB visible sin convertir automáticamente toda la vegetación y agua en colisiones.
+Importar el GLB COLLIDERS y asignar colisiones estáticas tipo triangle mesh al suelo y parapetos.
+No usar un único casco convexo para el circuito completo: cerraría los huecos.
+Los checkpoints son datos de colocación, NO lógica ejecutable de vueltas.
+Validar CP_00 -> CP_01 ... -> CP_15 -> CP_00 en el sentido de las flechas para contar una vuelta.
+Asignar la posición y el vector forward del spawn al vehículo; ajustar altura de chasis/hover.
+La raíz RUINS_CIRCUIT_034 tiene transformación identidad. Los datos usan coordenadas de mapa.
+Los marcadores vacíos de Blender/GLB pueden sustituirse por triggers del motor.
+
+LÍMITES
+Es un asset de escenario, no un juego completo ni un circuito homologado.
+No se implementaron física de vehículos, inteligencia artificial, cronómetro, multijugador ni eventos.
+La continuidad y las holguras se revisaron geométricamente; falta hacer una prueba con el controlador real del videojuego.
+Agua, cascadas, vegetación y luces de salida son estáticas. Sus materiales están separados para animarlas en el motor.
+Las colisiones incluidas cubren pista y parapetos, no todo el paisaje ni los portales elevados.
+No se utiliza una capa de imagen ni filtro global: el entorno, las marcas, las grietas, el musgo y las facetas son geometría/materiales.
+
+COLECCIONES
+00_ASSET_ROOT: raíz del asset.
+01_COURSE_RENDER: asfalto, deck, hombros y bordillos.
+02_SAFETY_BARRIERS: parapetos continuos y reflectores.
+03_BRIDGES_AND_TOWER_RING / 03B_BRUTALIST_GATEWAYS: estructura elevada y portales.
+04_RACE_MARKINGS / 05_START_FINISH_FACILITIES / 06_COURSE_SIGNAGE: equipamiento de carrera.
+ENV_*: paisaje, roca, ruinas, bosque, musgo, agua y cascadas por grupos/materiales.
+90_COLLISION_PROXIES: proxies ocultos en render y exportados por separado.
+91_GAMEPLAY_MARKERS: checkpoints y spawns.
+99_PRESENTATION: suelo de estudio, cámaras y luces, excluidos del GLB.
+
+REPRODUCIR
+Blender 4.3.2, sin dependencias externas para construir el modelo.
+Ejecutar scripts/build_circuit.py desde Blender en modo background.
+scripts/route.py usa NumPy, y Pillow solo cuando genera el plano PNG de presentación.

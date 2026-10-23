@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.context/
+test-results/
+playwright-report/
+.DS_Store
+dist-house/

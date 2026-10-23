@@ -1,0 +1,70 @@
+NEXUS RACE CITY · 035 v03
+Entorno futurista de carreras, editable y exportado en metros.
+
+Esta versión reconstruye el circuito como calles dentro de un entorno continuo.
+La ruta deja de ser una cinta elevada sobre una plataforma: el terreno acompaña
+su elevación, con aceras, bordillos, plazas y arquitectura a nivel de calle.
+V01 y V02 se conservan por separado.
+
+TRAZADO
+Vuelta cerrada de aproximadamente 1.212 km. Asfalto útil de 18 m.
+Ocho posiciones de salida escalonadas en dos columnas y 16 checkpoints.
+Las posiciones y orientaciones reales están en data/gameplay.json.
+La anchura permite varios vehículos simultáneos, pero no incluye un sistema
+multijugador ni pruebas de física con vehículos dentro de un motor.
+
+ARCHIVOS
+sources/035_nexus_circuit_v03.blend: escena editable con cámaras y luces.
+models/035_nexus_circuit_v03.glb: geometría visual y materiales.
+models/035_nexus_circuit_COLLIDERS.glb: colisión estática separada.
+data/route_blender.json: recorrido Z arriba, coordenadas Blender.
+data/route_gltf.json: recorrido Y arriba, coordenadas glTF.
+data/gameplay.json: salida, posiciones iniciales y checkpoints en ambos ejes.
+previews: vistas renderizadas del modelo real, no imágenes conceptuales.
+scripts: generación reproducible de la geometría y las vistas.
+
+INTEGRACIÓN
+Importar el GLB visual conservando escala 1 unidad = 1 metro.
+Importar los colliders en la misma transformación y asignar colisión estática.
+No añadir una pared invisible continua: los obstáculos de carrera corresponden
+a bordillos y protecciones visibles. El terreno y las aceras permiten una
+salida de pista física; el juego debe definir límites, penalizaciones y respawn.
+Verificar los grupos de colisión antes de activar la física del vehículo.
+Los detalles decorativos finos no necesitan colisión individual.
+
+Implementar por separado conducción, checkpoints ordenados, vueltas, respawn,
+IA, red/multijugador, audio y efectos. No se incluyen vehículos jugables.
+Arquitectura, iluminación y vegetación son estáticas.
+La auditoría suministrada valida geometría y posiciones; no equivale a una
+prueba de rendimiento, balance de carrera o física en el motor del videojuego.
+
+COLISIONES DE ESCENARIO
+El archivo de colisiones incluye suelo de carrera, bordillos, aceras, terreno,
+protecciones de carrera y masas principales seleccionadas de la arquitectura.
+Usar colisión de malla estática/concava, no convertir todo el mapa en una sola
+envolvente convexa: eso cerraría el paso bajo el edificio transversal.
+La decoración pequeña, follaje, ventanas y piezas secundarias son visuales;
+si el juego permite explorar el entorno a pie, revisar y ampliar estas colisiones.
+
+PASO ARQUITECTÓNICO
+El edificio transversal de la avenida está aproximadamente en los índices80–88
+del recorrido. El volumen libre debajo supera10 m en esta versión; no es un túnel
+con vehículos incluidos. Confirmar cámara y conducción con el vehículo final.
+
+CÓMO ABRIR EL EDITABLE DIVIDIDO
+Extraer los tres paquetes BLENDER_ESCENA, BLENDER_CIUDAD y BLENDER_TERRENO
+sobre la misma carpeta de destino, conservando la subcarpeta sources.
+Deben quedar juntos:
+  sources/035_nexus_circuit_v03.blend
+  sources/035_city_library.blend
+  sources/035_terrain_library.blend
+Abrir el primero. Los otros dos son bibliotecas enlazadas con rutas relativas.
+Para editar arquitectura o terreno, abrir su biblioteca correspondiente;
+también se pueden hacer locales sus datos desde Blender si se prefiere.
+Las texturas están empaquetadas dentro de los archivos, no faltan imágenes.
+Se comprobó la apertura desde una carpeta nueva sin depender del equipo original.
+
+El GLB visual sigue siendo un único modelo completo, no requiere estos enlaces.
+Los paquetes están separados por tamaño de entrega, no por pérdida de detalle.
+Aproximadamente 903 mil triángulos visuales. Para plataformas móviles o muchos
+vehículos simultáneos, preparar LOD, culling, iluminación y física en el motor.

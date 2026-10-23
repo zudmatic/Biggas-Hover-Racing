@@ -1,0 +1,23 @@
+/* Exit copies never participate in layout, keyboard navigation or hit testing. */
+.race-lobby .lobby-exit{z-index:3;pointer-events:none}
+.race-lobby .lobby-exit *{pointer-events:none!important}
+.lobby-launching.race-entry-cover{position:fixed;inset:0;z-index:100;overflow:hidden;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif;border-left:12px solid #ffc400;isolation:isolate}
+.race-entry-cover::before{content:'';position:absolute;inset:-20% auto -20% calc(50% - 52px);width:104px;background:#ffc400;transform:rotate(16deg);z-index:-1}
+.race-entry-cover::after{content:'';position:absolute;left:-10%;right:-10%;top:68%;height:30px;background:conic-gradient(#111 25%,#fff 0 50%,#111 0 75%,#fff 0) 0 0/30px 30px;transform:rotate(-12deg);opacity:.08;z-index:-1}
+.race-entry-cover .lobby-kicker{color:#008dca}
+.race-entry-cover .lobby-launch-track{border:2px solid #111;border-radius:5px;background:#fff}
+.race-entry-progress{width:min(230px,65vw);height:5px;background:#1112;overflow:hidden;border-radius:3px}
+.race-entry-progress>span{display:block;width:100%;height:100%;background:#008dca;transform:scaleX(0);transform-origin:left}
+@media(prefers-reduced-motion:no-preference){
+  .race-entry-progress>span{transition:transform 180ms ease-out}
+  .flight-app[data-entry-motion=true][data-ready=false] :is(.flight-header,.flight-telemetry,.flight-minimap){opacity:0}
+  .flight-app[data-entry-motion=true][data-ready=true] .flight-header{animation:race-hud-top 260ms cubic-bezier(.22,1,.36,1) both}
+  .flight-app[data-entry-motion=true][data-ready=true] :is(.flight-race,.flight-telemetry,.flight-minimap){animation:race-hud-bottom 260ms 35ms cubic-bezier(.22,1,.36,1) both}
+}
+@keyframes race-hud-top{from{opacity:0;transform:translateY(-12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes race-hud-bottom{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+  .race-entry-progress>span{transition:none}
+  .flight-app[data-entry-motion=true][data-ready=true] :is(.flight-header,.flight-race,.flight-telemetry,.flight-minimap){animation:none}
+}
+@media(max-width:760px){.lobby-launching.race-entry-cover{border-left-width:7px}.race-entry-cover::before{width:75px;left:calc(50% - 37px)}}
