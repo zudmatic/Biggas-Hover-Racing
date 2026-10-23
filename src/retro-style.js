@@ -21,7 +21,7 @@ export const RETRO_DEFAULTS={
   posterAmount:1,posterSteps:12,posterSoft:.5,
   tintAmount:.78,shadowTint:'#b7ebf5',lightTint:'#ffdfb3',
   // Highlight dots (and rim dots, which share their grid): light ink, added.
-  // Pitch is in CSS px; in object space it is measured at the default room scale (~1440 px wide).
+  // Pitch is in CSS px; in object space it is measured at the default scene scale (~1440 px wide).
   hiOn:true,hiPitch:4.5,hiAngle:48,hiOpacity:.18,hiCoverage:.3,hiInk:'#ffeed1',hiGain:.94,
   rimOn:false,rimCoverage:.6,rimPower:1.25,rimStart:.52,
   // Shadow hatching; the second set crosses the first only in the deepest shadow.
@@ -47,10 +47,9 @@ export const RETRO_DEFAULTS={
   // Paper: blank paper is exactly PAPER_COLOR unless paperGrain or the dots are on.
   paper:PAPER_COLOR,paperGrain:0,
   bgOn:true,bgPitch:5.8,bgAngle:46,bgReach:61,bgCoverage:.41,bgInk:'#641b12',bgOpacity:.22,
-  // The page follows the scene's light (src/paper-theme.js): closing the blind or
-  // nightfall darkens the paper with a halftone wipe, the lamp warms it. The paper's
-  // dark color and the dusk and lamp tints are sRGB; speed is the clock's smoothing
-  // in seconds; the dots are the wipe's cell size in CSS px (0 gives a smooth wipe).
+  // Optional paper lighting parameters shared by the render pass:
+  // Dark paper and warm lighting tints use sRGB; speed is the smoothing time
+  // in seconds, and dot pitch is measured in CSS pixels.
   themeOn:true,paperDark:'#15121f',themeDusk:'#e29a78',themeGlow:'#ffb36b',themeGlowStrength:.22,
   themeDots:true,themeDotPitch:9,themeSpeed:1.2,bgInkNight:'#ffd2a0',
   // Animated on twos: Zud's pose and position update at twosFps; the camera,

@@ -47,7 +47,7 @@ test('blocked playback can retry and unavailable sources do not break the game',
   await expect.poll(()=>page.evaluate(()=>window.music.state.status)).toBe('blocked');
   await page.evaluate(()=>window.music.unlock());await expect.poll(()=>page.evaluate(()=>window.music.state.status)).toBe('playing');
   await page.evaluate(()=>window.music.setPhase('flying'));expect(await page.evaluate(()=>window.music.state.status)).toBe('unavailable');
-  await expect(page.getByRole('button',{name:'Empezar',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Jugar',exact:true})).toBeVisible();
   await page.evaluate(()=>window.music.dispose());
 });
 
@@ -56,7 +56,7 @@ test('the downloaded soundtrack plays locally, loops and switches from selection
   const remote=[],errors=[];page.on('request',r=>{if(/youtube|googlevideo/.test(r.url()))remote.push(r.url());});page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{const NativeAudio=window.Audio;window.soundtrackPlayers=[];window.Audio=function(...args){const player=new NativeAudio(...args);window.soundtrackPlayers.push(player);return player;};});
   await page.goto('/simulator.html?map=nexus');expect(await page.evaluate(()=>window.soundtrackPlayers.length)).toBe(0);
-  await page.getByRole('button',{name:'Empezar',exact:true}).click();
+  await page.getByRole('button',{name:'Jugar',exact:true}).click();
   await expect.poll(()=>page.evaluate(()=>window.soundtrackPlayers[0]?.currentTime??0)).toBeGreaterThan(.1);
   expect(await page.evaluate(()=>window.soundtrackPlayers[0].src)).toMatch(/audio\/biggas-menu\.mp3$/);
   expect(await page.evaluate(()=>window.soundtrackPlayers[0].duration)).toBeGreaterThan(90);

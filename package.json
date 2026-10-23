@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "build:house": "vite build --mode house",
     "preview": "vite preview --host 0.0.0.0",
     "test": "playwright test"
   },
@@ -15,7 +14,6 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
-    "lil-gui": "^0.21.0",
     "vite": "^7.1.0"
   }
 }

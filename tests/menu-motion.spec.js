@@ -34,7 +34,7 @@ test('the launch cover survives loading and only reveals a rendered circuit befo
     new MutationObserver(()=>{const cover=document.querySelector('.race-entry-cover'),app=document.querySelector('.flight-app');if(cover&&app)window.entryStates.push({cover:cover.dataset.phase,phase:app.dataset.phase,ready:app.dataset.ready});}).observe(document,{subtree:true,attributes:true,attributeFilter:['data-phase','data-ready']});
   });
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/simulator.html');
-  for(const name of ['Empezar','Confirmar Zud','Confirmar nave'])await page.getByRole('button',{name,exact:true}).click();
+  for(const name of ['Jugar','Confirmar Zud','Confirmar nave'])await page.getByRole('button',{name,exact:true}).click();
   await page.locator('.lobby-mode label:has(input[value=race])').click();await page.getByRole('button',{name:'Correr',exact:true}).click();
   const cover=page.locator('.race-entry-cover'),app=page.locator('.flight-app');
   try{
@@ -52,7 +52,7 @@ test('a failed load removes the transition and leaves retry accessible',async({p
   test.setTimeout(60000);await page.setViewportSize({width:320,height:640});await page.emulateMedia({reducedMotion:'reduce'});
   await page.route('**/models/circuit034/gameplay.json',route=>route.fulfill({status:503,body:'Unavailable'}));
   await page.goto('/simulator.html');
-  for(const name of ['Empezar','Confirmar Zud','Confirmar nave','Volar'])await page.getByRole('button',{name,exact:true}).click();
+  for(const name of ['Jugar','Confirmar Zud','Confirmar nave','Volar'])await page.getByRole('button',{name,exact:true}).click();
   await expect(page.getByRole('button',{name:'Reintentar',exact:true})).toBeVisible({timeout:45000});
   await expect(page.locator('.race-entry-cover')).toHaveCount(0);expect(await finiteMotion(page)).toBe(0);
 });

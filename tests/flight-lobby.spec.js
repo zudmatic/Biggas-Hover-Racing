@@ -3,8 +3,8 @@ import {test,expect} from '@playwright/test';
 test('landing, locked roster, sequential confirmation and map choices work with keyboard',async({page})=>{
   test.setTimeout(60000);await page.setViewportSize({width:1200,height:800});
   const maps=[],models=[];page.on('request',request=>{if(/models\/circuit0/.test(request.url()))maps.push(request.url());if(request.url().endsWith('.glb'))models.push(request.url());});
-  await page.goto('/simulator.html?map=nexus');const lobby=page.locator('.race-lobby');
-  await expect(lobby).toHaveAttribute('data-stage','0');await expect(page.getByRole('button',{name:'Empezar'})).toBeVisible();
+  await page.goto('/?map=nexus');const lobby=page.locator('.race-lobby');
+  await expect(lobby).toHaveAttribute('data-stage','0');await expect(page.getByRole('button',{name:'Jugar'})).toBeVisible();
   await expect(page.locator('.flight-app')).toHaveCount(0);
   await expect(page.locator('.lobby-preview')).toBeHidden();
   await expect(lobby).not.toHaveAttribute('data-preview','ready');
@@ -31,10 +31,15 @@ test('landing, locked roster, sequential confirmation and map choices work with 
 
 test('small screens retain all steps, and reduced-motion preview stays still',async({page})=>{
   test.setTimeout(90000);await page.setViewportSize({width:320,height:640});await page.emulateMedia({reducedMotion:'reduce'});
-  const errors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto('/simulator.html');
+  const errors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto('/');
+  const hangar=page.getByRole('link',{name:'Hangar',exact:true});
+  await expect(hangar).toBeInViewport();await expect(page.getByRole('button',{name:'Jugar',exact:true})).toBeInViewport();
+  await hangar.focus();await page.keyboard.press('Enter');await expect(page).toHaveURL(/spaceship\.html/);
+  await page.getByRole('link',{name:'Volver al inicio',exact:true}).click();
+  await expect(page.locator('.race-lobby')).toHaveAttribute('data-stage','0');
   await expect(page.locator('.lobby-preview')).toBeHidden();
   await expect(page.locator('.lobby-title-biggas')).toHaveCSS('animation-name','none');
-  await page.getByRole('button',{name:'Empezar'}).click();
+  await page.getByRole('button',{name:'Jugar'}).click();
   await expect(page.locator('.race-lobby')).toHaveAttribute('data-preview','ready',{timeout:45000});
   const canvas=page.locator('.lobby-preview-canvas');const first=await canvas.screenshot();await page.waitForTimeout(150);expect((await canvas.screenshot()).equals(first)).toBe(true);
   for(const name of ['Confirmar Zud','Confirmar nave']){const button=page.getByRole('button',{name,exact:true});const rect=await button.boundingBox();expect(rect.x).toBeGreaterThanOrEqual(0);expect(rect.x+rect.width).toBeLessThanOrEqual(320);expect(rect.y+rect.height).toBeLessThanOrEqual(640);await button.click();}
@@ -49,7 +54,7 @@ test('paper defaults on, updates actual previews and thumbnails, and carries int
   const toggle=page.getByRole('button',{name:'Papel',exact:true}),root=page.locator('.race-lobby'),canvas=page.locator('.lobby-preview-canvas');
   await expect(toggle).toHaveAttribute('aria-pressed','true');await expect(root).toHaveAttribute('data-paper','true');await expect(page.locator('.lobby-paper-surface')).toBeVisible();
   await toggle.click();await expect(page.locator('.lobby-paper-surface')).toBeHidden();
-  await page.getByRole('button',{name:'Empezar',exact:true}).click();await expect(root).toHaveAttribute('data-preview','ready',{timeout:60000});await expect(canvas).toHaveAttribute('data-paper','false');
+  await page.getByRole('button',{name:'Jugar',exact:true}).click();await expect(root).toHaveAttribute('data-preview','ready',{timeout:60000});await expect(canvas).toHaveAttribute('data-paper','false');
   const portrait=page.locator('[data-screen="1"] [data-lobby-image=zud-face]');await expect(portrait).toHaveAttribute('src',/zud-face\.png$/);
   const normal=await canvas.screenshot();await toggle.click();await expect(canvas).toHaveAttribute('data-paper','true');await expect(portrait).toHaveAttribute('src',/zud-face-paper\.png$/);expect((await canvas.screenshot()).equals(normal)).toBe(false);
   await page.getByRole('button',{name:'Confirmar Zud',exact:true}).click();await expect(canvas).toHaveAttribute('data-paper','true');

@@ -12,7 +12,7 @@ import {PAPER_COLOR} from './paper.js';
 //   2. misregister  each channel sampled off register, more at the outline
 //   3. develop      ACES, saturation x1.12, then comic grading and split tone
 //   4. glow         the existing 12-tap warm bloom, added after grading
-//   5. paper        blank paper stays exactly PAPER_COLOR; dots near the room
+//   5. paper        blank paper stays exactly PAPER_COLOR; dots near the geometry
 //   6. outline ink  drawn over the finished frame, tinted by the nearest surface
 //   7. grain        static, on the ink (and on the paper only if asked)
 //
@@ -59,9 +59,8 @@ vec3 grade(vec3 c) {
 }
 // Interleaved gradient noise: sin() hashes lose precision at pixel coordinates
 // this large and show up as columns.
-// The paper under the scene (src/paper-theme.js): light, or darkened by the night
-// coming in from the top and by the blind's curtain, with a halftone wipe, a warm
-// dusk on the night's front and the lamp's glow. At darkness 0 it is exactly paper.
+// The paper under the scene: light, or darkened by the lighting uniforms
+// with a halftone wipe and warm glow. At darkness 0 it is exactly paper.
 vec3 paperAt(vec2 uv,vec2 fragment) {
   if(transparentPaper>.5)return paper;
   if(uThemeB.w<.5)return paper;
@@ -167,7 +166,7 @@ void main() {
       float edge=edgeMask*uOutline.w;
 
       // 5 (prepared). Paper, with a halftone halo that fades with the distance
-      // to the room: its coverage follows the alpha around this pixel.
+      // to the geometry: its coverage follows the alpha around this pixel.
       vec3 pap=paperAt(vUv,fragment);
       if(transparentPaper<.5&&uBg.w>.001&&alpha<.999&&uLite<.5) {
         float proximity=alpha;

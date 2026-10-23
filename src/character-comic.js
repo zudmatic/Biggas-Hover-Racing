@@ -2,8 +2,8 @@ import {retro} from './retro-material.js';
 import {retroStyle} from './retro-style.js';
 import {createPrintPass} from './retro-print.js';
 
-// Preserve the original materials; preview the same surface ink and finishing
-// pass used by the room, including asynchronously loaded wardrobe meshes.
+// Preserve the original materials while applying the shared comic ink and
+// finishing pass to the pilot and ships.
 export function createCharacterComic(renderer) {
   const pass=createPrintPass(renderer,{comic:true}),cache=new Map();
   function printed(source) {

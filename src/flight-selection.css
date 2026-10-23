@@ -1,5 +1,7 @@
+@import './racing-theme.css';
+
 .race-lobby{
-  --lobby-ink:#111;--lobby-blue:#008dca;--lobby-yellow:#ffc400;--lobby-ease:cubic-bezier(.23,1,.32,1);
+  --lobby-ink:var(--race-ink);--lobby-blue:var(--race-blue);--lobby-yellow:var(--race-yellow);--lobby-ease:cubic-bezier(.23,1,.32,1);
   position:fixed;inset:0;isolation:isolate;overflow:hidden;border:3px solid var(--lobby-ink);
   background:#fff;color:var(--lobby-ink);font-family:Arial,Helvetica,sans-serif;font-synthesis:none;
 }
@@ -137,7 +139,7 @@
 .race-lobby #lobby-paper[aria-pressed=true]{background:var(--lobby-yellow)}
 #lobby-paper>span{font-size:17px}
 .lobby-slot img[data-lobby-image=zud-face]{width:100%;height:calc(100% - 18px);left:0;top:0;object-fit:cover}
-.lobby-paper-surface{display:none;position:absolute;inset:0;z-index:30;pointer-events:none;opacity:.14;mix-blend-mode:multiply;background-image:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Cfilter id="grain"%3E%3CfeTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch"/%3E%3CfeColorMatrix type="saturate" values="0"/%3E%3C/filter%3E%3Cpath fill="white" filter="url(%23grain)" d="M0 0h200v200H0z"/%3E%3C/svg%3E')}
+.lobby-paper-surface{display:none;position:absolute;inset:0;z-index:30;pointer-events:none;opacity:.14;mix-blend-mode:multiply;background-image:var(--race-grain)}
 .race-lobby[data-paper=true] .lobby-paper-surface{display:block}
 @media(max-width:760px){.lobby-header-actions{gap:14px}.race-lobby #lobby-paper{font-size:10px;padding:0 8px;gap:5px}.lobby-slot img[data-lobby-image=zud-face]{height:calc(100% - 16px)}}
 @media(max-height:520px) and (orientation:landscape){.lobby-header-actions{gap:12px}.race-lobby #lobby-paper{min-height:38px;font-size:9px}.lobby-slot img[data-lobby-image=zud-face]{height:calc(100% - 11px)}}

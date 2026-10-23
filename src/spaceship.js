@@ -13,9 +13,9 @@ export async function createSpaceship() {
   document.title=`${config.id} · ${config.title}`;
   const base=import.meta.env.BASE_URL;
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-  document.body.innerHTML=`<main class="ship-app">
-    <header class="ship-header"><a class="ship-brand" href="${base}" aria-label="Zudmatic, volver al cuarto"><span class="ship-mark" aria-hidden="true">✳</span> zudmatic<span style="font-weight:400;color:#8d9387"> / </span>hangar</a><nav aria-label="Navegación del hangar"><a class="ship-back" href="${base}">Volver al cuarto</a></nav></header>
-    <section class="ship-intro"><h1>${config.title}<span class="ship-title-number">${config.id}</span></h1><div class="ship-intro-actions"><nav class="ship-picker" aria-label="Naves del hangar">${Object.values(SHIPS).map(item=>`<a href="${base}spaceship.html?vehicle=${item.id}" ${item.id===config.id?'aria-current="page"':''}>${item.name}</a>`).join('')}</nav><a class="ship-simulator" href="${base}simulator.html?vehicle=${config.id}">Simulador de vuelo </a></div></section>
+  document.body.innerHTML=`<main class="ship-app"><div class="ship-paper-surface" aria-hidden="true"></div>
+    <header class="ship-header"><a class="ship-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span class="ship-mark" aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong><span class="ship-header-tag">Hangar</span></a><nav aria-label="Navegación del hangar"><a class="ship-back" href="${base}"><span aria-hidden="true">←</span> Volver al inicio</a></nav></header>
+    <section class="ship-intro"><div class="ship-heading"><span class="ship-eyebrow">HANGAR / EXPLORÁ TU NAVE</span><h1>${config.title}<span class="ship-title-number">${config.id}</span></h1></div><div class="ship-intro-actions"><nav class="ship-picker" aria-label="Naves del hangar">${Object.values(SHIPS).map(item=>`<a href="${base}spaceship.html?vehicle=${item.id}" ${item.id===config.id?'aria-current="page"':''}>${item.name}</a>`).join('')}</nav><a class="ship-simulator" href="${base}simulator.html?vehicle=${config.id}">Simulador de vuelo <span aria-hidden="true">▶</span></a></div></section>
     <div class="ship-workspace">
       <section class="ship-viewport" aria-label="Hangar 3D de ${config.title}" data-vehicle="${config.id}" data-ready="false">
         <canvas class="ship-canvas" tabindex="0" aria-label="Nave 3D. Arrastrá para girar, rueda para acercar y clic para identificar una pieza."></canvas>
@@ -57,12 +57,12 @@ export async function createSpaceship() {
   scene.add(new THREE.HemisphereLight(0xfaf8eb,0x798a75,1.25));
   const key=new THREE.DirectionalLight(0xfff9eb,2.5);key.position.set(-3,8,5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-6;key.shadow.camera.right=6;key.shadow.camera.top=7;key.shadow.camera.bottom=-5;key.shadow.normalBias=.025;key.shadow.bias=-.00015;key.shadow.radius=3;scene.add(key);
   const fill=new THREE.DirectionalLight(0xd4e5ff,1.1);fill.position.set(5,4,-5);scene.add(fill);
-  const platform=new THREE.Mesh(new THREE.CylinderGeometry(3.6,3.65,.16,96),new THREE.MeshStandardMaterial({color:0xd9ddd1,roughness:1}));platform.position.y=-.12;platform.receiveShadow=true;scene.add(platform);
-  const ring=new THREE.Mesh(new THREE.RingGeometry(3.22,3.235,128),new THREE.MeshBasicMaterial({color:0xaeb9a6,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=-.035;scene.add(ring);
+  const platform=new THREE.Mesh(new THREE.CylinderGeometry(3.6,3.65,.16,96),new THREE.MeshStandardMaterial({color:0xf3f3f3,roughness:1}));platform.position.y=-.12;platform.receiveShadow=true;scene.add(platform);
+  const ring=new THREE.Mesh(new THREE.RingGeometry(3.22,3.235,128),new THREE.MeshBasicMaterial({color:0x008dca,side:THREE.DoubleSide}));ring.rotation.x=-Math.PI/2;ring.position.y=-.035;scene.add(ring);
   const ringOuter=ring.clone();ringOuter.scale.setScalar(1.09);scene.add(ringOuter);
-  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x445340,opacity:.11}));floor.rotation.x=-Math.PI/2;floor.position.y=-.205;floor.receiveShadow=true;scene.add(floor);
-  const grid=new THREE.GridHelper(6,12,0xc3cbbb,0xc3cbbb);grid.position.y=-.033;grid.material.transparent=true;grid.material.opacity=.32;scene.add(grid);
-  const tickMaterial=new THREE.LineBasicMaterial({color:0x9ba98f,transparent:true,opacity:.65});
+  const floor=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.ShadowMaterial({color:0x111111,opacity:.11}));floor.rotation.x=-Math.PI/2;floor.position.y=-.205;floor.receiveShadow=true;scene.add(floor);
+  const grid=new THREE.GridHelper(6,12,0xcccccc,0xcccccc);grid.position.y=-.033;grid.material.transparent=true;grid.material.opacity=.32;scene.add(grid);
+  const tickMaterial=new THREE.LineBasicMaterial({color:0x111111,transparent:true,opacity:.65});
   for(let i=0;i<60;i++){const a=i/60*Math.PI*2,r=i%5===0?3.3:3.36;const g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(Math.sin(a)*r,-.028,Math.cos(a)*r),new THREE.Vector3(Math.sin(a)*3.43,-.028,Math.cos(a)*3.43)]);scene.add(new THREE.Line(g,tickMaterial));}
   // A soft, procedural contact shadow grounds the ship without extra assets.
   const shadowCanvas=document.createElement('canvas');shadowCanvas.width=128;shadowCanvas.height=128;

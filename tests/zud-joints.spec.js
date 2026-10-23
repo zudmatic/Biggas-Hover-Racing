@@ -1,7 +1,6 @@
 import {test,expect} from '@playwright/test';
-import {Box3,DoubleSide,Raycaster,Vector3} from 'three';
+import {Box3,Raycaster,Vector3} from 'three';
 import {createZudModel} from '../src/zud-model.js';
-import {createZudAnimator} from '../src/zud-animation.js';
 
 test('curves 100 has a continuous beanie hem without periodic pointed scallops',()=>{
   const model=createZudModel({detail:'high',curve:1,appearance:false});model.root.position.set(0,0,0);model.root.updateMatrixWorld(true);
@@ -32,32 +31,6 @@ test('thigh roots remain tucked behind the torso across the smoothing range',()=
     }
     expect(clearance).toBeGreaterThan(.02);model.dispose();
   }
-});
-
-test('shoulders, hips and neck retain actual mesh overlap during animated poses',()=>{
-  const model=createZudModel({detail:'high',curve:1,appearance:false}),animator=createZudAnimator(model);
-  const torso=model.root.getObjectByName('Torso'),head=model.root.getObjectByName('Cabeza de Zud');
-  torso.material.side=head.material.side=DoubleSide;
-  const ray=new Raycaster(),direction=new Vector3(.137,.231,1).normalize();
-  function overlaps(mesh,other) {
-    const p=mesh.geometry.attributes.position;let inside=0;
-    for(let i=0;i<p.count;i+=15) {
-      ray.set(new Vector3().fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld),direction);
-      const hits=ray.intersectObject(other).map(hit=>hit.distance).filter((distance,j,all)=>j===0||distance-all[j-1]>1e-5);
-      if(hits.length%2===1&&++inside===3)return true;
-    }
-    return false;
-  }
-  for(const state of ['idle','wave','dance','jump','smoke','work']) {
-    for(let frame=0;frame<45;frame++)animator.update({state,dt:1/30,time:.6,elapsed:.6,workPose:state==='work',typingAtDesk:state==='work'});
-    model.root.updateMatrixWorld(true);
-    for(const joint of [...model.arms,...model.feet]) {
-      expect(joint.position.distanceTo(joint.userData.restPosition)).toBeLessThan(1e-9);
-      expect(overlaps(joint.children[0],torso),`${state}: ${joint.children[0].name} detached`).toBe(true);
-    }
-    expect(overlaps(torso,head),`${state}: open neck`).toBe(true);
-  }
-  model.dispose();
 });
 
 test('smooth hips share a continuous normal and comic print frame on the front and back',()=>{

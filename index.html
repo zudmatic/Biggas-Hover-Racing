@@ -2,66 +2,17 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#ffffff" />
-    <title>Zudmatic</title>
+    <meta name="description" content="Biggas Hover Racing: elegí tu nave, explorá el hangar y corré con Zud por los circuitos Ruinas y Nexus." />
+    <title>Biggas Hover Racing</title>
     <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Zudmatic" />
-    <meta property="og:title" content="Zudmatic" />
-    <meta property="og:url" content="https://www.zudmatic.com/house" />
-    <meta property="og:image" content="https://www.zudmatic.com/house/house-og.jpg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Zudmatic" />
-    <meta name="twitter:image" content="https://www.zudmatic.com/house/house-og.jpg" />
-    <link rel="stylesheet" href="/src/loading.css" />
+    <meta property="og:site_name" content="Biggas Hover Racing" />
+    <meta property="og:title" content="Biggas Hover Racing" />
+    <meta property="og:description" content="Carreras hover con Zud, dos naves y dos circuitos." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="preload" href="/fonts/VT323-Regular.ttf" as="font" type="font/ttf" crossorigin />
   </head>
   <body>
-    <div class="house-loader" role="status" aria-label="Cargando la casa"><div><span></span><span></span><span></span></div></div>
-    <main id="app">
-      <h1 class="sr-only">El cuarto de Zud</h1>
-      <div id="stage" class="stage">
-        <canvas id="zud-canvas" aria-label="Zud en su cuarto, en 3D. Clic o flechas para caminar, espacio para saltar y arrastrar para girar." tabindex="0"></canvas>
-        <div id="floating-symbol" aria-hidden="true"></div>
-        <div id="hover-hint" class="hover-hint" aria-hidden="true" hidden></div>
-        <div id="thought" class="thought" role="img" aria-label="Zud sueña con un cheesecake" hidden></div>
-        <nav class="site-nav" aria-label="Navegación principal">
-          <a class="site-logo" href="%BASE_URL%" aria-label="Zudmatic — Home"><span aria-hidden="true"></span></a>
-          <div class="nav-links">
-            <a href="%BASE_URL%" aria-current="page">Home</a>
-            <a href="#work" id="work-link">Work</a>
-            <a role="link" aria-disabled="true" tabindex="0" title="Próximamente">About</a>
-            <a role="link" aria-disabled="true" tabindex="0" title="Próximamente">Photos</a>
-            <a role="link" aria-disabled="true" tabindex="0" title="Próximamente">Blog</a>
-            <a role="link" aria-disabled="true" tabindex="0" title="Próximamente">Contact</a>
-          </div>
-          <div class="nav-tools">
-          <button id="sound-toggle" class="look-toggle sound-toggle" type="button" aria-label="Silenciar sonido" aria-pressed="true" title="Silenciar sonido">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M11 5 6 9H3v6h3l5 4Z" />
-              <path class="sound-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14" />
-              <path class="sound-muted" d="m16 9 5 6m0-6-5 6" />
-            </svg>
-          </button>
-          <button id="look-toggle" class="look-toggle" type="button" aria-label="Cómic en blanco y negro" aria-pressed="false" title="Cambiar a cómic B/N">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" aria-hidden="true">
-              <circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="1.5" />
-              <path d="M12 4a8 8 0 0 1 0 16Z" fill="currentColor" />
-            </svg>
-          </button>
-          </div>
-        </nav>
-        <span id="state-label" class="sr-only" role="status">Zud, a tu lado</span>
-      </div>
-      <audio id="dance-audio" src="/audio/techno-80-92.m4a" preload="none"></audio>
-      <div id="music-panel" class="music-notice" hidden>
-        <p id="music-status" role="status"></p>
-        <button id="music-retry" type="button">Reproducir audio</button>
-      </div>
-    </main>
     <script type="module" src="/src/entry.js"></script>
   </body>
 </html>

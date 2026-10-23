@@ -1,0 +1,8 @@
+:root{
+  --race-ink:#111;
+  --race-blue:#008dca;
+  --race-yellow:#ffc400;
+  --race-paper:#fff;
+  --race-muted:#666;
+  --race-grain:url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Cfilter id="grain"%3E%3CfeTurbulence type="fractalNoise" baseFrequency=".82" numOctaves="3" stitchTiles="stitch"/%3E%3CfeColorMatrix type="saturate" values="0"/%3E%3C/filter%3E%3Cpath fill="white" filter="url(%23grain)" d="M0 0h200v200H0z"/%3E%3C/svg%3E');
+}

@@ -42,8 +42,7 @@ function sectionGeometry(rows,segments=8) {
   geometry.computeVertexNormals();return geometry;
 }
 
-// The approved base uses the authored mesh with the lab's shared surfaces.
-// The lab requests raw surfaces while editing its own local variant.
+// The approved pilot uses the authored mesh and shared character surfaces.
 export function createZudModel(options={}) {
   const {detail=CHARACTER_DEFAULTS.detail,curve=options.detail===undefined?Math.max(0,(CHARACTER_DEFAULTS.meshQuality-75)/25):0,appearance=true,comic=CHARACTER_DEFAULTS.comicShader}=options;
   let baseMaterials;

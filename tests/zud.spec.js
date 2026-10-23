@@ -1,9 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {Box3,Raycaster,Vector3} from 'three';
-import {createZudModel,BEANIE_COLORS} from '../src/zud-model.js';
+import {createZudModel} from '../src/zud-model.js';
 import {SURFACE_FAMILIES} from '../src/surface-library.js';
-import {ZUD} from '../src/zud-profile.js';
-import {enter,act,line} from './helpers.js';
 
 test('Zud has a round profile while the chin remains at the shoulder line',()=>{
   const model=createZudModel();model.root.position.set(0,0,0);model.root.updateMatrixWorld(true);
@@ -90,34 +88,6 @@ test('Beanie fold covers the head through the crown seam from elevated views',()
     }
     model.dispose();
   }
-});
-
-test('Zud runs every keyboard action in his room and wears the default beanie',async({page})=> {
-  test.setTimeout(60000); // Every action, each with its own line.
-  const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  await enter(page);
-  const stage=page.locator('#stage');
-  await expect(line(page)).toHaveText(ZUD.homeLine);
-  await expect(stage).toHaveAttribute('data-beanie-color',BEANIE_COLORS[0].hex);
-  for(const [action] of ZUD.controls) {
-    await act(page,action);await expect(stage).toHaveAttribute('data-state',action);
-    await expect(page.locator('#state-label')).toHaveText(ZUD.actions[action].label);
-  }
-  await expect(stage).toHaveAttribute('data-accessory','mask');
-  await page.keyboard.press('Escape');
-  await expect(stage).toHaveAttribute('data-accessory','none');
-  expect(errors).toEqual([]);
-});
-
-test('Zud walks, jumps and uses the house desk',async({page})=> {
-  test.setTimeout(60000);
-  await enter(page);
-  const stage=page.locator('#stage');await page.keyboard.down('ArrowRight');
-  await expect(stage).toHaveAttribute('data-walk-cycle','walking');await page.keyboard.up('ArrowRight');
-  await page.keyboard.press('Space');await expect.poll(async()=>Number(await stage.getAttribute('data-jump-height'))).toBeGreaterThan(.2);
-  await expect(stage).toHaveAttribute('data-jump-height','0.000');
-  await act(page,'work');await expect(stage).toHaveAttribute('data-activity','typing',{timeout:12000});
-  await expect(line(page)).toHaveText('Modo concentración. Una cosa a la vez.',{timeout:12000});
 });
 
 test('Standardized comic base preserves the rig, surface families, dye and unobstructed eyes',()=> {

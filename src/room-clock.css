@@ -1,8 +1,0 @@
-/* Only the actual WebGL clock is visible; this transparent surface handles the
-   lightbox's focus, touch capture and dismissal. */
-.clock-lightbox { position:fixed; inset:0; width:100vw; height:100dvh; max-width:none; max-height:none; padding:0; margin:0; border:0; background:transparent; overflow:hidden; touch-action:none; }
-.clock-lightbox::backdrop { background:transparent; }
-.clock-close { position:absolute; left:calc(var(--clock-x,75vw) + var(--clock-radius,140px) - 16px); top:calc(var(--clock-y,50vh) - var(--clock-radius,140px)*1.7 - 38px); width:36px; height:36px; border:1px solid #ffffff66; border-radius:50%; color:#fff; background:#29303a8c; font:24px/1 Arial; cursor:pointer; }
-.clock-accessibility,.clock-launch { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
-.clock-launch:focus-visible { width:auto; height:auto; clip-path:none; top:14px; right:14px; padding:8px 13px; border:1px solid #d3c7b5; border-radius:20px; background:#faf5ec; color:#77664d; font:11px Arial; z-index:5; }
-.stage[data-clock="open"] .speech,.stage[data-clock="returning"] .speech { visibility:hidden; }
