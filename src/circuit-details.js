@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {createDetailInstances} from './detail-instances.js';
 
 const randomFactory=()=>{let seed=34034;return ()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};};
 export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}){
@@ -8,6 +9,11 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
   const fabric=clay.clone(),fabricIvory=ivory.clone();fabric.name=fabricIvory.name='Cloth';
   const make=(geometry,material,parent=details)=>{const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;};
   const transforms=new THREE.Object3D(),flags=[],cones=[],drones=[],waves=[];
+  const poles=createDetailInstances(details,new THREE.CylinderGeometry(.055,.085,4.7,6),metal,12,{name:'Postes de banderas'});
+  const coneBases=createDetailInstances(details,new THREE.BoxGeometry(.48,.08,.48),metal,16,{name:'Bases de conos',dynamic:true});
+  const coneBodies=createDetailInstances(details,new THREE.ConeGeometry(.2,.65,6),clay,16,{name:'Conos',dynamic:true});
+  const coneStripes=createDetailInstances(details,new THREE.CylinderGeometry(.08,.12,.13,6),ivory,16,{name:'Franjas de conos',dynamic:true});
+  const batches=[poles,coneBases,coneBodies,coneStripes];
   let detailCount=0,impactSerial=0,lastAnimation=-1;
   const registerWave=(mesh,amplitude)=>{waves.push({mesh,base:mesh.geometry.attributes.position.array.slice(),amplitude});mesh.geometry.attributes.position.setUsage(THREE.DynamicDrawUsage);};
   // Water retains the authored materials; moving vertices also work with the comic pass.
@@ -30,7 +36,7 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
   for(let i=0;i<100;i++)for(let side=-1;side<=1;side+=2){const road=landscape.atDistance(i*landscape.length/100);transforms.position.set(road.x-road.nz*(road.width/2-.17)*side,road.y+.16,road.z+road.nx*(road.width/2-.17)*side);transforms.rotation.set(0,Math.atan2(road.nx,road.nz),0);transforms.scale.set(1,1,1);transforms.updateMatrix();lights.setMatrixAt(i*2+(side===1?1:0),transforms.matrix);}detailCount+=200;
   for(let i=0;i<12;i++){
     const road=landscape.atDistance(25+i*landscape.length/12),side=i%2?1:-1,group=new THREE.Group();group.position.set(road.x-road.nz*(road.width/2+.8)*side,road.y,road.z+road.nx*(road.width/2+.8)*side);group.rotation.y=Math.atan2(road.nx,road.nz);details.add(group);
-    const pole=make(new THREE.CylinderGeometry(.055,.085,4.7,6),metal,group);pole.position.y=2.35;
+    const pole=poles.add(group);pole.position.y=2.35;
     const cloth=make(new THREE.PlaneGeometry(2,1.05,8,3).translate(1,0,0),i%3===0?fabricIvory:fabric,group);cloth.name='Bandera';cloth.material.side=THREE.DoubleSide;cloth.position.y=3.95;cloth.castShadow=false;flags.push({mesh:cloth,base:cloth.geometry.attributes.position.array.slice(),phase:i*.6});
     detailCount+=2;
   }
@@ -47,9 +53,9 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
   locations.forEach((p,i)=>{for(let j=0;j<3;j++){transforms.position.set(p.x+(j-1)*.25,p.y+.4,p.z);transforms.rotation.set((random()-.5)*.4,random()*6,(j-1)*.5);transforms.scale.setScalar(.6+random()*.7);transforms.updateMatrix();ferns.setMatrixAt(i*3+j,transforms.matrix);}});detailCount+=locations.length*3;
   for(let i=0;i<16;i++){
     const road=landscape.atDistance(80+i*(landscape.length-100)/16),side=i%2?1:-1,group=new THREE.Group();group.position.set(road.x-road.nz*(road.width/2-.55)*side,road.y+.04,road.z+road.nx*(road.width/2-.55)*side);details.add(group);
-    const base=make(new THREE.BoxGeometry(.48,.08,.48),metal,group);base.position.y=.04;
-    const cone=make(new THREE.ConeGeometry(.2,.65,6),clay,group);cone.position.y=.39;
-    const stripe=make(new THREE.CylinderGeometry(.08,.12,.13,6),ivory,group);stripe.position.y=.45;
+    const base=coneBases.add(group);base.position.y=.04;
+    const cone=coneBodies.add(group);cone.position.y=.39;
+    const stripe=coneStripes.add(group);stripe.position.y=.45;
     group.name='Cono dinámico';cones.push({group,origin:group.position.clone(),velocity:new THREE.Vector3(),spin:0,age:0,active:false});detailCount+=3;
   }
   // Small maintenance drones patrol above the towers, safely outside the racing volume.
@@ -84,7 +90,7 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
       if(cone.age>8){cone.group.position.copy(cone.origin);cone.group.rotation.set(0,0,0);cone.active=false;}
     }
   }
-  function reset(){impactSerial=0;for(const c of cones){c.active=false;c.group.position.copy(c.origin);c.group.rotation.set(0,0,0);}particles.forEach(p=>p.life=0);}
+  function reset(){impactSerial=0;for(const c of cones){c.active=false;c.group.position.copy(c.origin);c.group.rotation.set(0,0,0);}particles.forEach(p=>p.life=0);batches.forEach(batch=>batch.update());}
   function update(time,reduced,{state,phase,dt=0}){
     const t=reduced?0:time,tick=Math.floor(t*18);
     if(tick!==lastAnimation){
@@ -102,6 +108,8 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
       if(state.speed>8){const amount=state.boosting||state.drifting?5:2;for(let i=0;i<amount;i++)emit(state.x-Math.sin(state.yaw)*2,state.y-.35,state.z-Math.cos(state.yaw)*2,-state.vx*.06,-state.vz*.06,false,state.drifting);}
     }
     particles.forEach((p,i)=>{if(dt>0){p.life-=dt;if(p.life>0){p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;if(p.spark)p.vy-=12*dt;}}positions[i*3]=p.life>0?p.x:-999;positions[i*3+1]=p.life>0?p.y:-999;positions[i*3+2]=p.life>0?p.z:-999;});geometry.attributes.position.needsUpdate=true;geometry.attributes.color.needsUpdate=true;
+    batches.forEach(batch=>batch.update());
   }
+  batches.forEach(batch=>batch.update());
   return {update,step,reset,detailCount};
 }

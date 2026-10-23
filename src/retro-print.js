@@ -24,6 +24,7 @@ const fragmentShader=`
 uniform sampler2D tScene;
 uniform sampler2D tBloom;
 uniform float bloomStrength;
+uniform float glowSamples;
 uniform vec2 resolution;
 uniform float pixelRatio;
 uniform vec3 paper;
@@ -111,14 +112,15 @@ vec3 develop(vec2 uv,vec4 glow,vec3 pap) {
 vec4 bloom(vec2 uv) {
   vec3 sum=vec3(0.);float open=0.;
   for(int i=0;i<12;i++) {
+    if(float(i)>=glowSamples)break;
     float a=float(i)*2.3998;
-    float r=(3.+float(i)*1.2)*pixelRatio;
+    float r=(3.+float(i)*13.2/max(glowSamples-1.,1.))*pixelRatio;
     vec4 s=texture2D(tScene,uv+vec2(cos(a),sin(a))*r/resolution);
     // Measured on the developed (tone-mapped) image: only true highlights glow.
     vec3 t=s.a>.001?ACESFilmicToneMapping(s.rgb/s.a):vec3(0.);
     sum+=max(t-.8,0.)*s.a;open+=1.-s.a;
   }
-  return vec4(sum/12.,open/12.);
+  return vec4(sum/glowSamples,open/glowSamples);
 }
 void main() {
   vec4 glow=bloom(vUv);glow.rgb=toSrgb(glow.rgb)*vec3(1.,.86,.66)*.17;
@@ -220,7 +222,7 @@ export function createPrintPass(renderer,{transparent=false,comic=!transparent,s
   const depthTexture=comic?new THREE.DepthTexture(1,1):null;
   const target=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:4,colorSpace:THREE.LinearSRGBColorSpace,depthTexture});
   const material=new THREE.ShaderMaterial({
-    uniforms:{tBloom:{value:null},bloomStrength:{value:0},transparentPaper:{value:transparent?1:0},paper:{value:new THREE.Color(1,1,1)},tScene:{value:target.texture},tDepth:{value:depthTexture},
+    uniforms:{tBloom:{value:null},bloomStrength:{value:0},glowSamples:{value:12},transparentPaper:{value:transparent?1:0},paper:{value:new THREE.Color(1,1,1)},tScene:{value:target.texture},tDepth:{value:depthTexture},
       resolution:{value:new THREE.Vector2(1,1)},pixelRatio:{value:1},uPixelWorld:{value:1},uDepthRange:{value:1},uCameraNear:{value:.1},uPerspective:{value:0},...style.post},
     defines:comic?{COMIC:1}:{},
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
@@ -238,7 +240,14 @@ export function createPrintPass(renderer,{transparent=false,comic=!transparent,s
   setPaper(PAPER_COLOR);
   return {
     setPaper,material,
-    render(scene,camera,{samples=4,viewport=false,afterScene=null}={}) {
+    async prepare(scene,camera){
+      const previous=renderer.getRenderTarget();
+      // Compile the scene for the same linear HDR target used by render().
+      // The default framebuffer uses different color/tone-mapping defines.
+      try{renderer.setRenderTarget(target);await renderer.compileAsync(scene,camera);}finally{renderer.setRenderTarget(previous);}
+      await renderer.compileAsync(screen,flat);
+    },
+    render(scene,camera,{samples=4,glowSamples=12,viewport=false,afterScene=null}={}) {
       // A gallery prints each view at its own pixel size, then composites it
       // into the canvas's current viewport/scissor without clearing its peers.
       if(viewport){renderer.getViewport(view);size.set(Math.floor(view.z*renderer.getPixelRatio()),Math.floor(view.w*renderer.getPixelRatio()));}
@@ -247,6 +256,7 @@ export function createPrintPass(renderer,{transparent=false,comic=!transparent,s
       if(target.width!==size.x||target.height!==size.y)target.setSize(size.x,size.y);
       if(target.samples!==samples){target.dispose();target.samples=samples;}
       material.uniforms.resolution.value.copy(size);
+      material.uniforms.glowSamples.value=Math.max(1,Math.min(12,glowSamples));
       material.uniforms.pixelRatio.value=renderer.getPixelRatio();
       if(comic) {
         // Perspective pixel size is measured at unit view depth, then scaled in GLSL.

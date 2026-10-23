@@ -4,8 +4,9 @@ import {createPrintPass} from './retro-print.js';
 
 // Preserve the original materials while applying the shared comic ink and
 // finishing pass to the pilot and ships.
-export function createCharacterComic(renderer) {
+export function createCharacterComic(renderer,{samples=4,glowSamples=12,lite=false}={}) {
   const pass=createPrintPass(renderer,{comic:true}),cache=new Map();
+  const restored=[],sources=[],arrays=new WeakMap(),synced=new Set();
   function printed(source) {
     if(source.userData.characterEyeSurface||source.userData.retro||!source.color||source.isMeshBasicMaterial||source.isShadowMaterial)return source;
     let entry=cache.get(source);
@@ -15,6 +16,8 @@ export function createCharacterComic(renderer) {
       source.addEventListener('dispose',release);entry={material,release};cache.set(source,entry);
     }
     const material=entry.material;
+    if(synced.has(source))return material;
+    synced.add(source);
     if(material.map!==source.map||material.bumpMap!==source.bumpMap||material.flatShading!==source.flatShading||material.vertexColors!==source.vertexColors)material.needsUpdate=true;
     material.map=source.map;material.flatShading=source.flatShading;material.vertexColors=source.vertexColors;
     material.bumpMap=source.bumpMap;material.bumpScale=source.bumpScale??1;
@@ -22,18 +25,31 @@ export function createCharacterComic(renderer) {
     material.emissive.copy(source.emissive);material.emissiveIntensity=source.emissiveIntensity;
     return material;
   }
+  function apply(scene){
+    synced.clear();
+    scene.traverseVisible(mesh=>{
+      if(!mesh.isMesh)return;
+      const source=mesh.material;
+      restored.push(mesh);sources.push(source);
+      if(Array.isArray(source)){
+        let materials=arrays.get(source);if(!materials){materials=[];arrays.set(source,materials);}
+        materials.length=source.length;for(let i=0;i<source.length;i++)materials[i]=printed(source[i]);mesh.material=materials;
+      }else mesh.material=printed(source);
+    });
+  }
+  function restore(){for(let i=0;i<restored.length;i++)restored[i].material=sources[i];restored.length=sources.length=0;}
   return {
+    setQuality(options){samples=options.samples??samples;glowSamples=options.glowSamples??glowSamples;lite=options.lite??lite;},
+    async prepare(scene,camera){
+      retroStyle.setLook('comic');retroStyle.setLite(lite);apply(scene);
+      try{await pass.prepare(scene,camera);}finally{restore();}
+    },
     render(scene,camera,background) {
-      retroStyle.setLook('comic');retroStyle.setPixelRatio(renderer.getPixelRatio());retroStyle.params.paper=background;
-      const restored=[],originalBackground=scene.background;
-      scene.traverseVisible(mesh=>{
-        if(!mesh.isMesh)return;
-        const source=mesh.material;
-        restored.push([mesh,source]);mesh.material=Array.isArray(source)?source.map(printed):printed(source);
-      });
+      retroStyle.setLook('comic');retroStyle.setLite(lite);retroStyle.setPixelRatio(renderer.getPixelRatio());retroStyle.params.paper=background;
+      const originalBackground=scene.background;apply(scene);
       scene.background=null;
-      try{pass.render(scene,camera);}
-      finally{scene.background=originalBackground;for(const [mesh,material] of restored)mesh.material=material;}
+      try{pass.render(scene,camera,{samples,glowSamples});}
+      finally{scene.background=originalBackground;restore();}
     },
     dispose(){for(const entry of [...cache.values()])entry.release();pass.dispose();},
   };

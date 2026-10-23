@@ -7,9 +7,12 @@ export const SOUNDTRACKS={
 // across selection steps and coexist with synthesized engine / race effects.
 export function createGameMusic({tracks=SOUNDTRACKS,createAudio=()=>new Audio()}={}){
   const players=new Map(),listeners=new Set();
+  const volumeKey='biggas-hover-racing-music-volume';
+  let volume=.32;
+  try{const saved=localStorage.getItem(volumeKey);if(saved!==null&&saved.trim()!==''&&Number.isFinite(Number(saved)))volume=Math.min(1,Math.max(0,Number(saved)));}catch{}
   let phase='loading',track=null,enabled=true,unlocked=false,disposed=false,generation=0,status='idle',currentPlayer=null;
   const events=new AbortController();
-  const publish=value=>{status=value;listeners.forEach(listener=>listener({track,status,enabled}));};
+  const publish=value=>{status=value;listeners.forEach(listener=>listener({track,status,enabled,volume}));};
   function pauseAll(){currentPlayer=null;for(const player of players.values())player.pause();}
   function synchronize(){
     if(disposed||!enabled||!unlocked||document.hidden||!track){++generation;pauseAll();publish('idle');return;}
@@ -17,7 +20,7 @@ export function createGameMusic({tracks=SOUNDTRACKS,createAudio=()=>new Audio()}
     if(!source){++generation;pauseAll();publish('unavailable');return;}
     let player=players.get(track);
     if(!player){
-      player=createAudio();player.preload='none';player.loop=true;player.volume=.32;player.src=source;
+      player=createAudio();player.preload='none';player.loop=true;player.volume=volume;player.src=source;
       player.addEventListener('error',()=>{if(currentPlayer===player)publish('unavailable');},{signal:events.signal});
       players.set(track,player);
     }
@@ -34,10 +37,17 @@ export function createGameMusic({tracks=SOUNDTRACKS,createAudio=()=>new Audio()}
   window.addEventListener('blur',()=>{++generation;pauseAll();publish('idle');},{signal:events.signal});
   window.addEventListener('focus',()=>{if(phase==='lobby')synchronize();},{signal:events.signal});
   return {
-    get state(){return {track,status,enabled};},
+    get state(){return {track,status,enabled,volume};},
     subscribe(listener){listeners.add(listener);listener(this.state);return ()=>listeners.delete(listener);},
     unlock(){if(disposed)return;unlocked=true;synchronize();},
     setEnabled(value){enabled=!!value;synchronize();},
+    setVolume(value){
+      if(disposed||!Number.isFinite(value))return;
+      volume=Math.min(1,Math.max(0,value));
+      for(const player of players.values())player.volume=volume;
+      try{localStorage.setItem(volumeKey,String(volume));}catch{}
+      publish(status);
+    },
     setPhase(value){
       phase=value;
       const next=value==='lobby'?'menu':['flying','countdown','finished'].includes(value)?'race':null;

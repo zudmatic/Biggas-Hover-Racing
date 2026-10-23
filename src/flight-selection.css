@@ -145,7 +145,7 @@
 @media(max-height:520px) and (orientation:landscape){.lobby-header-actions{gap:12px}.race-lobby #lobby-paper{min-height:38px;font-size:9px}.lobby-slot img[data-lobby-image=zud-face]{height:calc(100% - 11px)}}
 
 .race-lobby #lobby-sound{display:grid;place-items:center;min-width:44px;min-height:44px;background:#fff;border:2px solid #111;border-radius:6px}
-.race-lobby #lobby-sound[aria-pressed=true]{background:var(--lobby-yellow)}
-#lobby-sound .sound-muted{display:none}#lobby-sound[aria-pressed=false] .sound-waves{display:none}#lobby-sound[aria-pressed=false] .sound-muted{display:block}
+.race-lobby #lobby-sound[data-muted=false]{background:var(--lobby-yellow)}
+
 @media(max-width:760px){.lobby-header-actions{gap:7px}.lobby-header{padding-inline:3vw;gap:8px}.lobby-brand>span{display:none}.lobby-brand strong{font-size:21px}.lobby-hangar{font-size:10px}.race-lobby #lobby-sound{min-width:40px}}
 @media(max-height:520px) and (orientation:landscape){.race-lobby #lobby-sound{min-width:38px;min-height:38px}.lobby-header-actions{gap:7px}}

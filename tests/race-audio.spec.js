@@ -34,17 +34,17 @@ test('race audio unlocks on launch, follows speed, pauses, mutes and remembers t
   await page.keyboard.up('ShiftLeft');await page.keyboard.press('Escape');
   await expect(app).toHaveAttribute('data-phase','paused');await expect.poll(()=>rms(page)).toBeLessThan(.0001);
   await page.getByRole('button',{name:'Continuar',exact:true}).click();await expect.poll(()=>rms(page)).toBeGreaterThan(.005);
-  await page.keyboard.press('KeyM');await expect(page.getByRole('button',{name:'Sonido',exact:true})).toHaveAttribute('aria-pressed','false');await expect.poll(()=>rms(page)).toBeLessThan(.0001);
-  await page.getByRole('button',{name:'Sonido',exact:true}).click();await expect.poll(()=>rms(page)).toBeGreaterThan(.005);
+  await page.keyboard.press('KeyM');await expect(page.getByRole('button',{name:'Sonido',exact:true})).toHaveAttribute('data-muted','true');await expect.poll(()=>rms(page)).toBeLessThan(.0001);
+  await page.getByRole('button',{name:'Sonido',exact:true}).click();await page.getByRole('button',{name:'Activar sonido',exact:true}).click();await page.keyboard.press('Escape');await expect.poll(()=>rms(page)).toBeGreaterThan(.005);
   await page.evaluate(()=>window.dispatchEvent(new Event('blur')));await expect(app).toHaveAttribute('data-phase','paused');await expect.poll(()=>rms(page)).toBeLessThan(.0001);
   await page.setViewportSize({width:320,height:640});
-  const controls=await page.locator('.flight-header button,.flight-header a').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {x:r.x,right:r.right,y:r.y,bottom:r.bottom};}));
+  const controls=await page.locator('.flight-header button:visible,.flight-header a:visible').evaluateAll(nodes=>nodes.map(node=>{const r=node.getBoundingClientRect();return {x:r.x,right:r.right,y:r.y,bottom:r.bottom};}));
   for(const rect of controls){expect(rect.x).toBeGreaterThanOrEqual(0);expect(rect.right).toBeLessThanOrEqual(320);expect(rect.bottom).toBeLessThanOrEqual(640);}
-  await page.getByRole('button',{name:'Sonido',exact:true}).click();await page.reload();
+  await page.getByRole('button',{name:'Sonido',exact:true}).click();await page.getByRole('button',{name:'Silenciar todo',exact:true}).click();await page.reload();
   expect((await status(page)).enabled).toBe(false);expect((await status(page)).context).toBe('uninitialized');
   await launchFromLobby(page);await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
-  await expect(page.getByRole('button',{name:'Sonido',exact:true})).toHaveAttribute('aria-pressed','false');expect((await status(page)).context).toBe('uninitialized');
-  await page.getByRole('button',{name:'Sonido',exact:true}).click();await expect.poll(()=>rms(page)).toBeGreaterThan(.005);
+  await expect(page.getByRole('button',{name:'Sonido',exact:true})).toHaveAttribute('data-muted','true');expect((await status(page)).context).toBe('uninitialized');
+  await page.getByRole('button',{name:'Sonido',exact:true}).click();await page.getByRole('button',{name:'Activar sonido',exact:true}).click();await page.keyboard.press('Escape');await expect.poll(()=>rms(page)).toBeGreaterThan(.005);
   expect(errors).toEqual([]);
 });
 
