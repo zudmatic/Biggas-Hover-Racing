@@ -172,7 +172,7 @@ noche, faros, cambio de calidad, pausa, redimensionado y reinicio de contrarrelo
 El selector de calidad del menú de pausa controla también el render WebGPU y
 su fallback WebGL2. Alta conserva 4 muestras de antialiasing y 12 muestras de
 resplandor; Rendimiento usa 0 y 4 respectivamente, reduce la resolución y emite
-el 55% de partículas, conservando la llama continua. Automático reduce primero
+el 55% de fragmentos, conservando llama, brasas y líneas. Automático reduce primero
 la resolución y activa la variante ligera ante caídas sostenidas. Un cuadro
 aislado de carga no baja la calidad, pero las pausas repetidas sí se contabilizan.
 Las variantes del postprocesado se reutilizan y se liberan al salir.
@@ -181,8 +181,15 @@ La longitud del propulsor incluye ahora el desplazamiento de la nave y su escala
 acelerar no estira indefinidamente el historial de la llama. Las partículas
 también acortan su vida según la velocidad; son más pequeñas y tienen bordes
 suaves. DialKit añade `Densidad llama` (0,82), con longitud base 2,7, ancho 0,7,
-fragmentos de tamaño 0,24 y duración máxima de 0,18 segundos. Turbo sigue azul.
+fragmentos de tamaño 0,32 y duración máxima de 0,22 segundos. Turbo sigue azul.
 El historial está limitado a 240 poses reutilizables y no crece durante la pausa.
+
+Las partículas heredan parte de la velocidad de la nave (`Seguir nave`, 0,9).
+`Estela partículas` controla su alcance separado de la llama; las brasas y líneas
+pueden sobresalir del núcleo, con brillo y dispersión mayores. Sus cantidades,
+tamaños y duraciones se ajustan por separado en DialKit. La vida mínima de 90 ms
+evita que desaparezcan en un solo cuadro. Rendimiento reduce los fragmentos
+densos, pero conserva las brasas y chispas lineales.
 
 `flame-trail.spec.js` valida longitud a 0, 52 y 100 m/s, giros y recuperación;
 `flight-performance.spec.js` comprueba el ajuste automático y las preferencias;
