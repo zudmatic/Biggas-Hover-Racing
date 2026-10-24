@@ -1,0 +1,64 @@
+[
+  {
+    "name": "Original",
+    "colors": {
+      "orange": "#f9670d",
+      "blue": "#0d7ecf",
+      "ivory": "#ebe1bf",
+      "dark": "#293037",
+      "black": "#161813",
+      "metal": "#4b4f4e"
+    }
+  },
+  {
+    "name": "Matcha",
+    "colors": {
+      "orange": "#8caa68",
+      "blue": "#315c4b",
+      "ivory": "#eee7c9",
+      "dark": "#303e34",
+      "black": "#18221c",
+      "metal": "#7c8b7b"
+    }
+  },
+  {
+    "name": "Lavanda",
+    "colors": {
+      "orange": "#ac9bd0",
+      "blue": "#565689",
+      "ivory": "#f1ddd8",
+      "dark": "#343247",
+      "black": "#201d2c",
+      "metal": "#77718c"
+    }
+  },
+  {
+    "name": "Coral",
+    "colors": {
+      "orange": "#ff8c66",
+      "blue": "#972651",
+      "ivory": "#ffe2b3",
+      "dark": "#392f3e",
+      "black": "#211d29",
+      "metal": "#977c89"
+    }
+  },
+  {
+    "name": "Bosque",
+    "colors": {
+      "orange": "#8caa68",
+      "blue": "#315c4b",
+      "ivory": "#eee7c9",
+      "dark": "#303e34",
+      "black": "#18221c",
+      "metal": "#7c8b7b"
+    },
+    "parts": {
+      "part_078": "#6e6e6e",
+      "part_036": "#6e6e6e",
+      "part_015": "#dd9269",
+      "part_053": "#dd9269",
+      "part_095": "#dd9269"
+    }
+  }
+]

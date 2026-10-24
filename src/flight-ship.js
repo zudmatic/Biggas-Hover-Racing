@@ -1,10 +1,10 @@
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
-import {createSpaceshipPilot} from './spaceship-pilot.js';
+import {createSelectablePilot} from './selectable-pilot.js';
 import {shipConfig,shipUrl,shipCanopy} from './ship-catalog.js';
 
-export async function createFlightShip(id='033'){
+export async function createFlightShip(id='033',choice={}){
   const config=shipConfig(id);
   const source=(await new GLTFLoader().loadAsync(shipUrl(config.id))).scene;
   source.updateMatrixWorld(true);
@@ -31,7 +31,7 @@ export async function createFlightShip(id='033'){
     const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=true;mesh.receiveShadow=true;root.add(mesh);
   }
   source.traverse(mesh=>{if(mesh.isMesh)mesh.geometry.dispose();});
-  const pilot=createSpaceshipPilot({offset:config.pilotOffset});pilot.root.visible=true;root.add(pilot.root);
+  const pilot=await createSelectablePilot({...choice,offset:config.pilotOffset});pilot.root.visible=true;root.add(pilot.root);
   const plumes=[];
   const glow=new THREE.MeshBasicMaterial({color:0xa6efff,transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});
   for(const [x,y,z,radius] of config.exhausts){

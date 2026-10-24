@@ -58,8 +58,10 @@
 .lobby-preview-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;opacity:0}
 .lobby-preview-canvas:active{cursor:grabbing}
 .race-lobby[data-preview=ready] .lobby-preview-canvas{opacity:1}
-.lobby-preview-fallback{position:absolute;inset:5%;width:90%;height:90%;object-fit:contain}
-.race-lobby[data-preview=ready] .lobby-preview-fallback{display:none}
+.lobby-preview-fallback{display:none;position:absolute;inset:5%;width:90%;height:90%;object-fit:contain}
+.race-lobby[data-preview=fallback] .lobby-preview-fallback{display:block}
+.lobby-preview-loading{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:#777}
+.race-lobby:is([data-preview=ready],[data-preview=fallback]) .lobby-preview-loading{display:none}
 .lobby-drag-hint{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:#777}
 .race-lobby:not([data-preview=ready]) .lobby-drag-hint{visibility:hidden}
 .lobby-footer{position:absolute;bottom:0;left:0;right:0;height:91px;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:22px;padding:0 5vw;background:#fff}
@@ -149,3 +151,53 @@
 
 @media(max-width:760px){.lobby-header-actions{gap:7px}.lobby-header{padding-inline:3vw;gap:8px}.lobby-brand>span{display:none}.lobby-brand strong{font-size:21px}.lobby-hangar{font-size:10px}.race-lobby #lobby-sound{min-width:40px}}
 @media(max-height:520px) and (orientation:landscape){.race-lobby #lobby-sound{min-width:38px;min-height:38px}.lobby-header-actions{gap:7px}}
+
+/* Five supplied palettes, with per-part accents visible in each swatch. */
+.lobby-palettes{border:0;padding:0;margin:0 0 22px;pointer-events:auto}
+.lobby-palettes legend{font-size:10px;font-weight:900;letter-spacing:1px;margin-bottom:10px}
+.lobby-palette-name{font-weight:500;letter-spacing:0;margin-left:10px}
+.lobby-palettes>div{display:flex;gap:8px}
+.race-lobby .lobby-palettes button{display:grid;place-items:center;width:44px;height:44px;padding:4px;border:2px solid #111;border-radius:50%;background:white}
+.lobby-palettes button span{width:100%;height:100%;border-radius:50%;background:conic-gradient(var(--palette-main) 0 50%,var(--palette-detail) 50% 80%,var(--palette-accent) 80%)}
+.lobby-palettes button[aria-pressed=true]{box-shadow:0 0 0 3px var(--lobby-yellow)}
+.race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-profile-brand{display:none}
+.race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-selected-name strong{font-size:clamp(24px,3.4vw,53px)}
+.lobby-slot img[data-lobby-image=zudmatic-face]{width:100%;height:calc(100% - 18px);left:0;top:0;object-fit:cover}
+@media(max-width:760px){
+  .race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-selected-name{width:68vw}
+  .race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-profile{width:45%}
+  .lobby-palettes>div{flex-wrap:wrap;gap:8px}
+  .race-lobby .lobby-palettes button{width:36px;height:36px}
+  .lobby-palettes{margin-bottom:15px}
+}
+@media(max-height:520px) and (orientation:landscape){
+  .lobby-palettes{margin-bottom:6px}.lobby-palettes legend{margin-bottom:5px;font-size:8px}
+  .race-lobby .lobby-palettes button{width:28px;height:28px}.lobby-palettes>div{gap:6px}
+  .race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-profile{display:block;top:195px}
+  .race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-profile dl{display:none}
+}
+
+/* The hat selector follows the same circular controls as Zudmatic's palettes. */
+.lobby-hats{border:0;padding:0;margin:0 0 22px;pointer-events:auto}
+.lobby-hats legend{font-size:10px;font-weight:900;letter-spacing:1px;margin-bottom:10px}
+.lobby-hat-name{font-weight:500;letter-spacing:0;margin-left:10px}
+.lobby-hats>div{display:flex;flex-wrap:wrap;gap:8px}
+.race-lobby .lobby-hats button{display:grid;place-items:center;width:44px;height:44px;padding:4px;border:2px solid #111;border-radius:50%;background:white}
+.lobby-hats button>span{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--hat-color)}
+.lobby-hats svg{width:24px;height:24px}
+.lobby-hats button[aria-pressed=true]{box-shadow:0 0 0 3px var(--lobby-yellow)}
+[data-screen='1'] .lobby-profile-brand{display:none}
+@media(max-width:760px){
+  .race-lobby[data-pilot=zud] [data-screen='1'] .lobby-profile{width:45%}
+  .lobby-hats{margin-bottom:15px}
+  .lobby-hat-name{display:block;margin:4px 0 0}
+  .race-lobby .lobby-hats button{width:36px;height:36px}
+  .lobby-hats svg{width:20px;height:20px}
+}
+@media(max-height:520px) and (orientation:landscape){
+  .race-lobby[data-pilot=zud] [data-screen='1'] .lobby-profile{display:block;top:195px;width:40%}
+  .lobby-hats{margin-bottom:6px}.lobby-hats legend{margin-bottom:5px;font-size:8px}
+  .race-lobby .lobby-hats button{width:28px;height:28px}.lobby-hats>div{gap:6px}
+  .lobby-hats svg{width:16px;height:16px}
+  .race-lobby[data-pilot=zud] [data-screen='1'] .lobby-profile dl{display:none}
+}

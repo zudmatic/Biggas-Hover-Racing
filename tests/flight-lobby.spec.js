@@ -12,7 +12,7 @@ test('landing, locked roster, sequential confirmation and map choices work with 
   await expect(page.locator('.lobby-title-biggas')).not.toHaveCSS('animation-name','none');
   await page.keyboard.press('Enter');await expect(lobby).toHaveAttribute('data-stage','1');
   await expect(page.locator('[data-step="3"]')).toBeDisabled();
-  await expect(page.locator('[data-screen="1"] .is-locked')).toHaveCount(8);
+  await expect(page.locator('[data-screen="1"] .is-locked')).toHaveCount(7);
   for(const slot of await page.locator('[data-screen="1"] .is-locked').all())await expect(slot).toBeDisabled();
   await expect(page.getByRole('button',{name:'Zud, seleccionado'})).toHaveAttribute('aria-pressed','true');
   await page.keyboard.press('Enter');await expect(lobby).toHaveAttribute('data-stage','2');
