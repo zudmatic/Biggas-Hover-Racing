@@ -155,3 +155,5 @@ a{color:inherit;text-decoration:none}
   .ship-app button:not(.ship-hotspot),.ship-switch input::before,.ship-picker a,.ship-simulator{transition:none}
   .ship-app button:not(.ship-hotspot):active:not(:disabled),.ship-picker a:active,.ship-simulator:active{transform:none}
 }
+
+.ship-switch[hidden]{display:none;}

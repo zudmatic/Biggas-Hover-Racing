@@ -1,0 +1,23 @@
+NÓMADA 038 · INTEGRACIÓN EN BIGGAS HOVER RACING
+
+Modelo original: 038_Nave_Nomada_v01.glb, del paquete suministrado junto con
+038_Nave_Nomada_v01.blend y 038_Fuentes_y_Texturas (2).zip.
+El GLB se conserva sin modificar: 378 mallas, 150.730 triángulos,
+11 materiales y 10 imágenes embebidas. No requiere texturas externas.
+
+El archivo original usa +X como frente y +Y como vertical. El juego aplica
+una rotación de -90° en Y para conducir hacia +Z, tanto en hangar como en
+carrera. Dimensiones de la nave orientada: aproximadamente 1,56 × 2,74 ×
+5,64 unidades; la llama del reactor se genera por separado.
+
+El modelo entregado es estático. La aplicación incorpora las animaciones de
+vuelo, reactor, turbo, piloto y flameo de la bandera con sus flecos, así como las colisiones, el faro y la vista
+desarmada. Sillín abierto sin cubierta ni parabrisas.
+
+Los pilotos conservan sus proporciones con escala uniforme (Zud 0,48;
+Zudmatic 0,44) y una pose específica. Extensiones al manillar y estribos
+altos conectan sus manos y pies con los controles del vehículo.
+
+Las miniaturas normal y papel se renderizan desde el modelo real con
+scripts/render-nomada-previews.mjs. Ejecutar contra el servidor Vite local:
+node scripts/render-nomada-previews.mjs http://127.0.0.1:5173/

@@ -95,7 +95,7 @@
 .lobby-kicker{font-size:10px;font-weight:800;color:var(--lobby-blue);letter-spacing:1px}
 .lobby-maps h1{font-size:clamp(30px,4vw,54px);letter-spacing:-2px;line-height:1;margin:12px 0 0;font-weight:950}.lobby-maps h1 em{font-style:normal;color:var(--lobby-blue)}
 .lobby-team{display:flex;align-items:center;gap:8px;border:2px solid #111;border-radius:8px;padding:0 10px;font-size:11px;font-weight:900}.lobby-team img{width:45px;height:45px;object-fit:contain}.lobby-team b{color:var(--lobby-blue);margin:0 4px}
-.lobby-map-list{display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:0;border:0;margin:35px 0 24px}
+.lobby-map-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;padding:0;border:0;margin:35px 0 24px}
 .lobby-map-card{position:relative;display:block;border:2px solid #111;border-radius:10px;cursor:pointer;background:#fff;min-width:0}
 .lobby-map-card:has(input:checked){box-shadow:0 0 0 6px var(--lobby-yellow)}
 .lobby-map-card input,.lobby-mode input{position:absolute;width:1px;height:1px;opacity:0}
@@ -200,4 +200,13 @@
   .race-lobby .lobby-hats button{width:28px;height:28px}.lobby-hats>div{gap:6px}
   .lobby-hats svg{width:16px;height:16px}
   .race-lobby[data-pilot=zud] [data-screen='1'] .lobby-profile dl{display:none}
+}
+
+@media(max-width:760px) and (orientation:portrait){
+  .lobby-map-list{grid-template-columns:1fr;gap:12px;margin:20px 0}
+  .lobby-map-card{display:grid;grid-template-columns:110px minmax(0,1fr)}
+  .lobby-map-art{aspect-ratio:1.45;border-radius:8px 0 0 8px}
+  .lobby-map-info{justify-content:center;padding:10px 14px}
+  .lobby-map-info strong{font-size:20px}
+  .lobby-map-info>span{font-size:9px;white-space:normal}
 }

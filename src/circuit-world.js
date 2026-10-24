@@ -16,14 +16,14 @@ export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotr
   const json=async file=>{const response=await fetch(base+file);if(!response.ok)throw new Error(`Circuito: ${response.status} ${file}`);return response.json();};
   const results=await Promise.allSettled([loader.loadAsync(base+config.model,e=>{if(e.total)onProgress(e.loaded/e.total*.8);}),colliderLoader.loadAsync(base+config.collider),json('route_gltf.json'),json('gameplay.json')]);
   const failed=results.find(r=>r.status==='rejected');if(failed)throw failed.reason;
-  const [asset,colliders,route,gameplay]=results.map(r=>r.value),landscape=createCircuitLandscape(route,gameplay),root=new THREE.Group();root.name=`${config.name} ${config.number}`;landscape.map=config.id;landscape.physicalBoundaries=city;
+  const [asset,colliders,route,gameplay]=results.map(r=>r.value),landscape=createCircuitLandscape(route,gameplay),root=new THREE.Group();root.name=`${config.name} ${config.number}`;landscape.map=config.id;landscape.physicalBoundaries=!!config.physicalBoundaries;
   const textures=createCircuitTextures({anisotropy}),anchors=[];const bounds=new THREE.Box3();
   asset.scene.updateMatrixWorld(true);const batches=new Map(),originalGeometries=new Set(),startLights=[];
   asset.scene.traverse(mesh=>{
     if(!mesh.isMesh)return;originalGeometries.add(mesh.geometry);
     let geometry=mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
     if(geometry.index){const old=geometry;geometry=old.toNonIndexed();old.dispose();}
-    for(const key of Object.keys(geometry.attributes))if(!['position','normal','uv'].includes(key))geometry.deleteAttribute(key);
+    for(const key of Object.keys(geometry.attributes))if(!['position','normal','uv','color'].includes(key))geometry.deleteAttribute(key);
     const prepared=new THREE.Mesh(geometry,mesh.material);textures.apply(prepared);
     if(!geometry.attributes.uv)geometry.setAttribute('uv',new THREE.Float32BufferAttribute(new Float32Array(geometry.attributes.position.count*2),2));
     if(city&&/^CITY_.*__cement$/.test(mesh.name)){geometry.computeBoundingBox();const box=geometry.boundingBox.clone(),p=geometry.attributes.position,n=geometry.attributes.normal;let area=0,position=null;
@@ -40,7 +40,7 @@ export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotr
   }
   originalGeometries.forEach(g=>g.dispose());
   const floor=colliders.scene.getObjectByName(config.surface);if(!floor)throw new Error('Falta la superficie de pista.');
-  const collision=city?createCityCollision(colliders.scene):null,surfaceHeight=collision?.surfaceHeight??createRoadSurface(floor);
+  const collision=config.physicalBoundaries?createCityCollision(colliders.scene):null,surfaceHeight=collision?.surfaceHeight??createRoadSurface(floor);
   colliders.scene.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose();}});
   const marker=new THREE.Group(),markerMaterial=new THREE.MeshBasicMaterial({color:0xf7bd69,transparent:true,opacity:.75,depthWrite:false});
   // A short illuminated strip identifies the active checkpoint without covering the scenery.
@@ -49,7 +49,7 @@ export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotr
   for(const x of [-1,1].map(side=>side*(landscape.samples[0].width_m/2-.3))){const beacon=new THREE.Mesh(beaconGeometry,markerMaterial);beacon.position.set(x,1.4,0);marker.add(beacon);}
   root.add(marker);
   function setGate(index){const gate=landscape.gates[Math.min(index,landscape.gates.length-1)];marker.position.set(gate.x,gate.y-.65+.08,gate.z);marker.rotation.y=Math.atan2(gate.nx,gate.nz);}
-  const details=createCircuitDetails(root,landscape,{mobile,city});
+  const details=createCircuitDetails(root,landscape,{mobile,city,islands:config.id==='ruins'});
   const urban=city?createNexusDetails(root,anchors,{mobile}):null;textures.applyRoot(root);
   const fx=await loadFlightFx(root,{surfaceHeight,mobile,materialFactory:fxMaterialFactory});
   setGate(0);onProgress(1);

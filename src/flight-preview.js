@@ -79,6 +79,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   function updateActors(){
     for(const [id,root] of Object.entries(actors)){
       if(!root.visible)continue;
+      if(id.startsWith('vehicle:'))ships.get(id)?.update(time,0,false,reducedMotion.matches);
       if(id==='pilot:zudmatic')pilots.get('zudmatic')?.update(time);
       root.rotation.y=yaw+(reducedMotion.matches||drag?0:Math.sin(time*.45)*.12);
       root.position.y=floor[id]+(id.startsWith('vehicle:')?.22:0)+(reducedMotion.matches?0:Math.sin(time*(id.startsWith('pilot:')?1.8:1.2))*(id.startsWith('pilot:')?.025:.08));

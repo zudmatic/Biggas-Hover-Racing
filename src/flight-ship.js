@@ -2,15 +2,16 @@ import * as THREE from 'three';
 import {createFlightExhaust} from './flight-exhaust.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
+import {createShipCloth} from './ship-cloth.js';
 import {createSelectablePilot} from './selectable-pilot.js';
-import {shipConfig,shipUrl,shipCanopy} from './ship-catalog.js';
+import {shipConfig,shipUrl,shipCanopy,prepareShipModel} from './ship-catalog.js';
 
 export async function createFlightShip(id='033',choice={}){
   const config=shipConfig(id);
   const source=(await new GLTFLoader().loadAsync(shipUrl(config.id))).scene;
-  source.updateMatrixWorld(true);
+  prepareShipModel(source,config);
   const canopy=shipCanopy(source,config),excluded=new Set();if(config.removeCanopyInFlight)canopy?.traverse(o=>excluded.add(o));
-  const batches=new Map(),headlamps=new Map(),root=new THREE.Group();root.name=`${config.title} · vuelo`;root.userData.vehicle=config.id;
+  const batches=new Map(),clothBatches=new Map(),cloth=[],headlamps=new Map(),root=new THREE.Group();root.name=`${config.title} · vuelo`;root.userData.vehicle=config.id;
   source.traverse(mesh=>{
     if(!mesh.isMesh||excluded.has(mesh))return;
     let geometry=mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
@@ -24,15 +25,17 @@ export async function createFlightShip(id='033',choice={}){
       if(!headlamps.has(material)){const lamp=material.clone();lamp.emissiveIntensity=0;lamp.userData.headlight=true;headlamps.set(material,lamp);}
       material=headlamps.get(material);
     }
-    if(!batches.has(material))batches.set(material,[]);
-    batches.get(material).push(geometry);
+    const target=config.clothName?.test(mesh.name)?clothBatches:batches;
+    if(!target.has(material))target.set(material,[]);
+    target.get(material).push(geometry);
   });
-  for(const [material,geometries] of batches){
+  for(const [batch,dynamic] of [[batches,false],[clothBatches,true]])for(const [material,geometries] of batch){
     const geometry=mergeGeometries(geometries);geometries.forEach(g=>g.dispose());
     const mesh=new THREE.Mesh(geometry,material);mesh.castShadow=true;mesh.receiveShadow=true;root.add(mesh);
+    if(dynamic){mesh.name='Bandera y flecos';cloth.push(createShipCloth(mesh));}
   }
   source.traverse(mesh=>{if(mesh.isMesh)mesh.geometry.dispose();});
-  const pilot=await createSelectablePilot({...choice,offset:config.pilotOffset});pilot.root.visible=true;root.add(pilot.root);
+  const pilot=await createSelectablePilot({...choice,offset:config.pilotOffset,fit:config.pilotFit});pilot.root.visible=true;root.add(pilot.root);
   const exhaust=createFlightExhaust(root,config.exhausts);
   return {root,pilot,config,exhaust,dispose(){
     exhaust.dispose();
@@ -41,6 +44,7 @@ export async function createFlightShip(id='033',choice={}){
     for(const material of headlamps.values())materials.add(material);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());root.removeFromParent();
   },setHeadlights(enabled){for(const [source,material] of headlamps)material.emissiveIntensity=enabled?source.emissiveIntensity:0;},update(time,speed,boost,reduced,state){
     pilot.update(Math.floor(time*24)/24,!reduced&&speed>1);
+    for(const flag of cloth)flag.update(time,speed,boost,reduced);
     exhaust.update(time,speed,boost,reduced,state);
   }};
 }
