@@ -8,6 +8,7 @@ import {createCircuitLandscape} from './circuit-physics.js';
 import {circuitMap} from './circuit-maps.js';
 import {collisionMaterials,createSurfaceIndex,createCityCollision} from './circuit-collision.js';
 import {createNexusDetails} from './nexus-details.js';
+import {loadFlightFx} from './flight-fx.js';
 export const createRoadSurface=createSurfaceIndex;
 
 export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotropy=4,map='ruins'}={}){
@@ -50,13 +51,16 @@ export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotr
   function setGate(index){const gate=landscape.gates[Math.min(index,landscape.gates.length-1)];marker.position.set(gate.x,gate.y-.65+.08,gate.z);marker.rotation.y=Math.atan2(gate.nx,gate.nz);}
   const details=createCircuitDetails(root,landscape,{mobile,city});
   const urban=city?createNexusDetails(root,anchors,{mobile}):null;textures.applyRoot(root);
+  const fx=await loadFlightFx(root,{surfaceHeight,mobile});
   setGate(0);onProgress(1);
-  return {root,landscape,textures,surfaceHeight,clipCamera:collision?.clipCamera,setGate,detailCount:details.detailCount+(urban?.detailCount??0),step(state,dt,previous){collision?.step(state,dt,landscape,previous);details.step(state,dt);},reset:details.reset,update(time,reduced,context){
+  return {root,landscape,textures,surfaceHeight,fx,clipCamera:collision?.clipCamera,setGate,detailCount:details.detailCount+(urban?.detailCount??0),step(state,dt,previous){collision?.step(state,dt,landscape,previous);details.step(state,dt);},reset(){details.reset();fx.reset();},update(time,reduced,context){
     details.update(time,reduced,context);urban?.update(time,reduced,context);
+    fx.update(context.dt??0,{...context,reduced});
     const running=context.phase==='flying',count=Math.ceil(context.countdown);
     if(!['paused','finished'].includes(context.phase))startLights.forEach((light,i)=>{const lit=running||context.phase==='countdown'&&i<(4-count)*2;const color=running?0x65dd9a:lit?0xe74826:0x4b5c51;light.material.color.setHex(color);light.material.emissive.setHex(lit?color:0x000000);});
     markerMaterial.opacity=reduced?.8:.62+Math.sin(time*3)*.16;
   },dispose(){
+    fx.dispose();
     const geometries=new Set(),materials=new Set();root.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.geometry&&o.material){geometries.add(o.geometry);materials.add(o.material);}});geometries.forEach(g=>g.dispose());const authored=new Set();materials.forEach(m=>{if(m.map&&!m.userData.circuitSurface)authored.add(m.map);m.dispose();});authored.forEach(t=>t.dispose());textures.dispose();collision?.dispose();
   }};
 }

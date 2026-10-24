@@ -19,6 +19,30 @@ Las rutas del juego aceptan `?vehicle=033|037`, `?map=ruins|nexus` y `?comic=0|1
 
 ## Controles
 
+Para comparar el nuevo humo, abrí **Humo · comparación** en DialKit: **A · Fragmentos procedurales**, **B · Humo híbrido** (predeterminado) o **C · Mixto**. Los valores iniciales son tamaño 1,3, duración 1,5, color `#bababa`, densidad 1, trama 1,5 y emisión desde cuatro ruedas desactivada. Podés cambiar el color y el tramado en vivo; los ajustes se guardan en el navegador. Acelerá con W y combiná E con A/D para derrapar: en recta no aparece humo de derrape. Cada variante introduce formas, giros y tiempos distintos por partícula. El selector devuelve el foco al juego y limpia el humo anterior.
+
+El derrape (**E**) y el frenado (**Espacio**) tienen un primer pase de efectos pixel-cómic: humo coloreable, chispas y marcas cortas que siguen la superficie de la pista. La intensidad del derrape depende del deslizamiento; los efectos acompañan la escala de la nave, se congelan al pausar y se limpian al recuperar o reiniciar. Con movimiento reducido se omiten. Detalles y siguientes etapas en [el plan de efectos](assets/fx/IMPLEMENTACION.md).
+
+### Barril de aceite y bot de prueba
+
+En **vuelo libre**, Ruinas y Nexus tienen barriles flotantes recogibles. Atravesá uno para guardarlo (un espacio) y presioná **Q** o **Soltar aceite**. La nave vierte una estela durante 1 segundo; cada tramo dura 6 segundos y reduce un 55% la velocidad objetivo al pisarlo, con recuperación gradual al salir. También puede afectarte tu propio aceite. Los barriles reaparecen a los 8 segundos.
+
+Para probarlo rápido, pulsá **Preparar prueba**: vuelve al tramo inicial, entrega un barril, pone tu nave en movimiento y ubica al bot detrás. Usá Q para ver su velocidad bajar y el indicador **EN ACEITE**. El bot es un vehículo de entrenamiento que sigue el centro de la ruta, sin colisiones con tu nave; se puede desactivar con su casilla. El minimapa lo marca en naranja. No es una IA de competición.
+
+**Bot tira aceite** hace la prueba inversa: coloca al bot delante, vierte automáticamente y deja tu nave avanzando hacia su estela. El panel muestra tu velocidad y los estados **EN ACEITE**, **recuperando** y **normal**. **Mirar atrás / Mirar adelante** cambia la vista para observar la estela y al bot.
+
+El aceite solo ralentiza: mantiene disponibles dirección, turbo y freno, sin giro ni aturdimiento. Para una futura bomba queda propuesto un impacto al pisarla o chocar con ella, giro de 360° en 0,49 s con easing áureo (38,2% aceleración / 61,8% frenada) y aturdimiento breve. La bomba todavía no está implementada.
+
+En DialKit, **Aceite · prueba** ajusta ancho, tiempo de vertido, duración de la mancha, porcentaje de ralentización y velocidad del bot (m/s). En móvil DialKit empieza cerrado para dejar libres los controles. La pausa congela aceite y bot; reiniciar limpia la prueba. La contrarreloj no incluye ítems ni bot y mantiene sus récords separados de estas pruebas.
+
+El modelo del barril está en `public/models/items/oil-barrel.glb`; el original editable, textura y render están en `assets/items/oil-barrel/`.
+
+Para experimentar con el aceite, DialKit ofrece **Ralentizacion** de 0 a 95%. **Ancho** es el diámetro inicial de las manchas (m); en **Forma**, **AnchoFinal** es el diámetro al terminar el vertido, **DispersionInicial/Final** controlan cuánto se apartan lateralmente del centro (m), **Separacion** la distancia entre manchas (m) y **Variacion** la irregularidad de tamaño (%). **Evolucion** menor que 1 afina antes; mayor que 1 conserva el ancho inicial más tiempo. En **Respuesta**, **Entrada** y **Recuperacion** son los segundos aproximados para completar el 95% de cada transición. La velocidad física también depende de la aceleración y el frenado de la nave.
+
+Los botones **Probar: fuerte y fina** (65%) y **Probar: salpicado** (75%) aplican combinaciones iniciales; **Volver al clásico** recupera el 30% y la estela uniforme. Los ajustes se guardan en el navegador. Los cambios de forma afectan a las nuevas manchas; las existentes conservan tamaño y vencimiento. Vertido se toma al activar cada barril. La ralentización y la respuesta se actualizan en vivo tanto para la nave como para el bot.
+
+Durante la carrera, el panel DialKit de abajo a la izquierda permite ajustar **Escala** de la nave y su piloto juntos: `0.75` es el tamaño inicial, `1.00` el original, con un rango de `0.35` a `1.25`. El cambio es inmediato y se guarda en el navegador para ambas naves y mapas. Las colisiones y los faros acompañan la escala. El hangar y las vistas de selección conservan su presentación original. Para acordar el tamaño definitivo, basta compartir el número del deslizador.
+
 | Tecla | Acción |
 | --- | --- |
 | W / S | Acelerar / reducir velocidad |

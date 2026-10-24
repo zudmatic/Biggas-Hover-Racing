@@ -39,9 +39,10 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
     anchor.set(state.x,state.y,state.z);
     const nearest=fixtures.map((position,index)=>({position,index,distance:position.distanceToSquared(anchor)})).sort((a,b)=>a.distance-b.distance).slice(0,lamps.length);
     lamps.forEach((light,i)=>{const fixture=nearest[i];if(!fixture){light.intensity=0;return;}light.position.copy(fixture.position);light.intensity=(70+blend*230)*THREE.MathUtils.clamp((40-Math.sqrt(fixture.distance))/12,0,1);});
+    const scale=state.modelScale??1;
     const fx=Math.sin(state.yaw),fz=Math.cos(state.yaw),rx=Math.cos(state.yaw),rz=-fx;
-    headlights.forEach(light=>{const side=light.userData.offset;light.position.set(state.x+fx*light.userData.forward+rx*side,state.y+light.userData.height,state.z+fz*light.userData.forward+rz*side);light.target.position.set(state.x+fx*23+rx*side,state.y-1.4+Math.sin(state.pitch)*23,state.z+fz*23+rz*side);light.intensity=headlightsEnabled?90+blend*160:0;});
-    engine.position.set(state.x-fx*1.5,state.y+.15,state.z-fz*1.5);
+    headlights.forEach(light=>{const side=light.userData.offset*scale;light.position.set(state.x+fx*light.userData.forward*scale+rx*side,state.y+light.userData.height*scale,state.z+fz*light.userData.forward*scale+rz*side);light.target.position.set(state.x+fx*23+rx*side,state.y-1.4+Math.sin(state.pitch)*23,state.z+fz*23+rz*side);light.intensity=headlightsEnabled?90+blend*160:0;});
+    engine.position.set(state.x-fx*1.5*scale,state.y+.15*scale,state.z-fz*1.5*scale);
     engine.color.setHex(state.braking?0xff5035:state.drifting?0xffb24c:0x64e9ff);
     const pulse=reducedMotion||paused?1:1+Math.sin(time*19)*.04;
     engine.intensity=(state.boosting?38:state.drifting?25:12)*pulse;
