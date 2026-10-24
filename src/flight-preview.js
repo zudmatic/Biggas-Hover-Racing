@@ -8,7 +8,7 @@ import {createCharacterComic} from './character-comic.js';
 export async function createFlightPreview(canvas,{reducedMotion,signal,initialKind='pilot',paper=true,vehicle='033',onStatus=()=>{}}){
   const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'low-power'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
-  const comic=createCharacterComic(renderer);let paperEnabled=paper;
+  const comic=createCharacterComic(renderer,{samples:0,glowSamples:4});let paperEnabled=paper;
   function renderScene(){if(paperEnabled)comic.render(scene,camera,'#ffffff');else renderer.render(scene,camera);canvas.dataset.paper=String(paperEnabled);}
   const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,1,.1,100);
   scene.add(new THREE.HemisphereLight(0xffffff,0x747474,3));
@@ -43,7 +43,9 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   reducedMotion.addEventListener('change',()=>{dirty=true;},{signal});
   setKind(initialKind);
   renderer.setAnimationLoop(now=>{
-    const dt=Math.min((now-last)/1000,.05);last=now;if(disposed||document.hidden||!canvas.clientWidth||!canvas.clientHeight)return;
+    if(disposed||document.hidden||!canvas.clientWidth||!canvas.clientHeight){last=now;return;}
+    if(!dirty&&now-last<1000/(drag?60:30))return;
+    const dt=Math.min((now-last)/1000,.05);last=now;
     if(!reducedMotion.matches)time+=dt;
     if(reducedMotion.matches&&!dirty)return;dirty=false;
     for(const [id,root] of Object.entries(actors)){

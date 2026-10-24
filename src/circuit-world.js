@@ -57,6 +57,6 @@ export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotr
     if(!['paused','finished'].includes(context.phase))startLights.forEach((light,i)=>{const lit=running||context.phase==='countdown'&&i<(4-count)*2;const color=running?0x65dd9a:lit?0xe74826:0x4b5c51;light.material.color.setHex(color);light.material.emissive.setHex(lit?color:0x000000);});
     markerMaterial.opacity=reduced?.8:.62+Math.sin(time*3)*.16;
   },dispose(){
-    const geometries=new Set(),materials=new Set();root.traverse(o=>{if(o.geometry&&o.material){geometries.add(o.geometry);materials.add(o.material);}});geometries.forEach(g=>g.dispose());const authored=new Set();materials.forEach(m=>{if(m.map&&!m.userData.circuitSurface)authored.add(m.map);m.dispose();});authored.forEach(t=>t.dispose());textures.dispose();collision?.dispose();
+    const geometries=new Set(),materials=new Set();root.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.geometry&&o.material){geometries.add(o.geometry);materials.add(o.material);}});geometries.forEach(g=>g.dispose());const authored=new Set();materials.forEach(m=>{if(m.map&&!m.userData.circuitSurface)authored.add(m.map);m.dispose();});authored.forEach(t=>t.dispose());textures.dispose();collision?.dispose();
   }};
 }

@@ -1,7 +1,8 @@
 import {SHIPS,shipConfig} from './ship-catalog.js';
 import {CIRCUIT_MAPS,circuitMap} from './circuit-maps.js';
 import './flight-selection.css';
-import {raceAudio,soundIcon} from './race-audio.js';
+import {raceAudio} from './race-audio.js';
+import {soundControlMarkup,mountSoundControl} from './sound-control.js';
 import {createMenuMotion,createRaceEntryTransition} from './menu-motion.js';
 
 const lock='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>';
@@ -18,7 +19,7 @@ export function chooseFlight(){
   let selectedVehicle=shipConfig(new URLSearchParams(location.search).get('vehicle')).id;
   let stage=0,selectedMap=circuitMap(new URLSearchParams(location.search).get('map')).id,mode='free',preview=null,previewStarted=false,leaving=false,paper=new URLSearchParams(location.search).get('comic')!=='0';
   document.title='Biggas Hover Racing';
-  document.body.innerHTML=`<main class="race-lobby" data-stage="0" data-pilot="zud" data-vehicle="033"><div class="lobby-paper-surface" aria-hidden="true"></div><div class="lobby-title-ribbon" aria-hidden="true"></div><div class="lobby-title-checkers" aria-hidden="true"></div><header class="lobby-header"><a class="lobby-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong></a><nav class="lobby-steps" aria-label="Preparación de carrera" hidden>${steps.slice(1).map((name,i)=>`<button type="button" data-step="${i+1}" disabled><span>0${i+1}</span>${name}</button>`).join('')}</nav><div class="lobby-header-actions"><button type="button" id="lobby-sound" aria-label="Sonido" aria-pressed="${raceAudio.enabled}" title="Sonido · M">${soundIcon}</button><button type="button" id="lobby-paper" aria-label="Papel" aria-pressed="true" title="Shader de papel"><span aria-hidden="true">◐</span> Papel</button><a class="lobby-hangar" href="${base}spaceship.html">Hangar</a></div></header>
+  document.body.innerHTML=`<main class="race-lobby" data-stage="0" data-pilot="zud" data-vehicle="033"><div class="lobby-paper-surface" aria-hidden="true"></div><div class="lobby-title-ribbon" aria-hidden="true"></div><div class="lobby-title-checkers" aria-hidden="true"></div><header class="lobby-header"><a class="lobby-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong></a><nav class="lobby-steps" aria-label="Preparación de carrera" hidden>${steps.slice(1).map((name,i)=>`<button type="button" data-step="${i+1}" disabled><span>0${i+1}</span>${name}</button>`).join('')}</nav><div class="lobby-header-actions">${soundControlMarkup('lobby-sound')}<button type="button" id="lobby-paper" aria-label="Papel" aria-pressed="true" title="Shader de papel"><span aria-hidden="true">◐</span> Papel</button><a class="lobby-hangar" href="${base}spaceship.html">Hangar</a></div></header>
     <div class="lobby-preview" aria-label="Vista del modelo seleccionado" hidden><img class="lobby-preview-fallback" data-lobby-image="033" src="${base}images/flight/033.png" alt="Nave 033 con Zud al mando"><canvas class="lobby-preview-canvas" role="img" aria-label="Modelo 3D. Arrastra para girar."></canvas><span class="lobby-drag-hint">↔ Girar</span></div>
     <section class="lobby-screen lobby-landing" data-screen="0" aria-labelledby="lobby-title-0"><div class="lobby-title-mark"><span class="lobby-title-orbit" aria-hidden="true">✳</span><h1 id="lobby-title-0" tabindex="-1"><span class="lobby-title-biggas">BIGGAS</span><span class="lobby-title-racing">HOVER<br>RACING</span></h1><span class="lobby-title-edition">033 / ORIGINAL SERIES</span></div><button class="lobby-primary lobby-start" type="button">Jugar <span aria-hidden="true">▶</span></button><span class="lobby-start-hint"><kbd>ENTER</kbd> PARA JUGAR</span></section>
     <section class="lobby-screen lobby-selection" data-screen="1" aria-labelledby="lobby-title-1" hidden><div class="lobby-section-title"><h1 id="lobby-title-1" tabindex="-1">ELIGE TU PERSONAJE</h1><span>01 / 09</span></div><div class="lobby-roster-panel">${roster('pilot',base)}</div><div class="lobby-selected-name"><span>P1</span><strong>ZUD</strong></div><div class="lobby-profile"><div class="lobby-profile-brand">BIGGAS<span>HOVER RACING</span></div><dl><div><dt>Vehículo</dt><dd>Nave 033</dd></div><div><dt>Estado</dt><dd>Listo</dd></div></dl></div></section>
@@ -29,10 +30,8 @@ export function chooseFlight(){
   const root=document.querySelector('.race-lobby'),$=selector=>root.querySelector(selector);
   const motion=createMenuMotion(root,{reduced,signal});motion.intro();
   raceAudio.setPhase('lobby');
-  const updateSound=()=>$('#lobby-sound').setAttribute('aria-pressed',String(raceAudio.enabled));
-  const toggleSound=()=>{raceAudio.setEnabled(!raceAudio.enabled);updateSound();};
-  $('#lobby-sound').addEventListener('click',toggleSound,{signal});
-  root.addEventListener('pointerdown',event=>{if(!event.target.closest('#lobby-sound'))raceAudio.unlock();},{signal});
+  const {toggleSound}=mountSoundControl($('.sound-control'),{signal});
+  root.addEventListener('pointerdown',event=>{if(!event.target.closest('.sound-control'))raceAudio.unlock();},{signal});
   return new Promise(resolve=>{
     function show(next,{keyboard=false}={}){
       if(leaving)return;const previous=stage;motion.before(previous,next,keyboard);stage=next;root.dataset.stage=String(stage);root.dataset.keyboard=String(keyboard);
