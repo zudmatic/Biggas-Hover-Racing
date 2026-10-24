@@ -1,4 +1,4 @@
-import {launchFromLobby} from './helpers/flight.js';
+import {launchFromLobby,withFlightOptions} from './helpers/flight.js';
 import {test,expect} from '@playwright/test';
 import * as THREE from 'three';
 import {createHoverState,advanceHover} from '../src/circuit-physics.js';
@@ -30,14 +30,14 @@ test('lighting provides global fill, follows the ship, changes at night and resp
 
 test('keyboard drift releases correctly, night lighting works with comic and normal rendering',async({page})=>{
   test.setTimeout(120000);const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.setViewportSize({width:960,height:640});await page.goto('/simulator.html');await launchFromLobby(page);const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
-  await page.getByRole('button',{name:'Iluminación nocturna'}).click();await expect(app).toHaveAttribute('data-lighting','night');await expect(page.getByRole('button',{name:'Cómic',exact:true})).toHaveAttribute('aria-pressed','true');
+  await withFlightOptions(page,()=>page.getByRole('button',{name:'Iluminación nocturna'}).click());await expect(app).toHaveAttribute('data-lighting','night');await expect(page.locator('#flight-comic')).toHaveAttribute('aria-pressed','true');
   await page.keyboard.down('KeyW');await expect.poll(async()=>Number(await app.getAttribute('data-speed')),{timeout:15000}).toBeGreaterThan(12);await page.keyboard.up('KeyW');
   await page.keyboard.down('KeyE');await expect(app).toHaveAttribute('data-drifting','true');await expect(page.locator('.flight-drift')).toBeVisible();await page.keyboard.up('KeyE');await expect(app).toHaveAttribute('data-drifting','false');
   await page.keyboard.down('KeyE');await expect(app).toHaveAttribute('data-drifting','true');await page.keyboard.press('Escape');await page.keyboard.up('KeyE');await page.getByRole('button',{name:'Continuar',exact:false}).first().click();await expect(app).toHaveAttribute('data-drifting','false');
-  await page.getByRole('button',{name:'Cómic',exact:true}).click();await expect(app).toHaveAttribute('data-comic','false');await page.getByRole('button',{name:'Iluminación nocturna'}).click();await expect(app).toHaveAttribute('data-lighting','day');expect(errors).toEqual([]);
+  await withFlightOptions(page,()=>page.getByRole('button',{name:'Cómic',exact:true}).click());await expect(app).toHaveAttribute('data-comic','false');await withFlightOptions(page,()=>page.getByRole('button',{name:'Iluminación nocturna'}).click());await expect(app).toHaveAttribute('data-lighting','day');expect(errors).toEqual([]);
 });
 
-test('touch drift releases on pointer cancellation and fits the mobile header',async({browser})=>{
+test('touch drift releases on pointer cancellation with no HUD header',async({browser})=>{
   test.setTimeout(90000);const context=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true});const page=await context.newPage();await page.goto(`http://127.0.0.1:${process.env.TEST_PORT??5173}/simulator.html`);await launchFromLobby(page);const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
   const accel=page.getByRole('button',{name:'Acelerar',exact:true}),drift=page.getByRole('button',{name:'Derrapar',exact:true});
   // Synthetic pointer events exercise the same multi-touch hold/cancel handlers.
@@ -45,5 +45,5 @@ test('touch drift releases on pointer cancellation and fits the mobile header',a
   await expect.poll(async()=>Number(await app.getAttribute('data-speed')),{timeout:15000}).toBeGreaterThan(10);
   await drift.evaluate(b=>{b.setPointerCapture=()=>{};b.dispatchEvent(new PointerEvent('pointerdown',{pointerId:12,bubbles:true}));});await expect(app).toHaveAttribute('data-drifting','true');
   await drift.dispatchEvent('pointercancel',{pointerId:12});await expect(app).toHaveAttribute('data-drifting','false');await expect(drift).toHaveAttribute('aria-pressed','false');
-  const bounds=await page.locator('.flight-header').evaluate(h=>{const brand=h.querySelector('.flight-brand').getBoundingClientRect(),nav=h.querySelector('nav').getBoundingClientRect();return {gap:nav.left-brand.right,right:nav.right};});expect(bounds.gap).toBeGreaterThanOrEqual(0);expect(bounds.right).toBeLessThanOrEqual(390);await context.close();
+  await expect(page.locator('.flight-header')).toHaveCount(0);await context.close();
 });

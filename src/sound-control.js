@@ -62,5 +62,5 @@ export function mountSoundControl(root,{signal,onOpen=()=>{}}={}){
   controller.signal.addEventListener('abort',unsubscribe,{once:true});
   const dispose=()=>controller.abort();
   if(signal){if(signal.aborted)dispose();else signal.addEventListener('abort',dispose,{once:true});}
-  return {toggleSound,dispose};
+  return {toggleSound,close,dispose};
 }

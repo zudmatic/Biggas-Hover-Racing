@@ -1,4 +1,4 @@
-import {launchFromLobby} from './helpers/flight.js';
+import {launchFromLobby,withFlightOptions} from './helpers/flight.js';
 import {test,expect} from '@playwright/test';
 import fs from 'node:fs';
 import * as THREE from 'three';
@@ -31,14 +31,14 @@ test('headlights are off on creation and at night until explicitly switched on',
 
 test('F toggles actual beams without key-repeat, both shaders show textured scenery',async({page})=>{
   test.setTimeout(120000);await page.setViewportSize({width:960,height:640});await page.emulateMedia({reducedMotion:'reduce'});const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
-  await page.goto('/simulator.html');await launchFromLobby(page);const app=page.locator('.flight-app'),button=page.getByRole('button',{name:'Faros',exact:true});await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});await expect(app).toHaveAttribute('data-headlights','false');await expect(button).toHaveAttribute('aria-pressed','false');await expect(app).toHaveAttribute('data-texture-families','12');
-  await page.getByRole('button',{name:'Iluminación nocturna'}).click();await expect(app).toHaveAttribute('data-headlights','false');const dark=await page.locator('.flight-canvas').screenshot();
-  await page.keyboard.press('KeyF');await expect(button).toHaveAttribute('aria-pressed','true');await expect(app).toHaveAttribute('data-headlights','true');expect((await page.locator('.flight-canvas').screenshot()).equals(dark)).toBe(false);
-  await page.evaluate(()=>document.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyF',repeat:true,bubbles:true})));await expect(button).toHaveAttribute('aria-pressed','true');
-  await page.keyboard.press('KeyF');await expect(app).toHaveAttribute('data-headlights','false');await page.getByRole('button',{name:'Cómic',exact:true}).click();await expect(app).toHaveAttribute('data-comic','false');await button.click();await expect(app).toHaveAttribute('data-headlights','true');expect(errors).toEqual([]);
+  await page.goto('/simulator.html');await launchFromLobby(page);const app=page.locator('.flight-app'),button=page.getByRole('button',{name:'Faros',exact:true});await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});await expect(app).toHaveAttribute('data-headlights','false');await expect(button).toHaveCount(0);await expect(app).toHaveAttribute('data-texture-families','12');
+  await withFlightOptions(page,()=>page.getByRole('button',{name:'Iluminación nocturna'}).click());await expect(app).toHaveAttribute('data-headlights','false');const dark=await page.locator('.flight-canvas').screenshot();
+  await page.keyboard.press('KeyF');await expect(app).toHaveAttribute('data-headlights','true');await expect(app).toHaveAttribute('data-headlights','true');expect((await page.locator('.flight-canvas').screenshot()).equals(dark)).toBe(false);
+  await page.evaluate(()=>document.dispatchEvent(new KeyboardEvent('keydown',{code:'KeyF',repeat:true,bubbles:true})));await expect(app).toHaveAttribute('data-headlights','true');
+  await page.keyboard.press('KeyF');await expect(app).toHaveAttribute('data-headlights','false');await withFlightOptions(page,()=>page.getByRole('button',{name:'Cómic',exact:true}).click());await expect(app).toHaveAttribute('data-comic','false');await page.keyboard.press('KeyF');await expect(app).toHaveAttribute('data-headlights','true');expect(errors).toEqual([]);
 });
 
-test('touch headlights remain reachable on a narrow mobile screen',async({browser})=>{
-  test.setTimeout(90000);const context=await browser.newContext({viewport:{width:320,height:740},isMobile:true,hasTouch:true}),page=await context.newPage();await page.goto(`http://127.0.0.1:${process.env.TEST_PORT??5173}/simulator.html`);await launchFromLobby(page);const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});const button=page.getByRole('button',{name:'Faros',exact:true});await button.tap();await expect(app).toHaveAttribute('data-headlights','true');await button.tap();await expect(app).toHaveAttribute('data-headlights','false');
-  const bounds=await page.locator('.flight-header').evaluate(h=>{const brand=h.querySelector('.flight-brand').getBoundingClientRect(),nav=h.querySelector('nav').getBoundingClientRect();return {separated:nav.left>=brand.right||nav.top>=brand.bottom,left:nav.left,right:nav.right};});expect(bounds.separated).toBe(true);expect(bounds.left).toBeGreaterThanOrEqual(0);expect(bounds.right).toBeLessThanOrEqual(320);await context.close();
+test('pause options remain reachable on a narrow mobile screen',async({browser})=>{
+  test.setTimeout(90000);const context=await browser.newContext({viewport:{width:320,height:740},isMobile:true,hasTouch:true}),page=await context.newPage();await page.goto(`http://127.0.0.1:${process.env.TEST_PORT??5173}/simulator.html`);await launchFromLobby(page);const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});await expect(page.getByRole('button',{name:'Faros',exact:true})).toHaveCount(0);await withFlightOptions(page,async()=>{await expect(page.getByRole('link',{name:'Ir al hangar'})).toBeVisible();await expect(page.getByRole('button',{name:'Cambiar cámara'})).toBeVisible();});
+  await expect(page.locator('.flight-header')).toHaveCount(0);await context.close();
 });

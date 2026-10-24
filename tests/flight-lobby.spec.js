@@ -21,9 +21,9 @@ test('landing, locked roster, sequential confirmation and map choices work with 
   await page.keyboard.press('Escape');await expect(lobby).toHaveAttribute('data-stage','1');
   await page.keyboard.press('Enter');await page.keyboard.press('Enter');await expect(lobby).toHaveAttribute('data-stage','3');
   await expect(page.locator('input[value=nexus]')).toBeChecked();await page.locator('.lobby-map-card:has(input[value=ruins])').click();
-  await page.locator('.lobby-mode label:has(input[value=race])').click();await expect(page.getByRole('button',{name:'Correr',exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Volar',exact:true})).toBeVisible();
   await page.keyboard.press('Escape');await page.keyboard.press('Enter');
-  await expect(page.locator('input[value=ruins]')).toBeChecked();await expect(page.locator('input[value=race]')).toBeChecked();
+  await expect(page.locator('input[value=ruins]')).toBeChecked();await expect(page.locator('.lobby-mode')).toHaveCount(0);
   expect(maps).toEqual([]);
   await page.keyboard.press('Escape');await page.keyboard.press('Escape');await page.keyboard.press('Escape');
   await expect(lobby).toHaveAttribute('data-stage','0');await expect(page.locator('.lobby-preview')).toBeHidden();

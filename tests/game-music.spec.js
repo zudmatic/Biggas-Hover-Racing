@@ -1,3 +1,4 @@
+import {openFlightOptions} from './helpers/flight.js';
 import {test,expect} from '@playwright/test';
 
 function tone(){
@@ -60,7 +61,7 @@ test('the downloaded soundtrack plays locally, loops and switches from selection
   await expect.poll(()=>page.evaluate(()=>window.soundtrackPlayers[0]?.currentTime??0)).toBeGreaterThan(.1);
   expect(await page.evaluate(()=>window.soundtrackPlayers[0].src)).toMatch(/audio\/biggas-menu\.mp3$/);
   expect(await page.evaluate(()=>window.soundtrackPlayers[0].duration)).toBeGreaterThan(90);
-  await page.getByRole('button',{name:'Sonido',exact:true}).click();
+  await openFlightOptions(page);await page.getByRole('button',{name:'Sonido',exact:true}).click();
   const volume=page.getByRole('slider',{name:'Volumen de música'});
   await expect(volume).toHaveValue('32');
   await volume.fill('18');
@@ -71,7 +72,7 @@ test('the downloaded soundtrack plays locally, loops and switches from selection
   await page.evaluate(()=>{const player=window.soundtrackPlayers[0];player.currentTime=player.duration-.2;});
   await expect.poll(()=>page.evaluate(()=>window.soundtrackPlayers[0].currentTime)).toBeLessThan(2);
   await page.keyboard.press('KeyM');expect(await page.evaluate(()=>window.soundtrackPlayers[0].paused)).toBe(true);
-  await expect(page.getByRole('button',{name:'Sonido',exact:true})).toHaveAttribute('data-muted','true');
+  await expect(page.getByRole('button',{name:'Sonido',exact:true,includeHidden:true})).toHaveAttribute('data-muted','true');
   await page.keyboard.press('KeyM');await expect.poll(()=>page.evaluate(()=>window.soundtrackPlayers[0].paused)).toBe(false);
   await page.getByRole('button',{name:'Confirmar Zud',exact:true}).click();await page.getByRole('button',{name:'Confirmar nave',exact:true}).click();
   expect(await page.evaluate(()=>window.soundtrackPlayers.length)).toBe(1);
@@ -80,17 +81,17 @@ test('the downloaded soundtrack plays locally, loops and switches from selection
   expect(await page.evaluate(()=>window.soundtrackPlayers[1].src)).toMatch(/audio\/biggas-race\.mp3$/);
   expect(await page.evaluate(()=>window.soundtrackPlayers[1].duration)).toBeGreaterThan(100);
   expect(await page.evaluate(()=>window.soundtrackPlayers[1].volume)).toBeCloseTo(.19);
-  await page.getByRole('button',{name:'Sonido',exact:true}).click();
+  await openFlightOptions(page);await page.getByRole('button',{name:'Sonido',exact:true}).click();
   await expect(volume).toHaveValue('19');
   await volume.fill('0');
   expect(await page.evaluate(()=>window.soundtrackPlayers.every(p=>p.volume===0))).toBe(true);
-  await volume.fill('65');await volume.press('Escape');
+  await volume.fill('65');await volume.press('Escape');await page.getByRole('button',{name:'Continuar',exact:true}).click();
   await expect(page.locator('.flight-app')).toHaveAttribute('data-phase','flying');
   expect(await page.evaluate(()=>window.soundtrackPlayers[0].paused)).toBe(true);
   await page.keyboard.press('Escape');expect(await page.evaluate(()=>window.soundtrackPlayers.every(p=>p.paused))).toBe(true);
   await page.getByRole('button',{name:'Continuar',exact:true}).click();await expect.poll(()=>page.evaluate(()=>window.soundtrackPlayers[1].paused)).toBe(false);
   await page.keyboard.press('KeyM');expect(await page.evaluate(()=>window.soundtrackPlayers.every(p=>p.paused))).toBe(true);
-  await page.reload();await page.getByRole('button',{name:'Sonido',exact:true}).click();
+  await page.reload();await openFlightOptions(page);await page.getByRole('button',{name:'Sonido',exact:true}).click();
   await expect(volume).toHaveValue('65');
   await page.setViewportSize({width:320,height:640});
   const bounds=await page.locator('.sound-panel').boundingBox();

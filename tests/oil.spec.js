@@ -30,14 +30,17 @@ test('strong oil and response durations change braking and recovery without stun
 test('oil presets tune live sliders and survive reload',async({page})=>{
   test.setTimeout(90000);await page.goto('/simulator.html');await launchFromLobby(page);
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
+  await page.getByRole('button',{name:'DialKit',exact:true}).click();
   await page.getByText('Aceite · prueba',{exact:true}).click();
   await page.getByRole('button',{name:'Probar: fuerte y fina',exact:true}).click();
   await expect(page.getByRole('slider',{name:'Ralentizacion',exact:true})).toHaveAttribute('aria-valuenow','65');
   await expect(page.getByRole('slider',{name:'Ralentizacion',exact:true})).toHaveAttribute('aria-valuemax','95');
+  await page.locator('.oil-tools summary').click();
   await page.getByRole('button',{name:'Bot tira aceite',exact:true}).click();
   await expect(app).toHaveAttribute('data-oil-contact','true',{timeout:15000});
   await expect.poll(async()=>Number(await app.getAttribute('data-speed')),{timeout:15000}).toBeLessThan(14);
   await page.reload();await launchFromLobby(page);await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
+  await page.getByRole('button',{name:'DialKit',exact:true}).click();
   await page.getByText('Aceite · prueba',{exact:true}).click();
   await expect(page.getByRole('slider',{name:'Ralentizacion',exact:true})).toHaveAttribute('aria-valuenow','65');
 });
@@ -92,6 +95,7 @@ for(const map of ['ruins','nexus'])test(`barrel and bot work in ${map}; pause fr
   await page.goto(`/simulator.html?map=${map}`);await launchFromLobby(page,{map});
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
   await expect(page.getByRole('button',{name:'Soltar aceite'})).toBeDisabled();
+  await page.locator('.oil-tools summary').click();
   await page.getByRole('button',{name:'Preparar prueba',exact:true}).click();
   await expect(app).toHaveAttribute('data-oil-inventory','true');await page.keyboard.press('q');
   await expect.poll(async()=>Number(await app.getAttribute('data-bot-oil-hits')),{timeout:20000}).toBeGreaterThan(0);
@@ -112,12 +116,14 @@ test('bot lays oil ahead of the player; player slows and recovers',async({page})
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
   // Use a continuous trail and a fixed speed so this checks contact/recovery,
   // independently of the currently selected art-direction defaults.
+  await page.getByRole('button',{name:'DialKit',exact:true}).click();
   await page.getByText('Aceite · prueba',{exact:true}).click();
   await page.getByRole('button',{name:'Volver al clásico',exact:true}).click();
   const botSpeed=page.getByRole('slider',{name:'Velocidad Bot',exact:true});
   await botSpeed.focus();await page.keyboard.press('Home');
   for(let i=0;i<14;i++)await page.keyboard.press('ArrowRight');
   await expect(botSpeed).toHaveAttribute('aria-valuenow','22');
+  await page.locator('.oil-tools summary').click();
   await page.getByRole('button',{name:'Bot tira aceite',exact:true}).click();
   await expect(app).toHaveAttribute('data-oil-source','bot');
   await expect(app).toHaveAttribute('data-oil-contact','true',{timeout:15000});
@@ -129,10 +135,10 @@ test('bot lays oil ahead of the player; player slows and recovers',async({page})
   await expect.poll(async()=>Number(await app.getAttribute('data-oil-factor')),{timeout:10000}).toBeGreaterThan(.98);await page.keyboard.up('Space');
 });
 
-test('time trial excludes oil and the training bot',async({page})=>{
-  test.setTimeout(90000);await page.goto('/simulator.html');await launchFromLobby(page,{mode:'race'});
+test('legacy time trial links enter free driving with oil available',async({page})=>{
+  test.setTimeout(90000);await page.goto('/simulator.html?mode=race');await launchFromLobby(page);
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
-  await expect(app).toHaveAttribute('data-oil-enabled','false');await expect(page.locator('.flight-oil')).toBeHidden();await page.keyboard.press('q');await expect(app).toHaveAttribute('data-oil-patches','0');
+  await expect(app).toHaveAttribute('data-oil-enabled','true');await expect(page.locator('.flight-oil')).toBeVisible();expect(new URL(page.url()).searchParams.has('mode')).toBe(false);await page.keyboard.press('q');await expect(app).toHaveAttribute('data-oil-patches','0');
 });
 
 test('collect a barrel by driving through the track pickup',async({page})=>{
@@ -145,6 +151,7 @@ test('collect a barrel by driving through the track pickup',async({page})=>{
 test('mobile Oliva can deploy oil and disable the bot without overlapping driving controls',async({page})=>{
   test.setTimeout(90000);await page.setViewportSize({width:390,height:844});await page.goto('/simulator.html?vehicle=037');await launchFromLobby(page);
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});await expect(app).toHaveAttribute('data-vehicle','037');
+  await page.locator('.oil-tools summary').click();
   await page.getByRole('button',{name:'Preparar prueba',exact:true}).click();await page.getByRole('button',{name:'Soltar aceite'}).click();
   await expect.poll(async()=>Number(await app.getAttribute('data-bot-oil-hits')),{timeout:20000}).toBeGreaterThan(0);
   await page.getByLabel('Bot de prueba',{exact:true}).uncheck();await expect(page.locator('.oil-bot-status')).toHaveText('Bot desactivado');

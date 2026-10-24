@@ -7,11 +7,11 @@ export function createFlightScale(onChange,onInteract){
   const host=document.createElement('aside');host.className='flight-dials';host.setAttribute('aria-label','Ajustar escala');document.body.append(host);
   host.addEventListener('pointerdown',onInteract);
   host.addEventListener('keydown',event=>event.stopPropagation());
-  const root=createDialRoot({target:host,defaultOpen:!matchMedia('(max-width:760px)').matches,position:'bottom-left',theme:'dark'});
+  const root=createDialRoot({target:host,defaultOpen:false,position:'bottom-left',theme:'light'});
   const kit=createDialKit('Tamaño · nave y piloto',{
     Escala:[.75,.35,1.25,.01],
     Original:{type:'action',label:'Tamaño original · 1,00'},
-  },{id:'flight-scale',persist:true,onAction:()=>kit.setValue('Escala',1)});
+  },{id:'flight-scale',persist:true,defaultCollapsed:false,onAction:()=>kit.setValue('Escala',1)});
   const unsubscribe=kit.subscribe(values=>onChange(values.Escala));
   return {setVisible(visible){host.hidden=!visible;},dispose(){unsubscribe();kit.destroy();root.destroy();host.remove();}};
 }

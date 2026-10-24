@@ -1,6 +1,6 @@
 import {test,expect} from '@playwright/test';
 import {createFlightPerformance} from '../src/flight-performance.js';
-import {launchFromLobby} from './helpers/flight.js';
+import {launchFromLobby,openFlightOptions} from './helpers/flight.js';
 
 const options={width:1920,height:1080,pixelRatio:2,storage:{getItem:()=>null,setItem:()=>{}}};
 const run=(control,ms,seconds)=>{for(let elapsed=0;elapsed<seconds*1000;elapsed+=ms)control.sample(ms);};
@@ -53,7 +53,7 @@ test('graphics modes change only the 3D resolution and preserve driving, pause a
   await page.goto('/simulator.html?map=nexus');await launchFromLobby(page);
   const app=page.locator('.flight-app'),canvas=page.locator('.flight-canvas');
   await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
-  await page.keyboard.press('Escape');const quality=page.getByLabel('Gráficos');
+  await page.keyboard.press('Escape');await openFlightOptions(page);const quality=page.getByLabel('Gráficos');
   await quality.selectOption('high');await expect(app).toHaveAttribute('data-quality','high');
   await expect(canvas).toHaveAttribute('width','960');
   await quality.selectOption('performance');await expect(canvas).toHaveAttribute('width','672');
@@ -61,7 +61,7 @@ test('graphics modes change only the 3D resolution and preserve driving, pause a
   await expect(app).toHaveAttribute('data-phase','paused');
   await page.getByRole('button',{name:'Continuar',exact:true}).click();
   await page.keyboard.down('KeyW');await expect.poll(async()=>Number(await app.getAttribute('data-speed'))).toBeGreaterThan(10);await page.keyboard.up('KeyW');
-  await page.keyboard.press('Escape');await page.getByRole('button',{name:'Sonido',exact:true}).click();
+  await page.keyboard.press('Escape');await openFlightOptions(page);await page.getByRole('button',{name:'Sonido',exact:true}).click();
   await page.screenshot({path:'.context/controls-desktop.png'});
   await page.getByRole('slider',{name:'Volumen de música'}).press('Escape');
   await page.setViewportSize({width:390,height:844});

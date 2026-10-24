@@ -1,4 +1,4 @@
-import {launchFromLobby} from './helpers/flight.js';
+import {launchFromLobby,withFlightOptions} from './helpers/flight.js';
 import {test,expect} from '@playwright/test';
 import fs from 'node:fs';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -52,7 +52,7 @@ test('Ruinas remains available, low hover responds to steering and preserves pau
   await expect.poll(async()=>Number(await app.getAttribute('data-gate')),{timeout:15000}).toBe(1);expect(Number(await app.getAttribute('data-hover'))).toBeGreaterThan(.6);expect(Number(await app.getAttribute('data-hover'))).toBeLessThan(.7);
   const yaw=Number(await app.getAttribute('data-yaw'));await page.keyboard.down('KeyA');await expect.poll(async()=>Number(await app.getAttribute('data-yaw'))).toBeGreaterThan(yaw+.1);await page.keyboard.up('KeyA');
   await page.keyboard.press('Escape');await expect(app).toHaveAttribute('data-phase','paused');await page.waitForTimeout(150);const time=await app.getAttribute('data-time');await page.waitForTimeout(250);expect(await app.getAttribute('data-time')).toBe(time);
-  await page.getByRole('button',{name:'Cómic',exact:true}).click();await expect(app).toHaveAttribute('data-comic','false');await expect(page.getByRole('link',{name:'Cuenca 033',exact:true})).toHaveCount(0);expect(errors).toEqual([]);
+  await withFlightOptions(page,()=>page.getByRole('button',{name:'Cómic',exact:true}).click());await expect(app).toHaveAttribute('data-comic','false');await expect(page.getByRole('link',{name:'Cuenca 033',exact:true})).toHaveCount(0);expect(errors).toEqual([]);
 });
 
 test('mobile circuit shows touch controls without overflow',async({browser})=>{

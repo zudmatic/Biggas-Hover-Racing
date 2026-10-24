@@ -25,7 +25,7 @@ test('pointer navigation animates, interruption stays clean and keyboard remains
   expect(errors).toEqual([]);
 });
 
-test('the launch cover survives loading and only reveals a rendered circuit before countdown',async({page})=>{
+test('the launch cover survives loading and only reveals a rendered circuit before free driving',async({page})=>{
   test.setTimeout(120000);await page.setViewportSize({width:960,height:640});
   let release;const gate=new Promise(resolve=>release=resolve);
   await page.route('**/models/circuit034/gameplay.json',async route=>{await gate;await route.continue();});
@@ -35,7 +35,7 @@ test('the launch cover survives loading and only reveals a rendered circuit befo
   });
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/simulator.html');
   for(const name of ['Jugar','Confirmar Zud','Confirmar nave'])await page.getByRole('button',{name,exact:true}).click();
-  await page.locator('.lobby-mode label:has(input[value=race])').click();await page.getByRole('button',{name:'Correr',exact:true}).click();
+  await page.getByRole('button',{name:'Volar',exact:true}).click();
   const cover=page.locator('.race-entry-cover'),app=page.locator('.flight-app');
   try{
     await expect(cover).toHaveAttribute('data-phase','loading');await expect(cover).toHaveCSS('position','fixed');
@@ -44,7 +44,7 @@ test('the launch cover survives loading and only reveals a rendered circuit befo
   }finally{release();}
   await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});await expect(cover).toHaveCount(0);
   expect(await page.evaluate(()=>window.entryStates.some(s=>s.cover==='revealing'&&s.phase==='loading'&&s.ready==='false'))).toBe(true);
-  await expect(app).toHaveAttribute('data-phase','countdown');await expect(app).toHaveAttribute('data-phase','flying',{timeout:15000});
+  await expect(page.locator('.flight-countdown')).toHaveCount(0);await expect(app).toHaveAttribute('data-phase','flying',{timeout:15000});
   expect(errors).toEqual([]);
 });
 
@@ -54,5 +54,5 @@ test('a failed load removes the transition and leaves retry accessible',async({p
   await page.goto('/simulator.html');
   for(const name of ['Jugar','Confirmar Zud','Confirmar nave','Volar'])await page.getByRole('button',{name,exact:true}).click();
   await expect(page.getByRole('button',{name:'Reintentar',exact:true})).toBeVisible({timeout:45000});
-  await expect(page.locator('.race-entry-cover')).toHaveCount(0);expect(await finiteMotion(page)).toBe(0);
+  await expect(page.locator('.race-entry-cover')).toHaveCount(0);await expect.poll(()=>finiteMotion(page)).toBe(0);
 });

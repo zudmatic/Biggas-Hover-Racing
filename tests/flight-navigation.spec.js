@@ -50,13 +50,13 @@ test('a failed 3D preview shows the static character without a loading indicator
   await expect(page.locator('.lobby-preview-canvas')).toHaveCSS('opacity','0');
 });
 
-for(const mode of ['free','race'])test(`pause opens map selection and the landing in ${mode} mode`,async({page})=>{
+for(const mode of ['free','race'])test(`pause navigation works with legacy mode=${mode} links`,async({page})=>{
   test.setTimeout(120000);
   await page.setViewportSize(mode==='race'?{width:390,height:844}:{width:1200,height:800});
   await page.emulateMedia({reducedMotion:'reduce'});
   const errors=[];page.on('pageerror',error=>errors.push(error.message));
-  await page.goto('/simulator.html?vehicle=037&comic=0');
-  await launchFromLobby(page,{mode});
+  await page.goto(`/simulator.html?vehicle=037&comic=0&mode=${mode}`);
+  await launchFromLobby(page);
   const app=page.locator('.flight-app');
   await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
   await page.keyboard.press('Escape');await expect(app).toHaveAttribute('data-phase','paused');
@@ -67,10 +67,10 @@ for(const mode of ['free','race'])test(`pause opens map selection and the landin
   const lobby=page.locator('.race-lobby');
   await expect(lobby).toHaveAttribute('data-stage','3');await expect(lobby).toHaveAttribute('data-vehicle','037');
   await expect(page.locator('input[name=map][value=ruins]')).toBeChecked();
-  await expect(page.locator(`input[name=mode][value=${mode}]`)).toBeChecked();
+  await expect(page.locator('input[name=mode]')).toHaveCount(0);
   await expect(page.getByRole('button',{name:'Papel',exact:true})).toHaveAttribute('aria-pressed','false');
   await page.locator('.lobby-map-card:has(input[value=nexus])').click();
-  await page.getByRole('button',{name:mode==='race'?'Correr':'Volar',exact:true}).click();
+  await page.getByRole('button',{name:'Volar',exact:true}).click();
   await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
   await expect(app).toHaveAttribute('data-map','nexus');await expect(app).toHaveAttribute('data-vehicle','037');
   expect(new URL(page.url()).searchParams.has('selection')).toBe(false);

@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import * as THREE from 'three';
 import {createCircuitSky,createSpeedAtmosphere,speedCameraProfile} from '../src/flight-atmosphere.js';
-import {launchFromLobby} from './helpers/flight.js';
+import {launchFromLobby,withFlightOptions} from './helpers/flight.js';
 
 test('speed camera builds a restrained rush while preserving accessible and alternate cameras',()=>{
   const stopped=speedCameraProfile({speed:0}),fast=speedCameraProfile({speed:72,boosting:true,yawRate:3});
@@ -42,8 +42,8 @@ for(const map of ['ruins','nexus'])test(`${map}: clouds and speed effects work t
   await expect.poll(async()=>Number(await app.getAttribute('data-speed-effect')),{timeout:15000}).toBeGreaterThan(.1);
   await page.screenshot({path:`.context/speed-rush-${map}.png`});await page.keyboard.up('KeyW');await page.keyboard.up('ShiftLeft');
   await page.keyboard.press('Escape');await expect(app).toHaveAttribute('data-speed-effect','0.000');
-  await page.getByRole('button',{name:'Iluminación nocturna'}).click();await expect(app).toHaveAttribute('data-lighting','night');
+  await withFlightOptions(page,()=>page.getByRole('button',{name:'Iluminación nocturna'}).click());await expect(app).toHaveAttribute('data-lighting','night');
   await page.emulateMedia({reducedMotion:'reduce'});await expect.poll(async()=>Number(await app.getAttribute('data-fov'))).toBe(62);await expect(app).toHaveAttribute('data-speed-effect','0.000');
   await page.getByRole('button',{name:'Continuar',exact:false}).first().click();await page.screenshot({path:`.context/speed-night-${map}.png`});
-  await page.getByRole('button',{name:'Cómic',exact:true}).click();await expect(app).toHaveAttribute('data-comic','false');await page.screenshot({path:`.context/speed-normal-${map}.png`});expect(errors).toEqual([]);
+  await withFlightOptions(page,()=>page.getByRole('button',{name:'Cómic',exact:true}).click());await expect(app).toHaveAttribute('data-comic','false');await page.screenshot({path:`.context/speed-normal-${map}.png`});expect(errors).toEqual([]);
 });

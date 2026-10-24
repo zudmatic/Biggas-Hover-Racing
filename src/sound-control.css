@@ -1,10 +1,10 @@
 .sound-control{position:relative;flex-shrink:0;--sound-accent:#ba4b2a;--sound-track:#d5d8ca}
-.race-lobby .sound-control{--sound-accent:var(--lobby-blue);--sound-track:#e1e1e1}
+:is(.race-lobby,.flight-app) .sound-control{--sound-accent:var(--race-blue);--sound-track:#e1e1e1}
 .sound-control .sound-muted{display:none}
 .sound-control .sound-trigger[data-muted=true] .sound-waves{display:none}
 .sound-control .sound-trigger[data-muted=true] .sound-muted{display:block}
 .sound-control .sound-panel{position:fixed;z-index:20;width:228px;max-width:calc(100vw - 24px);padding:16px;background:#f4f1e8;color:#283b38;border:1px solid #fff8;border-radius:9px;box-shadow:0 8px 24px #14251e26;text-align:left;font:12px Arial,Helvetica,sans-serif}
-.race-lobby .sound-panel{background:#fff;color:var(--lobby-ink);border:2px solid var(--lobby-ink);border-radius:6px;box-shadow:4px 4px 0 var(--lobby-ink)}
+:is(.race-lobby,.flight-app) .sound-panel{background:var(--race-paper);color:var(--race-ink);border:var(--race-border);border-radius:6px;box-shadow:var(--race-shadow)}
 .sound-panel[hidden]{display:none!important}
 .sound-volume-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:700}
 .sound-volume-value{font:12px monospace;color:var(--sound-accent);font-variant-numeric:tabular-nums}

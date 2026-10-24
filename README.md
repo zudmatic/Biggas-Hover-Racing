@@ -23,7 +23,7 @@ Las rutas del juego aceptan `?vehicle=033|037|038`, `?map=ruins|nexus|mario-race
 
 **Zudmatic** usa el GLB con rig y animaciones del paquete `Personaje-rig-shader-animaciones-5-paletas`. Sus cinco paletas se eligen en la selección de personaje; Bosque conserva los colores particulares de sus piezas. La vista previa reproduce Reposo y las naves 033 y 037 usan una pose sentada con escala uniforme de `0.31`, pelvis anclada al asiento y el desplazamiento de cabina de cada vehículo. La elección acompaña al jugador en la pista, el hangar y el regreso a la selección.
 
-La **Nómada 038** es una hoverbike de cabina abierta, con reactor único y faro ámbar. Está disponible en selección, hangar, vuelo libre y contrarreloj. Conserva sus texturas PBR y usa las mismas animaciones de vuelo, turbo, frenado y derrape que las otras naves. Zud y Zudmatic tienen una postura específica a horcajadas, escala uniforme propia, extensiones al manillar y estribos elevados. La bandera y sus flecos flamean con más intensidad al acelerar o usar turbo; se detienen al pausar la carrera y respetan movimiento reducido. El hangar ofrece inspección de sus ocho grupos de piezas, desarmado y secuencia de despegue/aterrizaje; al no tener cubierta, no muestra controles de cabina.
+La **Nómada 038** es una hoverbike de cabina abierta, con reactor único y faro ámbar. Está disponible en selección, hangar y conducción libre. Conserva sus texturas PBR y usa las mismas animaciones de vuelo, turbo, frenado y derrape que las otras naves. Zud y Zudmatic tienen una postura específica a horcajadas, escala uniforme propia, extensiones al manillar y estribos elevados. La bandera y sus flecos flamean con más intensidad al acelerar o usar turbo; se detienen al pausar la carrera y respetan movimiento reducido. El hangar ofrece inspección de sus ocho grupos de piezas, desarmado y secuencia de despegue/aterrizaje; al no tener cubierta, no muestra controles de cabina.
 
 ## Controles
 
@@ -43,7 +43,7 @@ Para probarlo rápido, pulsá **Preparar prueba**: vuelve al tramo inicial, entr
 
 El aceite solo ralentiza: mantiene disponibles dirección, turbo y freno, sin giro ni aturdimiento. Para una futura bomba queda propuesto un impacto al pisarla o chocar con ella, giro de 360° en 0,49 s con easing áureo (38,2% aceleración / 61,8% frenada) y aturdimiento breve. La bomba todavía no está implementada.
 
-En DialKit, **Aceite · prueba** ajusta ancho, tiempo de vertido, duración de la mancha, porcentaje de ralentización y velocidad del bot (m/s). En móvil DialKit empieza cerrado para dejar libres los controles. La pausa congela aceite y bot; reiniciar limpia la prueba. La contrarreloj no incluye ítems ni bot y mantiene sus récords separados de estas pruebas.
+En DialKit, **Aceite · prueba** ajusta ancho, tiempo de vertido, duración de la mancha, porcentaje de ralentización y velocidad del bot (m/s). En móvil DialKit empieza cerrado para dejar libres los controles. La pausa congela aceite y bot; reiniciar limpia la prueba. Los ítems y el bot están disponibles en conducción libre.
 
 El modelo del barril está en `public/models/items/oil-barrel.glb`; el original editable, textura y render están en `assets/items/oil-barrel/`.
 
@@ -66,13 +66,13 @@ Durante la carrera, el panel DialKit de abajo a la izquierda permite ajustar **E
 | M | Sonido |
 | Escape | Pausar / volver |
 
-El botón de sonido abre un slider de volumen de música (0–100%) y la opción de silenciar todo. El volumen se guarda entre visitas y se mantiene al entrar a la carrera. La tecla M sigue activando o silenciando todo el sonido.
+En el menú de pausa, **Opciones → Sonido** abre un slider de volumen de música (0–100%) y la opción de silenciar todo. El volumen se guarda entre visitas y se mantiene al entrar a la carrera. La tecla M sigue activando o silenciando todo el sonido.
 
-En pausa, **Gráficos** permite elegir **Automático**, **Mayor calidad** o **Más fluidez**. El modo predeterminado es **Mayor calidad**, que conserva la resolución, el suavizado y el brillo originales. Automático ajusta la resolución del mundo 3D cuando hay caídas sostenidas de FPS; los textos y controles mantienen su nitidez. La preferencia se guarda entre visitas. Los shaders se preparan durante la carga y las sombras se actualizan a 30 Hz en los modos de menor costo.
+En pausa, **Opciones → Gráficos** permite elegir **Automático**, **Mayor calidad** o **Más fluidez**. El modo predeterminado es **Mayor calidad**, que conserva la resolución, el suavizado y el brillo originales. Automático ajusta la resolución del mundo 3D cuando hay caídas sostenidas de FPS; los textos y controles mantienen su nitidez. La preferencia se guarda entre visitas. Los shaders se preparan durante la carga y las sombras se actualizan a 30 Hz en los modos de menor costo.
 
 Los postes, conos y piezas de ventilación comparten geometría mediante instancias, sin reducir polígonos ni texturas. Las instancias son una representación visual: cada cono conserva su transformación y estado físico independiente. Los lotes móviles actualizan sus límites de visibilidad al desplazarse; los estáticos se preparan una vez. Esta separación permite incorporar sincronización de entidades más adelante sin usar el lote gráfico como estado de juego; todavía no hay multijugador.
 
-El menú permite elegir vuelo libre o contrarreloj. En móvil se muestran controles táctiles. En el hangar se puede arrastrar para girar, acercar con la rueda o un gesto de dos dedos y explorar las piezas, el piloto y la animación de vuelo.
+El único modo es **conducción libre**: la selección de circuito entra directamente a pista, sin cuenta atrás ni modo contrarreloj. El panel de conducción muestra piloto, nave y estado actual (detenido, en marcha, frenando, derrapando o turbo). **Escape** abre el menú de pausa, con las secciones **Controles** y **Opciones**; allí están sonido, cámara, día/noche, estilo cómic, gráficos y acceso al hangar. La interfaz de conducción no muestra cabecera de marca ni botón de pausa. En móvil se muestran controles táctiles de conducción. En el hangar se puede arrastrar para girar, acercar con la rueda o un gesto de dos dedos y explorar las piezas, el piloto y la animación de vuelo.
 
 ## Compilación y pruebas
 

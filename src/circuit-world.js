@@ -42,23 +42,15 @@ export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotr
   const floor=colliders.scene.getObjectByName(config.surface);if(!floor)throw new Error('Falta la superficie de pista.');
   const collision=config.physicalBoundaries?createCityCollision(colliders.scene):null,surfaceHeight=collision?.surfaceHeight??createRoadSurface(floor);
   colliders.scene.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose();}});
-  const marker=new THREE.Group(),markerMaterial=new THREE.MeshBasicMaterial({color:0xf7bd69,transparent:true,opacity:.75,depthWrite:false});
-  // A short illuminated strip identifies the active checkpoint without covering the scenery.
-  const strip=new THREE.Mesh(new THREE.BoxGeometry(landscape.samples[0].width_m-.5,.035,.18),markerMaterial);marker.add(strip);
-  const beaconGeometry=new THREE.CylinderGeometry(.055,.055,2.8,5);
-  for(const x of [-1,1].map(side=>side*(landscape.samples[0].width_m/2-.3))){const beacon=new THREE.Mesh(beaconGeometry,markerMaterial);beacon.position.set(x,1.4,0);marker.add(beacon);}
-  root.add(marker);
-  function setGate(index){const gate=landscape.gates[Math.min(index,landscape.gates.length-1)];marker.position.set(gate.x,gate.y-.65+.08,gate.z);marker.rotation.y=Math.atan2(gate.nx,gate.nz);}
   const details=createCircuitDetails(root,landscape,{mobile,city,islands:config.id==='ruins'});
   const urban=city?createNexusDetails(root,anchors,{mobile}):null;textures.applyRoot(root);
   const fx=await loadFlightFx(root,{surfaceHeight,mobile,materialFactory:fxMaterialFactory});
-  setGate(0);onProgress(1);
-  return {root,landscape,textures,surfaceHeight,fx,clipCamera:collision?.clipCamera,setGate,detailCount:details.detailCount+(urban?.detailCount??0),step(state,dt,previous){collision?.step(state,dt,landscape,previous);details.step(state,dt);},reset(){details.reset();fx.reset();},update(time,reduced,context){
+  onProgress(1);
+  return {root,landscape,textures,surfaceHeight,fx,clipCamera:collision?.clipCamera,detailCount:details.detailCount+(urban?.detailCount??0),step(state,dt,previous){collision?.step(state,dt,landscape,previous);details.step(state,dt);},reset(){details.reset();fx.reset();},update(time,reduced,context){
     details.update(time,reduced,context);urban?.update(time,reduced,context);
     fx.update(context.dt??0,{...context,reduced});
-    const running=context.phase==='flying',count=Math.ceil(context.countdown);
-    if(!['paused','finished'].includes(context.phase))startLights.forEach((light,i)=>{const lit=running||context.phase==='countdown'&&i<(4-count)*2;const color=running?0x65dd9a:lit?0xe74826:0x4b5c51;light.material.color.setHex(color);light.material.emissive.setHex(lit?color:0x000000);});
-    markerMaterial.opacity=reduced?.8:.62+Math.sin(time*3)*.16;
+    const running=context.phase==='flying';
+    if(context.phase!=='paused')startLights.forEach(light=>{const lit=running;const color=running?0x65dd9a:0x4b5c51;light.material.color.setHex(color);light.material.emissive.setHex(lit?color:0x000000);});
   },dispose(){
     fx.dispose();
     const geometries=new Set(),materials=new Set();root.traverse(o=>{if(o.isInstancedMesh)o.dispose();if(o.geometry&&o.material){geometries.add(o.geometry);materials.add(o.material);}});geometries.forEach(g=>g.dispose());const authored=new Set();materials.forEach(m=>{if(m.map&&!m.userData.circuitSurface)authored.add(m.map);m.dispose();});authored.forEach(t=>t.dispose());textures.dispose();collision?.dispose();

@@ -49,7 +49,7 @@ test('flight meshes preserve Oliva UVs and toggle only the headlamp emissions',a
 
 test('Oliva also runs a Ruinas race and survives restart',async({page})=>{
   test.setTimeout(90000);await page.setViewportSize({width:960,height:640});await page.emulateMedia({reducedMotion:'reduce'});await page.goto('/simulator.html?vehicle=037&map=ruins');
-  for(const name of ['Jugar','Confirmar Zud','Confirmar nave'])await page.getByRole('button',{name,exact:true}).click();await page.locator('.lobby-mode label:has(input[value=race])').click();await page.getByRole('button',{name:'Correr',exact:true}).click();
+  for(const name of ['Jugar','Confirmar Zud','Confirmar nave'])await page.getByRole('button',{name,exact:true}).click();await page.getByRole('button',{name:'Volar',exact:true}).click();
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});await expect(app).toHaveAttribute('data-vehicle','037');await expect(app).toHaveAttribute('data-phase','flying',{timeout:10000});await page.keyboard.down('KeyW');await expect.poll(async()=>Number(await app.getAttribute('data-speed')),{timeout:15000}).toBeGreaterThan(8);await page.keyboard.up('KeyW');await page.keyboard.press('Escape');await page.locator('#flight-restart').click();await expect(app).toHaveAttribute('data-vehicle','037');await expect(app).toHaveAttribute('data-map','ruins');await expect(app).toHaveAttribute('data-headlights','false');
 });
 
