@@ -11,7 +11,7 @@ export function createCharacterComic(renderer,{samples=4,glowSamples=12,lite=fal
     if(source.userData.characterEyeSurface||source.userData.retro||!source.color||source.isMeshBasicMaterial||source.isShadowMaterial)return source;
     let entry=cache.get(source);
     if(!entry) {
-      const material=retro(source.color.clone(),{map:source.map,side:source.side,transparent:source.transparent,opacity:source.opacity,mottle:.08,facetVariation:.1});
+      const material=retro(source.color.clone(),{map:source.map,side:source.side,transparent:source.transparent,opacity:source.opacity,alphaTest:source.alphaTest,mottle:.08,facetVariation:.1});
       const release=()=>{material.dispose();cache.delete(source);source.removeEventListener('dispose',release);};
       source.addEventListener('dispose',release);entry={material,release};cache.set(source,entry);
     }

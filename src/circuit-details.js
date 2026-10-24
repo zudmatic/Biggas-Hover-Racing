@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import {createDetailInstances} from './detail-instances.js';
 
 const randomFactory=()=>{let seed=34034;return ()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};};
-export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}){
-  const random=randomFactory(),details=new THREE.Group();details.name=city?'Nexus · ambiente vivo':'Ruinas · ambiente vivo';root.add(details);
+export function createCircuitDetails(root,landscape,{mobile=false,city=false,islands=!city}={}){
+  const random=randomFactory(),details=new THREE.Group();details.name='Circuito · ambiente vivo';root.add(details);
   const clay=new THREE.MeshStandardMaterial({color:0xba572e,roughness:.9}),ivory=new THREE.MeshStandardMaterial({color:0xe3dcc0,roughness:.85}),metal=new THREE.MeshStandardMaterial({color:0x314b47,roughness:.7}),green=new THREE.MeshStandardMaterial({color:0x6c874b,roughness:1}),ink=new THREE.MeshBasicMaterial({color:0x8ad8cc});
   clay.name='Paint · cones';ivory.name='Paint · ivory';metal.name='Metal';green.name='Foliage';ink.name='Light lens';
   const fabric=clay.clone(),fabricIvory=ivory.clone();fabric.name=fabricIvory.name='Cloth';
@@ -18,7 +18,7 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
   const registerWave=(mesh,amplitude)=>{waves.push({mesh,base:mesh.geometry.attributes.position.array.slice(),amplitude});mesh.geometry.attributes.position.setUsage(THREE.DynamicDrawUsage);};
   // Water retains the authored materials; moving vertices also work with the comic pass.
   root.children.filter(m=>m.isMesh&&/^ENV_water/.test(m.name)).forEach(m=>registerWave(m,.065));
-  if(!city){const sea=make(new THREE.PlaneGeometry(6000,6000,mobile?40:70,mobile?40:70).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:0x145459,roughness:.48,metalness:.15,flatShading:true}));sea.name='Océano';sea.position.y=-6.2;sea.castShadow=false;registerWave(sea,.24);}
+  if(islands){const sea=make(new THREE.PlaneGeometry(6000,6000,mobile?40:70,mobile?40:70).rotateX(-Math.PI/2),new THREE.MeshStandardMaterial({color:0x145459,roughness:.48,metalness:.15,flatShading:true}));sea.name='Océano';sea.position.y=-6.2;sea.castShadow=false;registerWave(sea,.24);}
   function islandGeometry(radius,height){
     const positions=[],indices=[],levels=[0,.12,.34,.40,.65,.70,1],radii=[.92,1,.94,.77,.72,.5,.35],sides=9;
     const variation=Array.from({length:sides},()=>.8+random()*.35);
@@ -27,7 +27,7 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
     positions.push(height*.12,height,0);const top=positions.length/3-1;for(let i=0;i<sides;i++)indices.push(top,(levels.length-1)*sides+(i+1)%sides,(levels.length-1)*sides+i);
     const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));geometry.setIndex(indices);geometry.computeVertexNormals();return geometry;
   }
-  for(let i=0;i<(city?0:11);i++){
+  for(let i=0;i<(islands?11:0);i++){
     const a=i/11*Math.PI*2,rad=340+random()*300,height=35+random()*85;
     const island=make(islandGeometry(45+random()*60,height),new THREE.MeshStandardMaterial({color:i%2?0x627568:0x4e6862,flatShading:true,roughness:1}));
     island.name='Island rock';island.position.set(Math.cos(a)*rad,-12,Math.sin(a)*rad);island.rotation.y=random()*6;detailCount++;
@@ -44,7 +44,7 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
   const terrain=root.children.filter(m=>m.isMesh&&/^ENV_/.test(m.name)&&/rock|moss|concrete/.test(m.name));
   const ray=new THREE.Raycaster(),down=new THREE.Vector3(0,-1,0),locations=[];
   root.updateMatrixWorld(true);
-  for(let i=0;i<(city?0:mobile?75:150);i++){
+  for(let i=0;i<(!islands?0:mobile?75:150);i++){
     const road=landscape.atDistance(random()*landscape.length),offset=(8+random()*12)*(random()>.5?1:-1),x=road.x-road.nz*offset,z=road.z+road.nx*offset;
     ray.set(new THREE.Vector3(x,90,z),down);const hit=ray.intersectObjects(terrain,false)[0];
     if(hit&&hit.point.y>0&&hit.point.y<road.y+7)locations.push(hit.point.clone());
@@ -66,11 +66,11 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
     for(const x of [-1,1])for(const z of [-.9,.9]){const motor=make(new THREE.CylinderGeometry(.2,.2,.15,6),clay,group);motor.position.set(x,.2,z);const rotor=make(new THREE.BoxGeometry(1.4,.03,.12),metal,rotorGroup);rotor.position.set(x,.32,z);}
     drones.push({group,rotors:rotorGroup.children,phase:i*Math.PI});detailCount+=10;
   }
-  const mistCount=city?0:mobile?60:130,mistPositions=new Float32Array(mistCount*3),mistGeometry=new THREE.BufferGeometry();mistGeometry.setAttribute('position',new THREE.BufferAttribute(mistPositions,3));
+  const mistCount=!islands?0:mobile?60:130,mistPositions=new Float32Array(mistCount*3),mistGeometry=new THREE.BufferGeometry();mistGeometry.setAttribute('position',new THREE.BufferAttribute(mistPositions,3));
   const mist=new THREE.Points(mistGeometry,new THREE.PointsMaterial({color:0xc9e4d4,size:.23,transparent:true,opacity:.65,depthWrite:false}));mist.frustumCulled=false;details.add(mist);
   const mistSeeds=Array.from({length:mistCount},()=>[random(),random(),random()]);
   const ripples=[];
-  for(let i=0;i<(city?0:14);i++){const ring=make(new THREE.TorusGeometry(.5,.018,3,16).rotateX(Math.PI/2),new THREE.MeshBasicMaterial({color:0xafdad0,transparent:true,opacity:.4,depthWrite:false}));ring.position.set((random()-.5)*11,1.64,-23-random()*3);ring.castShadow=false;ripples.push(ring);}detailCount+=mistCount+(city?0:14);
+  for(let i=0;i<(islands?14:0);i++){const ring=make(new THREE.TorusGeometry(.5,.018,3,16).rotateX(Math.PI/2),new THREE.MeshBasicMaterial({color:0xafdad0,transparent:true,opacity:.4,depthWrite:false}));ring.position.set((random()-.5)*11,1.64,-23-random()*3);ring.castShadow=false;ripples.push(ring);}detailCount+=mistCount+(islands?14:0);
   const poolSize=mobile?90:180,positions=new Float32Array(poolSize*3).fill(-999),colors=new Float32Array(poolSize*3),particles=Array.from({length:poolSize},()=>({life:0,x:0,y:0,z:0,vx:0,vy:0,vz:0}));let cursor=0;
   const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
   const sparks=new THREE.Points(geometry,new THREE.PointsMaterial({size:.11,vertexColors:true,transparent:true,opacity:.85,depthWrite:false}));sparks.name='Estela y chispas';sparks.frustumCulled=false;details.add(sparks);

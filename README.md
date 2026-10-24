@@ -1,6 +1,6 @@
 # Biggas Hover Racing
 
-Juego de carreras hover en 3D con Zud y Zudmatic, las naves 033 y Oliva 037, y los circuitos Ruinas 034 y Nexus 035. Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
+Juego de carreras hover en 3D con Zud y Zudmatic, las naves 033 y Oliva 037, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
 
 ## Desarrollo
 
@@ -15,7 +15,7 @@ npm run dev
 
 En la landing, **Jugar** abre la selección de personaje, nave, circuito y modo. El enlace **Hangar** permite inspeccionar las naves y sus componentes. Desde el hangar se puede volver al inicio o abrir la selección de partida con la nave elegida.
 
-Las rutas del juego aceptan `?vehicle=033|037`, `?map=ruins|nexus` y `?comic=0|1`. El hangar acepta `?vehicle=033|037`. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
+Las rutas del juego aceptan `?vehicle=033|037`, `?map=ruins|nexus|mario-raceway` y `?comic=0|1`. El hangar acepta `?vehicle=033|037`. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
 
 **Zud** permite elegir el gorro original o los sombreros Samurai Kasa, Cloud Chef y Crescent Wizard. Los tres GLB y sus ajustes de encaje se recuperaron del historial anterior a `b0233e0`. La selección se conserva al cambiar de nave, entrar en pista y visitar el hangar.
 
@@ -98,3 +98,9 @@ TEST_PORT=43179 npm test -- --workers=1
 El repositorio contiene únicamente el juego y el hangar. La escena de la casa, sus editores y su compilación independiente fueron retirados. El modelo de Zud y el renderizado compartido permanecen porque los utilizan el piloto y las vistas previas.
 
 Más información: [acabado cómic](docs/comic-print.md), [superficies del piloto](docs/surfaces.md) y [banda sonora](public/audio/README.md).
+
+### Mario Raceway (N64)
+
+El mapa adjunto está integrado con sus texturas y colores originales, ruta de 1,50 km, colisiones de pista, terreno y obstáculos, 16 checkpoints y récord independiente. Comparte el shader cómic, luz global, sombras, faros, ciclo día/noche, efectos e ítems de los otros circuitos. Se puede elegir en el menú o con `?selection=map&map=mario-raceway`.
+
+El FBX original está en `assets/maps/mario-raceway/`. `node scripts/build-mario-raceway.mjs` regenera los GLB y datos de carrera de `public/models/mario-raceway/`, conservando las texturas embebidas y derivando la ruta de los bordes del asfalto. La escala de importación es 0,0015 (15 m de ancho de pista).
