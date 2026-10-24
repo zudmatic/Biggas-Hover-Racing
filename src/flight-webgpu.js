@@ -1,6 +1,6 @@
 import {createFlameMaterial} from './vfx/flame-material.js';
 import {createFlameTrail} from './vfx/flame-trail.js';
-import {WebGPURenderer} from 'three/webgpu';
+import {createGameRenderer} from './game-renderer.js';
 import {attribute} from 'three/tsl';
 import {createBaseMaterials} from './base-materials.js';
 import {createComicStyle,createComicMaterials} from './comic-tsl-material.js';
@@ -12,8 +12,7 @@ import {createOilMaterial} from './vfx/oil.js';
 export {createSmokeMaterial};
 export const oilMaterialFactory=()=>createOilMaterial(attribute('color','vec4').a);
 export async function createRenderer(canvas,forceWebGL){
-  const renderer=new WebGPURenderer({canvas,antialias:true,forceWebGL});
-  try{await renderer.init();return renderer;}catch(error){renderer.dispose();throw error;}
+  return createGameRenderer(canvas,{forceWebGL});
 }
 
 // Rendering adapter only: the simulator owns physics, race timing and cameras.

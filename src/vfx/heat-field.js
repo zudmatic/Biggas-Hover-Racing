@@ -2,12 +2,13 @@ import * as THREE from 'three';
 import {screenUV,uniform,float,vec2,sin,mix,smoothstep} from 'three/tsl';
 
 // Depth-aware screen distortion shared by the map composite.
-export function createHeatField(renderer,camera,viewZ){
+export function createHeatField(renderer,camera,depthAt){
   const clock=uniform(0),strength=uniform(0),turbulence=uniform(2);
   const aspect=uniform(1),pixel=uniform(new THREE.Vector2());
   let nozzles=[[-.68,.62,-2.14,.24],[.68,.62,-2.14,.24]];
   const segments=[0,1,2].map(()=>({a:uniform(new THREE.Vector3()),b:uniform(new THREE.Vector3()),radius:uniform(.04),visible:uniform(0)}));
-  const p=screenUV.mul(vec2(aspect,1));
+  function mask(sample){
+  const p=sample.mul(vec2(aspect,1));
   let coverage=float(0);
   for(const segment of segments){
     const a=segment.a.xy.mul(vec2(aspect,1)),b=segment.b.xy.mul(vec2(aspect,1));
@@ -20,16 +21,22 @@ export function createHeatField(renderer,camera,viewZ){
       .mul(float(1).sub(smoothstep(float(.65),float(1),along)));
     // Foreground objects (including the ship) must not shimmer with the background.
     const depth=mix(segment.a.z,segment.b.z,along);
-    const unoccluded=viewZ.negate().greaterThan(depth.sub(.08));
+    const unoccluded=smoothstep(depth.add(.04),depth.add(.35),depthAt(sample));
     coverage=coverage.max(envelope.mul(unoccluded).mul(segment.visible));
   }
+  return coverage;
+  }
+  const coverage=mask(screenUV);
   const q=screenUV.mul(vec2(aspect,1)).mul(65);
   const phase=clock.mul(3.5);
   const warp=sin(q.y.mul(.7).sub(phase)).add(sin(q.x.mul(.9).add(phase.mul(.73))));
   const dx=sin(q.y.mul(1.7).sub(phase.mul(2)).add(warp)).add(sin(q.x.mul(2.9).add(phase)).mul(.35));
   const dy=sin(q.x.mul(1.3).add(phase.mul(1.6)).add(warp)).mul(.65);
-  const offset=vec2(dx,dy).mul(pixel).mul(strength).mul(coverage).mul(turbulence.mul(.3).add(.6)).mul(5);
-  const sampleUV=screenUV.add(offset).clamp(.001,.999);
+  const offset=vec2(dx,dy).mul(pixel).mul(strength).mul(coverage).mul(turbulence.mul(.06).add(.6)).mul(3);
+  // Check the displaced sample as well: otherwise background pixels pull the
+  // ship silhouette into the plume at high strength. Fade across depth edges.
+  const destination=screenUV.add(offset).clamp(.001,.999);
+  const sampleUV=screenUV.add(offset.mul(mask(destination))).clamp(.001,.999);
   const world=new THREE.Vector3(),view=new THREE.Vector3(),size=new THREE.Vector2();
   function project(x,y,z,out,ship){
     world.set(x,y,z).applyMatrix4(ship.matrixWorld);

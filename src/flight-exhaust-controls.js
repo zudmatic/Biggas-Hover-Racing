@@ -1,4 +1,4 @@
-import {createDialKit} from 'dialkit/vanilla';
+import {createDialKit} from './dev-dials.js';
 
 export function createExhaustControls(exhaust,heat,{collapsed=true}={}){
   const kit=createDialKit('Propulsor · A · Chorro',{

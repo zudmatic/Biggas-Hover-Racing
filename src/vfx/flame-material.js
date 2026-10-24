@@ -19,9 +19,9 @@ export function createFlameMaterial(){
   flameMaterial.colorNode=mix(fire,hot,core).mul(brightness);
   flameMaterial.opacityNode=fireDither.alpha(mask.mul(opacity));
   fireDither.configure({Fuego:'Dither','Fuego intensidad':.6,'Fuego tamaño':2,'Niveles escena':6},'Fuego');
-  return {material:flameMaterial,update(time,v,blue){
+  return {material:flameMaterial,ditherAlpha:alpha=>fireDither.alpha(alpha),update(time,v,blue){
     clock.value=time;roughness.value=v.Turbulencia;frequency.value=.8;flowSpeed.value=1.95;brightness.value=1.75;opacity.value=v['Densidad llama']??.82;taper.value=.7;
     fire.value.set(blue?'#42a4ff':'#ff6b16');hot.value.set(blue?'#9e8c00':'#fff1bc');
-    fireDither.configure({Fuego:v.Trama,'Fuego intensidad':.6,'Fuego tamaño':2,'Niveles escena':6},'Fuego');
+    fireDither.configure({Fuego:v.Trama,'Fuego intensidad':v['Intensidad trama']??.6,'Fuego tamaño':v['Tamaño trama']??2,'Niveles escena':6},'Fuego');
   }};
 }

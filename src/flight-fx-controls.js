@@ -1,4 +1,4 @@
-import {createDialKit} from 'dialkit/vanilla';
+import {createDialKit} from './dev-dials.js';
 
 export function createFlightFxControls(fx,onChange=()=>{}){
   const kit=createDialKit('Humo · comparación',{

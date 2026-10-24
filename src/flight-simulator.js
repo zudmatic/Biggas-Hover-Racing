@@ -1,8 +1,6 @@
 import {createFlightRenderPose} from './flight-render-pose.js';
 import {createFlightCameraKlipp} from './flight-camera-klipp.js';
 import {pilotChoice,pilotConfig,pilotQuery} from './pilot-catalog.js';
-import {createFlightHeat} from './flight-heat.js';
-import {createExhaustControls} from './flight-exhaust-controls.js';
 import * as THREE from 'three';
 import {circuitMap} from './circuit-maps.js';
 import {createCircuitLighting} from './circuit-lighting.js';
@@ -12,7 +10,6 @@ import {createFlightShip} from './flight-ship.js';
 import {createFlightScale,scaledHull} from './flight-scale.js';
 import {createFlightOil} from './flight-oil.js';
 import {createFlightFxControls} from './flight-fx-controls.js';
-import {createCharacterComic} from './character-comic.js';
 import {formatRaceTime} from './circuit-physics.js';
 import './flight-simulator.css';
 import {raceAudio} from './race-audio.js';
@@ -30,7 +27,7 @@ export async function createFlightSimulator({launchMode,entryTransition}={}){
     <canvas class="flight-canvas" tabindex="0" aria-label="Circuito flotante. W y S para velocidad, A y D o flechas laterales para girar, E para derrapar, espacio para frenar, Shift para turbo, F para faros y Escape para pausar. Altura automática."></canvas>
     <header class="flight-header"><div class="flight-brand" aria-label="Biggas Hover Racing"><strong aria-hidden="true">✳</strong> <span class="flight-brand-name">BIGGAS</span> <small id="flight-map-name">${mapConfig.name.toUpperCase()} ${mapConfig.number}</small></div><nav aria-label="Controles del simulador"><a href="${base}spaceship.html?vehicle=${selectedShip.id}&${pilotParams}">Hangar</a>${soundControlMarkup('flight-sound')}<button id="flight-comic" aria-pressed="${query.get('comic')!=='0'}" aria-label="Cómic" title="Cómic">◐</button><button id="flight-headlights" aria-label="Faros" aria-pressed="false" title="Faros · F"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M14 5v14c9 0 9-14 0-14Z M10 6H2 M10 10H2 M10 14H2 M10 18H2"/></svg></button><button id="flight-light" aria-label="Iluminación nocturna" aria-pressed="false" title="Día / noche">☾</button><button id="flight-camera" disabled aria-label="Cambiar cámara" title="Cambiar cámara · C">◉ <span class="flight-camera-word">Cámara</span></button><button id="flight-pause" aria-label="Pausar vuelo" title="Pausar · Esc" disabled>Ⅱ</button></nav></header>
     <section class="flight-race" aria-label="Estado de la carrera" hidden><div><label id="flight-mode-label">CONTRARRELOJ</label><output id="flight-time">00:00.00</output></div><div><label>PUERTAS</label><output id="flight-gates">01 / 16</output></div><div class="flight-best"><label>MEJOR TIEMPO</label><output id="flight-best">—</output></div></section>
-    <section class="flight-menu" aria-label="Menú de vuelo" hidden><div class="flight-menu-tag"><span>${selectedPilot.name.toUpperCase()} AL MANDO</span><span id="flight-seed">HOVER</span></div><h1 id="flight-menu-title">${mapConfig.name} <span>${mapConfig.number}.</span></h1><a class="flight-team-link" href="${base}simulator.html?map=${mapConfig.id}&vehicle=${selectedShip.id}&${pilotParams}"><span>${selectedPilot.name} × ${selectedShip.name}</span><span>Cambiar selección</span></a><p class="flight-menu-score" hidden></p><p class="flight-menu-record" hidden></p><button id="flight-resume" class="flight-primary" hidden>Continuar </button><div id="flight-modes"><button id="flight-free" class="flight-primary">Recorrer circuito </button><button id="flight-race-start">Contrarreloj <span>1 vuelta</span></button></div><button id="flight-restart" hidden>Reiniciar <span>↻</span></button><nav class="flight-exit-links" aria-label="Salir del circuito"><a id="flight-map-selection" href="${base}?selection=map&map=${mapConfig.id}&vehicle=${selectedShip.id}&${pilotParams}">Selección de mapa <span aria-hidden="true">→</span></a><a id="flight-main-menu" href="${base}">Volver al menú principal <span aria-hidden="true">⌂</span></a></nav><div class="flight-quality"><label for="flight-quality">Gráficos</label><select id="flight-quality"><option value="auto">Automático</option><option value="high">Mayor calidad</option><option value="performance">Más fluidez</option></select><span id="flight-quality-state">Se adapta a tu equipo</span></div><div class="flight-menu-help"><span><kbd>W S</kbd> Velocidad</span><span><kbd>A D</kbd> Girar</span><span><kbd>SHIFT</kbd> Turbo</span><span><kbd>ESPACIO</kbd> Frenar</span><span><kbd>E</kbd> Derrapar</span><span><kbd>R</kbd> Recuperar</span><span><kbd>Q</kbd> Aceite (libre)</span><span><kbd>F</kbd> Faros</span><span><kbd>M</kbd> Sonido</span></div></section>
+    <section class="flight-menu" aria-label="Menú de vuelo" hidden><div class="flight-menu-tag"><span>${selectedPilot.name.toUpperCase()} AL MANDO</span><span id="flight-seed">HOVER</span></div><h1 id="flight-menu-title">${mapConfig.name} <span>${mapConfig.number}.</span></h1><a class="flight-team-link" href="${base}?map=${mapConfig.id}&vehicle=${selectedShip.id}&${pilotParams}"><span>${selectedPilot.name} × ${selectedShip.name}</span><span>Cambiar selección</span></a><p class="flight-menu-score" hidden></p><p class="flight-menu-record" hidden></p><button id="flight-resume" class="flight-primary" hidden>Continuar </button><div id="flight-modes"><button id="flight-free" class="flight-primary">Recorrer circuito </button><button id="flight-race-start">Contrarreloj <span>1 vuelta</span></button></div><button id="flight-restart" hidden>Reiniciar <span>↻</span></button><nav class="flight-exit-links" aria-label="Salir del circuito"><a id="flight-map-selection" href="${base}?selection=map&map=${mapConfig.id}&vehicle=${selectedShip.id}&${pilotParams}">Selección de mapa <span aria-hidden="true">→</span></a><a id="flight-main-menu" href="${base}">Volver al menú principal <span aria-hidden="true">⌂</span></a></nav><div class="flight-quality"><label for="flight-quality">Gráficos</label><select id="flight-quality"><option value="auto">Automático</option><option value="high">Mayor calidad</option><option value="performance">Más fluidez</option></select><span id="flight-quality-state">Se adapta a tu equipo</span></div><div class="flight-menu-help"><span><kbd>W S</kbd> Velocidad</span><span><kbd>A D</kbd> Girar</span><span><kbd>SHIFT</kbd> Turbo</span><span><kbd>ESPACIO</kbd> Frenar</span><span><kbd>E</kbd> Derrapar</span><span><kbd>R</kbd> Recuperar</span><span><kbd>Q</kbd> Aceite (libre)</span><span><kbd>F</kbd> Faros</span><span><kbd>M</kbd> Sonido</span></div></section>
     <div class="flight-loader" role="status"><span id="flight-load-status">Preparando ${mapConfig.name} ${mapConfig.number}…</span><progress max="1" value="0"></progress></div>
     <div class="flight-target" hidden aria-hidden="true"><i>⌄</i><span></span></div><div class="flight-countdown" role="status" hidden></div><div class="flight-notice" role="status" hidden></div>
     <section class="flight-telemetry" aria-label="Telemetría"><div class="flight-speed"><output id="flight-speed">0</output><span>km/h</span></div><span class="flight-drift" hidden>DERRAPE</span><div class="flight-altitude">ALT <output id="flight-altitude">0</output> m</div><div class="flight-energy" role="progressbar" aria-label="Reserva de turbo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span></span></div><div class="flight-energy-label"><span>TURBO</span><span id="flight-energy-value">100%</span></div></section>
@@ -41,31 +38,30 @@ export async function createFlightSimulator({launchMode,entryTransition}={}){
   entryTransition?.mount();
   const $=s=>document.querySelector(s),app=$('.flight-app'),canvas=$('.flight-canvas'),loader=$('.flight-loader');
   app.dataset.entryMotion=String(entryTransition?.animated??false);
-  const useWebGPU=['webgpu','webgl2'].includes(query.get('renderer'));
-  const gpuModule=useWebGPU?await import('./flight-webgpu.js'):null;
+  const gpuModule=await import('./flight-webgpu.js');
   let renderer,gpuGraphics;
   function fail(message){entryTransition?.cancel();raceAudio.setPhase('loading');loader.hidden=false;loader.replaceChildren();const text=document.createElement('p');text.textContent=message;const retry=document.createElement('button');retry.textContent='Reintentar';retry.onclick=()=>location.reload();loader.append(text,retry);}
-  try{renderer=useWebGPU?await gpuModule.createRenderer(canvas,query.get('renderer')==='webgl2'):new THREE.WebGLRenderer({canvas,antialias:true,powerPreference:'high-performance'});}catch(error){console.error(error);fail('No se pudo iniciar la vista 3D.');return;}
-  app.dataset.backend=useWebGPU?(renderer.backend.isWebGPUBackend?'WebGPU':'WebGL2'):'WebGL';
+  try{renderer=await gpuModule.createRenderer(canvas,query.get('renderer')==='webgl2');}catch(error){console.error(error);fail('No se pudo iniciar la vista 3D.');return;}
+  app.dataset.backend=renderer.backend.isWebGPUBackend?'WebGPU':'WebGL2';
   const mobile=matchMedia('(max-width:760px), (pointer:coarse)').matches;
   renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.25:1.5));renderer.setSize(innerWidth,innerHeight);
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=useWebGPU?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
   const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xb6c6bd,220,1100);scene.background=new THREE.Color(0xb6c6bd);
   scene.matrixWorldAutoUpdate=false;
   const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.15,7000);
   const lighting=createCircuitLighting(scene,{mobile,headlightMounts:selectedShip.headlights});
   const skyWorld=createCircuitSky(scene,{mobile,map:mapConfig.id}),speedAtmosphere=createSpeedAtmosphere(scene,{mobile});
-  const comic=useWebGPU?null:createCharacterComic(renderer);let comicEnabled=query.get('comic')!=='0';
+  let comicEnabled=query.get('comic')!=='0';
   let shadowElapsed=Infinity,shadowInterval=1/30;
   const performanceControl=createFlightPerformance({width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio,mobile,onChange:applyQuality});
   function applyQuality(settings){
-    renderer.setPixelRatio(settings.pixelRatio);comic?.setQuality(settings);gpuGraphics?.setQuality(settings);
+    renderer.setPixelRatio(settings.pixelRatio);gpuGraphics?.setQuality(settings);
     app.dataset.quality=settings.mode;app.dataset.renderScale=settings.scale.toFixed(2);
     shadowInterval=settings.shadowInterval;
     lighting.sun.shadow.needsUpdate=true;
   }
   applyQuality(performanceControl.settings);lighting.sun.shadow.autoUpdate=false;
-  let landscape,world,vehicle,oil,fxControls,exhaustControls,heat,state,phase='loading',mode='free',elapsed=0,simulationTime=0,worldTime=0,countdown=3,countdownDeadline=0,gateIndex=0,penalty=0,best=null,cameraMode=0,accumulator=0,noticeUntil=0;
+  let landscape,world,vehicle,oil,fxControls,state,phase='loading',mode='free',elapsed=0,simulationTime=0,worldTime=0,countdown=3,countdownDeadline=0,gateIndex=0,penalty=0,best=null,cameraMode=0,accumulator=0,noticeUntil=0;
   const keys=new Set(),touch={turn:0,accelerate:false,brake:false,boost:false,drift:false};let stickPointer=null;
   const mapCanvas=$('.flight-minimap canvas'),mapContext=mapCanvas.getContext('2d'),mapBase=document.createElement('canvas');mapBase.width=mapBase.height=192;
   const cameraAnchor=new THREE.Vector3(),followAnchor=new THREE.Vector3(),cameraPoint=new THREE.Vector3(),lookPoint=new THREE.Vector3(),desiredCamera=new THREE.Vector3(),desiredLook=new THREE.Vector3(),forward=new THREE.Vector3(),projected=new THREE.Vector3();
@@ -202,12 +198,12 @@ export async function createFlightSimulator({launchMode,entryTransition}={}){
     drawMap();
   }
   async function loadWorld(){
-    const next=await createCircuitWorld({map:mapConfig.id,mobile,fxMaterialFactory:gpuModule?.createSmokeMaterial,anisotropy:Math.min(4,(useWebGPU?renderer.getMaxAnisotropy():renderer.capabilities.getMaxAnisotropy())),onProgress:value=>{$('.flight-loader progress').value=value;entryTransition?.progress(value);}});
+    const next=await createCircuitWorld({map:mapConfig.id,mobile,fxMaterialFactory:gpuModule?.createSmokeMaterial,anisotropy:Math.min(4,renderer.getMaxAnisotropy()),onProgress:value=>{$('.flight-loader progress').value=value;entryTransition?.progress(value);}});
     world=next;landscape=next.landscape;scene.add(world.root);lighting.setTrack(landscape);world.textures.applyRoot(lighting.root);
     fxControls=createFlightFxControls(world.fx,message=>{notice(message);if(phase==='flying')canvas.focus({preventScroll:true});});
     setText($('#flight-seed'),`${Math.round(landscape.length)} M · HOVER`);buildMap();readBest();resetFlight();loader.hidden=true;setPhase('menu');updateCamera(1,true);
   }
-  document.querySelectorAll('.flight-team-link, #flight-map-selection').forEach(link=>link.addEventListener('click',()=>{const url=new URL(link.href);url.searchParams.set('comic',comicEnabled?'1':'0');if(useWebGPU)url.searchParams.set('renderer',query.get('renderer'));if(link.id==='flight-map-selection')url.searchParams.set('mode',mode);link.href=url.href;}));
+  document.querySelectorAll('.flight-team-link, #flight-map-selection').forEach(link=>link.addEventListener('click',()=>{const url=new URL(link.href);url.searchParams.set('comic',comicEnabled?'1':'0');if(query.get('renderer')==='webgl2')url.searchParams.set('renderer','webgl2');if(link.id==='flight-map-selection')url.searchParams.set('mode',mode);link.href=url.href;}));
   const soundControl=mountSoundControl($('.sound-control'),{onOpen:clearInput});
   const toggleSound=()=>soundControl.toggleSound();
   $('#flight-quality').value=performanceControl.mode;
@@ -247,19 +243,18 @@ export async function createFlightSimulator({launchMode,entryTransition}={}){
   window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);performanceControl.resize(innerWidth,innerHeight,devicePixelRatio);});
   reduced.addEventListener('change',()=>{if(state)updateCamera(1,true);});
   try{
-    const results=await Promise.allSettled([createFlightShip(selectedShip.id,choice),loadWorld()]);const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;vehicle=results[0].value;vehicle.root.scale.setScalar(modelScale);vehicle.setHeadlights(lighting.headlightsEnabled);scene.add(vehicle.root);syncShip();updateCamera(1,true);
-    if(!useWebGPU){heat=createFlightHeat(renderer);exhaustControls=createExhaustControls(vehicle.exhaust,heat);}
+    const results=await Promise.allSettled([createFlightShip(selectedShip.id,{...choice,exhaust:false}),loadWorld()]);const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;vehicle=results[0].value;vehicle.root.scale.setScalar(modelScale);vehicle.setHeadlights(lighting.headlightsEnabled);scene.add(vehicle.root);syncShip();updateCamera(1,true);
     oil=await createFlightOil({scene,landscape,surfaceHeight:world.surfaceHeight,app,clearInput,onPrepare:prepareOilTest,onNotice:notice,materialFactory:gpuModule?.oilMaterialFactory});oil.reset(state,mode==='free');
-    if(useWebGPU){gpuGraphics=await gpuModule.createFlightWebGPU(renderer,scene,camera,vehicle,oil);gpuGraphics.setQuality(performanceControl.settings);}
+    {gpuGraphics=await gpuModule.createFlightWebGPU(renderer,scene,camera,vehicle,oil);gpuGraphics.setQuality(performanceControl.settings);}
     setPhase('loading');loader.hidden=!!entryTransition;setText($('#flight-load-status'),'Preparando gráficos…');
     lighting.update(state,worldTime,{reducedMotion:reduced.matches});skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
-    await renderer.compileAsync(scene,camera);await comic?.prepare(scene,camera);
+    await renderer.compileAsync(scene,camera);
     loader.hidden=true;
     if(entryTransition){
       // Draw the actual track before pulling away the cover. The race clock and
       // countdown only start after the player can see the circuit.
       setPhase('loading');updateCamera(1,true);skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
-      if(gpuGraphics)await gpuGraphics.render({state,phase,comic:comicEnabled,reduced:reduced.matches});else heat.render(()=>{if(comicEnabled)comic.render(scene,camera,`#${scene.background.getHexString()}`);else renderer.render(scene,camera);},{ship:vehicle,camera,time:simulationTime,reduced:reduced.matches,boost:state.boosting,depthTexture:comicEnabled?()=>comic.depthTexture:null});
+      await gpuGraphics.render({state,phase,comic:comicEnabled,reduced:reduced.matches});
       await entryTransition.reveal();
     }
     app.dataset.ready='true';if(launchMode==='free'||launchMode==='race'){start(launchMode);if(document.hidden)pause();}else setPhase('menu');
@@ -276,8 +271,7 @@ export async function createFlightSimulator({launchMode,entryTransition}={}){
     raceAudio.update(state);
     const viewState=phase==='flying'?renderPose.sample(state,accumulator*60):state;
     syncShip(viewState);updateCamera(dt,false,viewState);
-    if(!useWebGPU)vehicle.exhaust.update(simulationTime,state.speed,state.boosting,reduced.matches,viewState);
-    const pilotFrame=Math.floor(simulationTime*24);if(pilotFrame!==lastPilotFrame){vehicle.pilot.update(pilotFrame/24,!reduced.matches&&state.speed>1);lastPilotFrame=pilotFrame;}
+    const pilotFrame=Math.floor(simulationTime*24);if(pilotFrame!==lastPilotFrame){vehicle.update(pilotFrame/24,state.speed,state.boosting,reduced.matches,viewState);lastPilotFrame=pilotFrame;}
     if(phase!=='paused'&&phase!=='finished')worldTime+=dt;
     world.update(worldTime,reduced.matches,{state,phase,countdown,night:lighting.night,camera,scale:modelScale,dt:phase==='flying'?dt:0});
     lighting.update(state,worldTime,{dt,reducedMotion:reduced.matches,paused:phase==='paused'||phase==='finished'});
@@ -288,11 +282,12 @@ export async function createFlightSimulator({launchMode,entryTransition}={}){
     oil?.update(state,camera,phase,modelScale,reduced.matches);
     scene.updateMatrixWorld(true);camera.updateMatrixWorld();updateHud(performance.now()/1000);
     if(noticeUntil&&performance.now()>noticeUntil){$('.flight-notice').hidden=true;noticeUntil=0;}
-    if(gpuGraphics){await gpuGraphics.render({dt,state,phase,comic:comicEnabled,reduced:reduced.matches});app.dataset.boostPalette=gpuGraphics.boost.stats.palette;app.dataset.boostParticles=JSON.stringify({lifetimes:gpuGraphics.boost.stats.particleLifetimes,emitted:gpuGraphics.boost.stats.emittedByLayer});app.dataset.postSamples=String(gpuGraphics.stats.samples);app.dataset.glowSamples=String(gpuGraphics.stats.glowSamples);}else heat.render(()=>{if(comicEnabled)comic.render(scene,camera,`#${scene.background.getHexString()}`);else renderer.render(scene,camera);},{ship:vehicle,camera,time:simulationTime,reduced:reduced.matches,boost:state.boosting,depthTexture:comicEnabled?()=>comic.depthTexture:null});
+    if(gpuGraphics){await gpuGraphics.render({dt,state,phase,comic:comicEnabled,reduced:reduced.matches});app.dataset.boostPalette=gpuGraphics.boost.stats.palette;app.dataset.boostParticles=JSON.stringify({lifetimes:gpuGraphics.boost.stats.particleLifetimes,emitted:gpuGraphics.boost.stats.emittedByLayer});app.dataset.postSamples=String(gpuGraphics.stats.samples);app.dataset.glowSamples=String(gpuGraphics.stats.glowSamples);}
     app.dataset.frame=String(Number(app.dataset.frame??0)+1);
     }catch(error){console.error(error);renderer.setAnimationLoop(null);clearInput();fail('Se interrumpió la vista 3D.');}finally{rendering=false;}
   }
-  renderer.setAnimationLoop(frame);
-  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();renderer.setAnimationLoop(null);raceAudio.setPhase('paused');clearInput();fail('Se interrumpió la vista 3D.');});
-  window.addEventListener('pagehide',()=>{disposed=true;gpuGraphics?.dispose();klippCamera.dispose();heat?.dispose();exhaustControls?.dispose();fxControls?.dispose();oil?.dispose();scaleControl.dispose();soundControl.dispose();raceAudio.dispose();renderer.setAnimationLoop(null);world.dispose();lighting.dispose();skyWorld.dispose();speedAtmosphere.dispose();vehicle.dispose();comic?.dispose();renderer.dispose();},{once:true});
+  let renderTask=Promise.resolve();
+  renderer.setAnimationLoop(()=>{if(!rendering&&!disposed)renderTask=frame();});
+  for(const event of ['webglcontextlost','graphicslost'])canvas.addEventListener(event,event=>{event.preventDefault();renderer.setAnimationLoop(null);raceAudio.setPhase('paused');clearInput();fail('Se interrumpió la vista 3D.');});
+  window.addEventListener('pagehide',()=>{disposed=true;renderer.setAnimationLoop(null);renderTask.finally(()=>{gpuGraphics?.dispose();klippCamera.dispose();fxControls?.dispose();oil?.dispose();scaleControl.dispose();soundControl.dispose();raceAudio.dispose();renderer.setAnimationLoop(null);world.dispose();lighting.dispose();skyWorld.dispose();speedAtmosphere.dispose();vehicle.dispose();renderer.dispose();});},{once:true});
 }

@@ -1,13 +1,15 @@
+import {attribute} from 'three/tsl';
+import {createOilMaterial} from './vfx/oil.js';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {createDialKit} from 'dialkit/vanilla';
+import {createDialKit} from './dev-dials.js';
 import {createFlightShip} from './flight-ship.js';
 import {createOilSimulation,updateOilResistance,clearOilEffect} from './oil-simulation.js';
 import './flight-oil.css';
 
 export async function createFlightOil({scene,landscape,surfaceHeight,app,clearInput,onPrepare,onNotice,materialFactory}){
   const base=import.meta.env.BASE_URL;
-  const results=await Promise.allSettled([new GLTFLoader().loadAsync(`${base}models/items/oil-barrel.glb`),createFlightShip('037')]);
+  const results=await Promise.allSettled([new GLTFLoader().loadAsync(`${base}models/items/oil-barrel.glb`),createFlightShip('037',{exhaust:false})]);
   if(results.some(r=>r.status==='rejected')){
     if(results[1].status==='fulfilled')results[1].value.dispose();
     throw results.find(r=>r.status==='rejected').reason;
@@ -34,51 +36,7 @@ export async function createFlightOil({scene,landscape,surfaceHeight,app,clearIn
   const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3).setUsage(THREE.DynamicDrawUsage));geometry.setAttribute('color',new THREE.BufferAttribute(colors,4).setUsage(THREE.DynamicDrawUsage));geometry.setAttribute('uv',new THREE.BufferAttribute(uvs,2).setUsage(THREE.DynamicDrawUsage));geometry.setDrawRange(0,0);
   // World-space shading keeps overlapping drops visually continuous. A thin-film
   // sheen and broad sky highlight vary with viewing angle, without tiled pixels.
-  const oilMaterial=materialFactory?materialFactory():new THREE.ShaderMaterial({
-    transparent:true,depthWrite:false,side:THREE.DoubleSide,
-    polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,
-    vertexShader:`
-      attribute vec4 color;
-      varying vec2 vUv;
-      varying vec3 vWorld;
-      varying float vAlpha;
-      void main(){
-        vUv=uv;vAlpha=color.a;
-        vec4 world=modelMatrix*vec4(position,1.0);vWorld=world.xyz;
-        gl_Position=projectionMatrix*viewMatrix*world;
-      }`,
-    fragmentShader:`
-      varying vec2 vUv;
-      varying vec3 vWorld;
-      varying float vAlpha;
-      float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-      float noise(vec2 p){
-        vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);
-        return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);
-      }
-      void main(){
-        vec2 p=vWorld.xz;
-        float n=noise(p*.65)+.35*noise(p*1.8);
-        float edge=1.0-smoothstep(.34,.455,length(vUv-.5)+.015*(n-.65));
-        if(edge<.01)discard;
-        vec3 normal=normalize(cross(dFdx(vWorld),dFdy(vWorld)));
-        if(normal.y<0.0)normal=-normal;
-        normal=normalize(normal+vec3(.014*sin(p.x*.8+n),0.0,.014*cos(p.y*.9+n)));
-        vec3 viewDir=normalize(cameraPosition-vWorld);
-        float facing=clamp(dot(normal,viewDir),0.0,1.0);
-        float fresnel=pow(1.0-facing,4.0);
-        vec3 reflection=reflect(-viewDir,normal);
-        float glint=pow(max(dot(reflection,normalize(vec3(-.4,.8,.25))),0.0),32.0);
-        vec3 base=mix(vec3(.006,.008,.011),vec3(.018,.022,.028),n*.55);
-        vec3 film=.5+.5*cos(6.28318*(n*.8+facing*.6+vec3(0.0,.33,.67)));
-        vec3 shaded=base+vec3(.065,.085,.11)*fresnel;
-        shaded+=film*.018*smoothstep(.4,.85,n)*( .25+.75*fresnel);
-        shaded+=vec3(.18,.20,.21)*glint;
-        gl_FragColor=vec4(shaded,edge*vAlpha);
-        #include <tonemapping_fragment>
-        #include <colorspace_fragment>
-      }`,
-  });
+  const oilMaterial=materialFactory?materialFactory():createOilMaterial(attribute('color','vec4').a);
   const oilMesh=new THREE.Mesh(geometry,oilMaterial);oilMesh.frustumCulled=false;oilMesh.renderOrder=2;root.add(oilMesh);
   const panel=document.createElement('section');panel.className='flight-oil';panel.setAttribute('aria-label','Barril de aceite');
   panel.innerHTML=`<div class="oil-heading"><span class="oil-drop" aria-hidden="true">◆</span><strong>ACEITE</strong><span class="oil-slot">Vacío</span></div><button class="oil-use" disabled>Soltar aceite <kbd>Q</kbd></button><p class="oil-hint">Recogé un barril en la pista</p><div class="oil-test"><button class="oil-prepare">Preparar prueba</button><button class="oil-bot-drop">Bot tira aceite</button><button class="oil-look" aria-pressed="false">Mirar atrás</button><label><input class="oil-bot-toggle" type="checkbox" checked> Bot de prueba</label></div><output class="oil-player-status">Tu velocidad: 0 km/h</output><output class="oil-bot-status">Bot listo</output>`;

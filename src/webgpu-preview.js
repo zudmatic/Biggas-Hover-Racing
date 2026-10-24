@@ -1,3 +1,4 @@
+import {createLegacySmokeMaterial} from './legacy-smoke-material.js';
 import {CIRCUIT_MAPS,circuitMap} from './circuit-maps.js';
 import {SHIPS,shipConfig} from './ship-catalog.js';
 import {createBoost} from './vfx/boost.js';
@@ -11,7 +12,7 @@ import {createCharacterComic} from './character-comic.js';
 import * as THREE from 'three';
 import {WebGPURenderer} from 'three/webgpu';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {createDialKit,createDialRoot} from 'dialkit/vanilla';
+import {createDialKit,createDialRoot} from './dev-dials.js';
 import 'dialkit/vanilla/styles.css';
 import {createCircuitWorld} from './circuit-world.js';
 import {createCircuitLighting} from './circuit-lighting.js';
@@ -32,11 +33,11 @@ async function main(){
   document.body.dataset.backend=backend;
   const compare=new URL(location.href);compare.searchParams.set('backend',legacy?'webgpu':'webgl');
   const link=document.querySelector('#compare');link.href=compare.href;link.textContent=legacy?'Comparar con WebGPU':'Comparar con WebGL';
-  const drive=new URL('simulator.html',location.href);drive.searchParams.set('selection','map');drive.searchParams.set('renderer',query.get('backend')==='webgl2'?'webgl2':'webgpu');drive.searchParams.set('map',query.get('map')??'ruins');drive.searchParams.set('vehicle',query.get('vehicle')??'037');drive.searchParams.set('camera','klipp');document.querySelector('#drive').href=drive.href;
+  const drive=new URL('./',location.href);drive.searchParams.set('selection','map');drive.searchParams.set('renderer',query.get('backend')==='webgl2'?'webgl2':'webgpu');drive.searchParams.set('map',query.get('map')??'ruins');drive.searchParams.set('vehicle',query.get('vehicle')??'037');drive.searchParams.set('camera','klipp');document.querySelector('#drive').href=drive.href;
   const scene=new THREE.Scene();scene.background=new THREE.Color(0xb6c6bd);scene.fog=new THREE.Fog(0xb6c6bd,220,1100);
   const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.15,7000);
   const orbit=new OrbitControls(camera,canvas);orbit.enableDamping=true;orbit.maxDistance=1000;orbit.minDistance=3;
-  const results=await Promise.allSettled([createCircuitWorld({map:query.get('map')??'ruins',onProgress:p=>{status.textContent=`Cargando mapa · ${Math.round(p*100)}%`;}}),createFlightShip(query.get('vehicle')??'037')]);
+  const results=await Promise.allSettled([createCircuitWorld({fxMaterialFactory:legacy?createLegacySmokeMaterial:undefined,map:query.get('map')??'ruins',onProgress:p=>{status.textContent=`Cargando mapa · ${Math.round(p*100)}%`;}}),createFlightShip(query.get('vehicle')??'037',{exhaust:false})]);
   const failure=results.find(r=>r.status==='rejected');if(failure){for(const r of results)if(r.status==='fulfilled')r.value.dispose();renderer.dispose();throw failure.reason;}
   const [world,ship]=results.map(r=>r.value);scene.add(world.root,ship.root);ship.root.scale.setScalar(.75);
   const lighting=createCircuitLighting(scene,{headlightMounts:ship.config.headlights});lighting.setTrack(world.landscape);world.textures.applyRoot(lighting.root);

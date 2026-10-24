@@ -3,7 +3,7 @@ import {test,expect} from '@playwright/test';
 for(const [backend,map,vehicle] of [['webgpu','ruins','037'],['webgl2','nexus','033'],['webgpu','mario-raceway','038'],['webgl2','mario-raceway','038']]){
  test(`driving ${backend} ${map}`,async({page})=>{
   test.setTimeout(240000);const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
-  await page.goto(`/simulator.html?selection=map&renderer=${backend}&map=${map}&vehicle=${vehicle}&camera=klipp&pilot=${backend==='webgl2'&&vehicle==='038'?'zudmatic':'zud'}`);
+  await page.goto(`/simulator.html?selection=map${backend==='webgl2'?'&renderer=webgl2':''}&map=${map}&vehicle=${vehicle}&camera=klipp&pilot=${backend==='webgl2'&&vehicle==='038'?'zudmatic':'zud'}`);
   await page.getByRole('button',{name:'Volar',exact:true}).click();const app=page.locator('.flight-app');
   await expect(app).toHaveAttribute('data-ready','true',{timeout:120000});
   await expect(app).toHaveAttribute('data-backend',backend==='webgpu'?'WebGPU':'WebGL2');

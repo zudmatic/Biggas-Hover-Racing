@@ -1,3 +1,4 @@
+import './renderer-navigation.js';
 import {ZUD_HATS,zudHat} from './hat-catalog.js';
 import {SHIPS,shipConfig} from './ship-catalog.js';
 import {PILOTS,ZUDMATIC_PALETTES,pilotConfig,pilotChoice,pilotQuery} from './pilot-catalog.js';
@@ -128,7 +129,7 @@ export function chooseFlight(){
     $('#lobby-paper').addEventListener('click',()=>setPaper(!paper),{signal});
     setPaper(paper);selectPilot(selectedPilot);root.dataset.map=selectedMap;
     if(new URLSearchParams(location.search).get('selection')==='map')show(3,{keyboard:true});
-    // The title screen is typography only: defer WebGL until selection.
+    // The title screen is typography only: defer the 3D renderer until selection.
     function loadPreview(){
       if(previewStarted)return;previewStarted=true;
       import('./flight-preview.js').then(({createFlightPreview})=>createFlightPreview($('.lobby-preview-canvas'),{reducedMotion:reduced,signal,initialKind:stage===1?'pilot':'vehicle',paper,vehicle:selectedVehicle,pilot:selectedPilot,palette:selectedPalette,hat:selectedHat,onStatus:status=>{if(!leaving)root.dataset.preview=$('.lobby-preview-canvas').dataset.pilot!==selectedPilot||(stage===2&&$('.lobby-preview-canvas').dataset.vehicle!==selectedVehicle)?'loading':status;}})).then(result=>{

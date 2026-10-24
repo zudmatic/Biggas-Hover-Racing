@@ -5,16 +5,27 @@ import {zudHat} from './hat-catalog.js';
 import {createFlightShip} from './flight-ship.js';
 import {shipConfig} from './ship-catalog.js';
 import {pilotConfig,pilotPalette} from './pilot-catalog.js';
-import {createCharacterComic} from './character-comic.js';
+import {createGameRenderer} from './game-renderer.js';
+import {createComicView} from './comic-view.js';
 
 // One small scene for the front end; disposed before loading a circuit.
 export async function createFlightPreview(canvas,{reducedMotion,signal,initialKind='pilot',paper=true,vehicle='033',pilot='zud',palette='Original',hat='beanie',onStatus=()=>{}}){
   if(signal.aborted)return null;
-  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'low-power'});
+  const renderer=await createGameRenderer(canvas,{alpha:true});
+  if(signal.aborted){renderer.dispose();return null;}
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
-  const comic=createCharacterComic(renderer,{samples:0,glowSamples:4});let paperEnabled=paper;
-  function renderScene(){updateActors();if(paperEnabled)comic.render(scene,camera,'#ffffff');else renderer.render(scene,camera);canvas.dataset.paper=String(paperEnabled);}
+  let paperEnabled=paper,rendering=false,renderTask=Promise.resolve(),frames=0,renderedKey=null,lastWidth=0,lastHeight=0;
   const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,1,.1,100);
+  const comic=createComicView(renderer,scene,camera,{samples:0,glowSamples:4});
+  function renderScene(){
+    if(disposed||rendering)return renderTask;
+    rendering=true;const frameKey=actorKey(),canPresent=assetsReady();updateActors();
+    const rect=canvas.getBoundingClientRect();
+    if(rect.width&&rect.height&&(rect.width!==lastWidth||rect.height!==lastHeight)){lastWidth=rect.width;lastHeight=rect.height;renderer.setSize(rect.width,rect.height,false);camera.aspect=rect.width/rect.height;camera.updateProjectionMatrix();}
+    renderTask=comic.render(paperEnabled,'#ffffff').then(()=>{canvas.dataset.paper=String(paperEnabled);canvas.dataset.frame=String(++frames);if(canPresent)renderedKey=frameKey;reportStatus();})
+      .catch(error=>{if(!disposed){console.error(error);onStatus('fallback');}}).finally(()=>{rendering=false;});
+    return renderTask;
+  }
   scene.add(new THREE.HemisphereLight(0xffffff,0x747474,3));
   const key=new THREE.DirectionalLight(0xffe2b7,4);key.position.set(-4,7,6);scene.add(key);
   const rim=new THREE.DirectionalLight(0xd5e4ff,2);rim.position.set(5,4,-4);scene.add(rim);
@@ -32,15 +43,18 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   const geometries=new Set(),materials=new Set(),textures=new Set();
   function dispose(){
     if(disposed)return;disposed=true;renderer.setAnimationLoop(null);resize.disconnect();
+    renderTask.finally(()=>{
     scene.traverse(object=>{if(!object.isMesh)return;geometries.add(object.geometry);for(const material of [].concat(object.material)){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value);}});
     geometries.forEach(value=>value.dispose());materials.forEach(value=>value.dispose());textures.forEach(value=>value.dispose());
-    pilots.forEach(actor=>actor.dispose());ships.forEach(ship=>ship.dispose());comic.dispose();renderer.dispose();renderer.forceContextLoss();
+    pilots.forEach(actor=>actor.dispose());ships.forEach(ship=>ship.dispose());comic.dispose();renderer.dispose();});
   }
-  function size(){if(disposed)return;const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;renderer.setSize(rect.width,rect.height,false);camera.aspect=rect.width/rect.height;camera.updateProjectionMatrix();frameCamera();dirty=true;renderScene();}
+  function size(){if(disposed)return;if(rendering){dirty=true;return;}const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;renderer.setSize(rect.width,rect.height,false);camera.aspect=rect.width/rect.height;camera.updateProjectionMatrix();frameCamera();dirty=true;renderScene();}
   const resize=new ResizeObserver(size);resize.observe(canvas);
   const hatFailures=new WeakSet();
   function activeActor(){return kind==='pilot'?pilots.get(selectedPilot):ships.get(vehicleKey())?.pilot.actor;}
-  function ready(){return !!actors[activeId()]&&(selectedPilot!=='zud'||activeActor()?.root.userData.hat===selectedHat);}
+  const actorKey=()=>`${activeId()}:${selectedHat}:${selectedPalette}:${paperEnabled}`;
+  function ready(){return assetsReady()&&renderedKey===actorKey();}
+  function assetsReady(){return !!actors[activeId()]&&(selectedPilot!=='zud'||activeActor()?.root.userData.hat===selectedHat);}
   function reportStatus(){
     canvas.dataset.ready=String(ready());
     onStatus(ready()?'ready':activeActor()&&hatFailures.has(activeActor())?'fallback':'loading');
@@ -53,7 +67,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
     });
   }
   function frameCamera(){const pilot=kind==='pilot',distance=Math.max(pilot?7.5:10.8,(pilot?4.2:6.8)/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect));camera.position.set(0,pilot?2.35:4.7,distance);camera.lookAt(0,pilot?1.5:1.7,0);
-    if(pilot&&selectedPilot==='zud'&&selectedHat!=='beanie'&&ready()){
+    if(pilot&&selectedPilot==='zud'&&selectedHat!=='beanie'&&assetsReady()){
       const bounds=new THREE.Box3();zud.root.updateWorldMatrix(true,true);zud.root.traverseVisible(mesh=>{if(mesh.isMesh)bounds.expandByObject(mesh);});
       const center=bounds.getCenter(new THREE.Vector3()),size=bounds.getSize(new THREE.Vector3());
       const distance=Math.max(size.y,size.x/camera.aspect)/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2)))*1.18+size.z*.5;
@@ -68,6 +82,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   reducedMotion.addEventListener('change',()=>{dirty=true;},{signal});
   setKind(initialKind);
   renderer.setAnimationLoop(now=>{
+    if(rendering)return;
     if(disposed||document.hidden||!canvas.clientWidth||!canvas.clientHeight){last=now;return;}
     if(!dirty&&now-last<1000/(drag?60:30))return;
     const dt=Math.min((now-last)/1000,.05);last=now;
@@ -88,7 +103,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   async function loadVehicle(){
     const requested=vehicleKey(),id=selectedVehicle,pilot=selectedPilot;
     if(ships.has(requested))return;
-    if(!pending.has(requested))pending.set(requested,createFlightShip(id,{pilot,palette:selectedPalette,hat:selectedHat}).then(ship=>{
+    if(!pending.has(requested))pending.set(requested,createFlightShip(id,{pilot,palette:selectedPalette,hat:selectedHat,exhaust:false}).then(ship=>{
       if(disposed||signal.aborted){ship.dispose();return;}
       ship.pilot.actor.setPalette?.(selectedPalette);ships.set(requested,ship);ship.update(0,0,false,true);addActor(requested,ship.root);applyHat(ship.pilot.actor);setKind(kind);
     }).catch(()=>{pending.delete(requested);if(!disposed&&requested===activeId())onStatus('fallback');}));
@@ -108,6 +123,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
     void loadVehicle();
   }
   // Keep navigation responsive while the vehicle model loads in the background.
+  canvas.addEventListener('graphicslost',()=>{renderer.setAnimationLoop(null);onStatus('fallback');},{signal});
   signal.addEventListener('abort',dispose,{once:true});
   setPilot(selectedPilot,selectedPalette);
   return {setKind,setVehicle,setPilot,setPaper(enabled){paperEnabled=enabled;dirty=true;if(canvas.clientWidth)renderScene();},dispose};

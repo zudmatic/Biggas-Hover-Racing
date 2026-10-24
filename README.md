@@ -11,7 +11,9 @@ npm run dev
 
 - Inicio y selección de partida: `http://localhost:5173/`
 - Hangar: `http://localhost:5173/spaceship.html`
-- Entrada alternativa al juego: `http://localhost:5173/simulator.html`
+- Pruebas integradas de efectos: `http://localhost:5173/webgpu-preview.html`
+- Laboratorio independiente de efectos y cámaras: `http://localhost:43181/` (requiere su propio servidor).
+- Compatibilidad: `simulator.html` redirige al inicio y `propulsor-studio.html` al preview; ambos conservan parámetros y fragmento.
 
 En la landing, **Jugar** abre la selección de personaje, nave, circuito y modo. El enlace **Hangar** permite inspeccionar las naves y sus componentes. Desde el hangar se puede volver al inicio o abrir la selección de partida con la nave elegida.
 
@@ -25,7 +27,7 @@ La **Nómada 038** es una hoverbike de cabina abierta, con reactor único y faro
 
 ## Controles
 
-**Propulsor · A · Chorro** en DialKit ajusta la llama de cada tobera: longitud, ancho, intensidad tramada, variación y colores del fuego/núcleo. El chorro crece suavemente con turbo, se acorta al frenar y sigue la posición y escala de la nave. La 033 emite desde dos toberas y Oliva desde tres. Los ajustes se guardan en el navegador.
+**Propulsor · WebGPU** en DialKit ajusta la llama, el motor incandescente, los fragmentos, las brasas, las chispas lineales y el tramado. Turbo usa la paleta azul; la aceleración normal usa rojo. La estela sigue el movimiento y la escala de la nave. La 033 emite desde dos toberas, Oliva desde tres y Nómada desde una. Los ajustes se guardan en el navegador.
 
 Para comparar el nuevo humo, abrí **Humo · comparación** en DialKit: **A · Fragmentos procedurales**, **B · Humo híbrido** (predeterminado) o **C · Mixto**. Los valores iniciales son tamaño 1,3, duración 1,5, color `#bababa`, densidad 1, trama 1,5 y emisión desde cuatro ruedas desactivada. Podés cambiar el color y el tramado en vivo; los ajustes se guardan en el navegador. Acelerá con W y combiná E con A/D para derrapar: en recta no aparece humo de derrape. Cada variante introduce formas, giros y tiempos distintos por partícula. El selector devuelve el foco al juego y limpia el humo anterior.
 
@@ -80,7 +82,7 @@ npm run preview
 npm test
 ```
 
-La compilación genera `dist/` con las tres entradas HTML. Las pruebas usan Playwright y levantan Vite. Para elegir un puerto libre:
+La compilación genera `dist/` con tres páginas activas (inicio/juego, hangar y preview WebGPU) y dos entradas de compatibilidad que solo redirigen. Las pruebas usan Playwright y levantan Vite. Para elegir un puerto libre:
 
 ```sh
 TEST_PORT=43179 npm test -- --workers=1
@@ -99,7 +101,7 @@ TEST_PORT=43179 npm test -- --workers=1
 - `src/race-audio.js`, `game-music.js`: efectos procedurales y banda sonora.
 - `public/models/`, `public/images/flight/`, `public/audio/`: recursos del juego.
 
-El repositorio contiene únicamente el juego y el hangar. La escena de la casa, sus editores y su compilación independiente fueron retirados. El modelo de Zud y el renderizado compartido permanecen porque los utilizan el piloto y las vistas previas.
+El repositorio contiene el juego, el hangar y las vistas de pruebas de renderizado y efectos. La escena de la casa, sus editores y su compilación independiente fueron retirados. El modelo de Zud y el renderizado compartido permanecen porque los utilizan el piloto y las vistas previas.
 
 Más información: [acabado cómic](docs/comic-print.md), [superficies del piloto](docs/surfaces.md) y [banda sonora](public/audio/README.md).
 
@@ -110,8 +112,9 @@ Más información: [acabado cómic](docs/comic-print.md), [superficies del pilot
 nave, texturas y luces con materiales base; la etapa 2 añade el acabado cómic en
 TSL: posterización, puntos, rayado, contornos por profundidad y acabado de color.
 La etapa 3 incorpora propulsor, motor incandescente, partículas, calor, humo,
-marcas de frenado y aceite. El simulador ofrece WebGPU de forma optativa desde
-la etapa 4; el render original sigue siendo el predeterminado.
+marcas de frenado y aceite. La etapa 4 incorporó la conducción y la etapa 5
+el ajuste de rendimiento. Ahora WebGPU es el render predeterminado de todas
+las vistas activas del juego, con fallback WebGL2 sobre la misma base TSL.
 
 - `webgpu-preview.html`: WebGPU con cómic; fallback automático si no hay WebGPU.
 - `webgpu-preview.html?backend=webgl`: referencia GLSL original con el mismo encuadre.
@@ -135,6 +138,8 @@ mueve la nave por el circuito. `Propulsor · WebGPU` ajusta llama, partículas y
 calor; `Humo · comparación` conserva los tres estilos y los cuatro apoyos.
 `vfx=off` reproduce la comparación de etapa 2 sin efectos.
 
+En **Propulsor · WebGPU**, **Trama** aplica Apagado, Damero o Dither a la llama, fragmentos, brasas y chispas lineales, igual que el laboratorio. **Intensidad trama** (0,6) y **Tamaño trama** (2 píxeles del render) controlan el patrón compartido. Estos controles también están disponibles al conducir con el renderer nuevo.
+
 El propulsor reutiliza Three VFX (`vanilla-vfx` 0.6.0), con simulación GPU en
 WebGPU y CPU en WebGL2. La estela conserva posiciones anteriores al girar; humo,
 marcas y aceite mantienen simulaciones acotadas y usan materiales TSL. El calor
@@ -149,11 +154,11 @@ aceite, pausa, desactivación, redimensionado y los backends WebGPU/WebGL2.
 
 ## Etapa 4: conducción con WebGPU
 
-`simulator.html?selection=map&renderer=webgpu&camera=klipp&vehicle=037`
+`/?selection=map&renderer=webgpu&camera=klipp&vehicle=037`
 abre el flujo de selección y permite conducir con el renderer nuevo. Usar
-`renderer=webgl2` fuerza su fallback; omitir `renderer` conserva el WebGL
-original para comparar. El cambio por defecto de todo el producto queda separado
-de esta integración del simulador.
+`renderer=webgl2` fuerza su fallback con los mismos materiales TSL. Omitir
+`renderer` usa WebGPU por defecto y selecciona WebGL2 automáticamente si no
+está disponible.
 
 La física a paso fijo, la interpolación visual, las cámaras, el HUD, la
 contrarreloj y el aceite siguen en el simulador compartido. El material de aceite
@@ -162,7 +167,7 @@ penalización de velocidad. Shift activa el turbo azul; el modo normal usa rojo.
 Pausa congela los efectos y recuperación/reinicio limpia las estelas. El cielo,
 noche, faros y líneas de velocidad se renderizan también en el nuevo backend.
 Los controles existentes de calidad ajustan resolución y frecuencia de sombras.
-La selección/hangar todavía conservan su render original.
+La selección y el hangar usan también el renderer de nodos compartido.
 
 `webgpu-driving.spec.js` valida conducción, turbo, derrape, recuperación, aceite,
 noche, faros, cambio de calidad, pausa, redimensionado y reinicio de contrarreloj.
@@ -194,7 +199,7 @@ densos, pero conserva las brasas y chispas lineales.
 `flame-trail.spec.js` valida longitud a 0, 52 y 100 m/s, giros y recuperación;
 `flight-performance.spec.js` comprueba el ajuste automático y las preferencias;
 `webgpu-driving.spec.js` verifica los cambios de calidad en ambos backends.
-Esta etapa no cambia el renderer predeterminado ni migra la selección/hangar.
+La migración completa descrita más abajo extiende esta base a las vistas de selección y hangar.
 ### Mario Raceway (N64)
 
 El mapa adjunto está integrado con sus texturas y colores originales, ruta de 1,50 km, colisiones de pista, terreno y obstáculos, 16 checkpoints y récord independiente. Comparte el shader cómic, luz global, sombras, faros, ciclo día/noche, efectos e ítems de los otros circuitos. Se puede elegir en el menú o con `?selection=map&map=mario-raceway`.
@@ -203,7 +208,7 @@ El FBX original está en `assets/maps/mario-raceway/`. `node scripts/build-mario
 
 ### Integración Mario Raceway y Nómada en WebGPU
 
-`simulator.html?selection=map&renderer=webgpu&map=mario-raceway&vehicle=038&camera=klipp`
+`/?selection=map&renderer=webgpu&map=mario-raceway&vehicle=038&camera=klipp`
 permite probar juntos el mapa y la nave nuevos. `renderer=webgl2` usa el fallback;
 `pilot=zudmatic` cambia el piloto. Se conservan el ajuste de manos y apoyos,
 la bandera animada, las colisiones, los checkpoints y los récords de Fran.
@@ -218,4 +223,44 @@ materiales, silueta y sombras funcionan en WebGPU sin duplicar la animación.
 Las pruebas `webgpu-fran.spec.js` verifican texturas, colores de vértices,
 recortes de transparencia, doble cara y bandera con materiales TSL;
 `webgpu-driving.spec.js` incluye Mario Raceway / Nómada en ambos backends.
-El hangar y la selección siguen usando su renderer original.
+El hangar y la selección usan WebGPU por defecto, con los mismos materiales TSL.
+
+
+## Renderer compartido: WebGPU por defecto
+
+El juego (`/`), la selección de pilotos/naves y el hangar (`spaceship.html`)
+usan `WebGPURenderer`. `src/game-renderer.js` inicializa WebGPU y permite el
+fallback automático a WebGL2. Para comprobarlo explícitamente, añadir
+`?renderer=webgl2`; la navegación interna conserva esta elección.
+
+Los materiales de cómic, humo, marcas, aceite y propulsores usan TSL. El hangar
+y la selección comparten `src/comic-view.js`, que incorpora sombreros y modelos
+cargados después del primer cuadro. Las piezas comparten el grafo del shader,
+con referencias de color por material, para evitar compilar una variante por
+pieza clonada. La selección y el hangar esperan un cuadro renderizado
+antes de mostrar el modelo. Las vistas evitan renders simultáneos y esperan al
+cuadro pendiente antes de liberar sus recursos. La bandera y el piloto de la
+nave se actualizan también durante la conducción.
+
+El laboratorio de `experiments/vfx-lab` ya utiliza WebGPU. Las rutas antiguas
+`simulator.html` y `propulsor-studio.html` redirigen a las páginas activas.
+El modo `webgpu-preview.html?backend=webgl` queda únicamente como referencia
+visual GLSL de diagnóstico; no interviene en el flujo normal del juego.
+
+La física y las cámaras conservan su simulación compartida en CPU. El cambio
+unifica el render, no altera sus reglas. El fallback WebGL2 utiliza los mismos
+materiales TSL y simula las partículas en CPU cuando corresponde.
+
+`webgpu-entrypoints.spec.js` cubre selección y hangar en ambos backends;
+`webgpu-driving.spec.js` comprueba el renderer predeterminado al conducir y su
+fallback. Las pruebas de navegación, sombreros, Nómada y banderas cubren las
+cargas y los controles compartidos.
+
+
+### Controles de desarrollo
+
+DialKit solo se muestra con el servidor de desarrollo (`npm run dev`).
+Las compilaciones de producción (`npm run build`) no montan sus paneles ni
+activan sus atajos; usan los valores predeterminados del código y no recuperan
+ajustes experimentales guardados en el navegador. Esto incluye el juego, el
+preview y las compilaciones del laboratorio independiente.

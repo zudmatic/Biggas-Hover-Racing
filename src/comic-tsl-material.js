@@ -1,6 +1,6 @@
 import {Color,Vector2} from 'three';
 import {MeshLambertNodeMaterial} from 'three/webgpu';
-import {color as tslColor,Fn,float,vec2,vec3,vec4,uniform,materialColor,positionGeometry,normalGeometry,screenCoordinate,mix,smoothstep,sin,fract,floor,dFdx,dFdy,fwidth} from 'three/tsl';
+import {color as tslColor,Fn,float,vec2,vec3,vec4,uniform,materialColor,materialReference,positionGeometry,normalGeometry,screenCoordinate,mix,smoothstep,sin,fract,floor,dFdx,dFdy,fwidth} from 'three/tsl';
 import {RETRO_DEFAULTS as defaults} from './retro-style.js';
 
 // Colors must use tslColor: vec3(Color) reads x/y/z rather than r/g/b.
@@ -67,8 +67,19 @@ class ComicMaterial extends MeshLambertNodeMaterial{
 }
 export function createComicMaterials(root,style){
   const cache=new Map(),bindings=[];
+  // Share the node graph across surfaces. Per-material uniform nodes create a
+  // different program key for every cloned hangar part, even for identical shaders.
+  const albedo=materialColor.rgb.max(vec3(.012,.010,.017)).pow(.82);
+  const textureDetail=albedo.dot(luma).div(materialReference('color','color').max(vec3(.012,.010,.017)).pow(.82).dot(luma).max(.0001));
+  const inkNoise=noise(positionGeometry.mul(34)).sub(.5);
+  const face=dFdx(positionGeometry).cross(dFdy(positionGeometry)).normalize().mul(48).add(.5).floor();
+  const variation=hash(face).sub(.5).mul(.1).add(inkNoise.mul(.08)).add(noise(positionGeometry.mul(8)).sub(.5).mul(.08*.45)).add(1);
+  const colorNode=vec4(albedo.mul(variation),materialColor.a);
+  const known=new WeakSet();
+  function refresh(){
   root.traverse(mesh=>{
-    if(!mesh.isMesh)return;
+    if(!mesh.isMesh||known.has(mesh))return;
+    known.add(mesh);
     const source=mesh.material;
     function convert(src){
       if(src.isNodeMaterial||!src.color||src.isShaderMaterial||src.isMeshBasicMaterial||src.isShadowMaterial||src.userData.characterEyeSurface)return src;
@@ -77,14 +88,11 @@ export function createComicMaterials(root,style){
       for(const key of ['map','alphaMap','normalMap','bumpMap','bumpScale','normalScale','emissiveMap','emissiveIntensity','aoMap','aoMapIntensity','side','transparent','opacity','alphaTest','depthWrite','depthTest','vertexColors','flatShading','wireframe','polygonOffset','polygonOffsetFactor','polygonOffsetUnits'])if(src[key]!==undefined)m[key]=src[key];
       m.color=src.color;m.emissive=src.emissive??new Color();
       m.name=`TSL · ${src.name}`;
-      const albedo=materialColor.rgb.max(vec3(.012,.010,.017)).pow(.82);
-      m.textureDetail=albedo.dot(luma).div(uniform(m.color).max(vec3(.012,.010,.017)).pow(.82).dot(luma).max(.0001));
-      m.inkNoise=noise(positionGeometry.mul(34)).sub(.5);
-      const face=dFdx(positionGeometry).cross(dFdy(positionGeometry)).normalize().mul(48).add(.5).floor();
-      const variation=hash(face).sub(.5).mul(.1).add(m.inkNoise.mul(.08)).add(noise(positionGeometry.mul(8)).sub(.5).mul(.08*.45)).add(1);
-      m.colorNode=vec4(albedo.mul(variation),materialColor.a);cache.set(src,m);return m;
+      m.textureDetail=textureDetail;m.inkNoise=inkNoise;m.colorNode=colorNode;cache.set(src,m);return m;
     }
     bindings.push({mesh,source,printed:Array.isArray(source)?source.map(convert):convert(source)});
   });
-  return {setEnabled(on){for(const b of bindings)b.mesh.material=on?b.printed:b.source;},sync(){for(const [src,m] of cache)m.emissiveIntensity=src.emissiveIntensity??1;},dispose(){for(const b of bindings)b.mesh.material=b.source;for(const m of cache.values())m.dispose();}};
+  }
+  refresh();
+  return {refresh,setEnabled(on){for(const b of bindings)b.mesh.material=on?b.printed:b.source;},sync(){for(const [src,m] of cache)m.emissiveIntensity=src.emissiveIntensity??1;},dispose(){for(const b of bindings)b.mesh.material=b.source;for(const m of cache.values())m.dispose();}};
 }

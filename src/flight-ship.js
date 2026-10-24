@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {createFlightExhaust} from './flight-exhaust.js';
+import {createLocalExhaust} from './vfx/local-exhaust.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createShipCloth} from './ship-cloth.js';
@@ -36,7 +36,7 @@ export async function createFlightShip(id='033',choice={}){
   }
   source.traverse(mesh=>{if(mesh.isMesh)mesh.geometry.dispose();});
   const pilot=await createSelectablePilot({...choice,offset:config.pilotOffset,fit:config.pilotFit});pilot.root.visible=true;root.add(pilot.root);
-  const exhaust=createFlightExhaust(root,config.exhausts);
+  const exhaust=choice.exhaust===false?{jets:[],update(){},dispose(){}}:createLocalExhaust(root,config.exhausts);
   return {root,pilot,config,exhaust,dispose(){
     exhaust.dispose();
     pilot.dispose();const geometries=new Set(),materials=new Set(),textures=new Set();

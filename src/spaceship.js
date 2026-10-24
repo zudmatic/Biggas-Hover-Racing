@@ -1,3 +1,4 @@
+import './renderer-navigation.js';
 import * as THREE from 'three';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
@@ -6,7 +7,9 @@ import {flightPose, FLIGHT_DURATION} from './spaceship-parts.js';
 import {createShipCloth} from './ship-cloth.js';
 import {createSelectablePilot} from './selectable-pilot.js';
 import {pilotChoice,pilotConfig,pilotQuery} from './pilot-catalog.js';
-import {createCharacterComic} from './character-comic.js';
+import {createGameRenderer} from './game-renderer.js';
+import {createComicView} from './comic-view.js';
+import {PMREMGenerator} from 'three/webgpu';
 import './spaceship.css';
 import {SHIPS,shipConfig,shipUrl,shipCanopy,prepareShipModel} from './ship-catalog.js';
 
@@ -17,7 +20,7 @@ export async function createSpaceship() {
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   document.body.innerHTML=`<main class="ship-app"><div class="ship-paper-surface" aria-hidden="true"></div>
     <header class="ship-header"><a class="ship-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span class="ship-mark" aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong><span class="ship-header-tag">Hangar</span></a><nav aria-label="Navegación del hangar"><a class="ship-back" href="${base}?vehicle=${config.id}&${pilotParams}"><span aria-hidden="true">←</span> Volver al inicio</a></nav></header>
-    <section class="ship-intro"><div class="ship-heading"><span class="ship-eyebrow">HANGAR / EXPLORÁ TU NAVE</span><h1>${config.title}<span class="ship-title-number">${config.id}</span></h1></div><div class="ship-intro-actions"><nav class="ship-picker" aria-label="Naves del hangar">${Object.values(SHIPS).map(item=>`<a href="${base}spaceship.html?vehicle=${item.id}&${pilotParams}" ${item.id===config.id?'aria-current="page"':''}>${item.name}</a>`).join('')}</nav><a class="ship-simulator" href="${base}simulator.html?vehicle=${config.id}&${pilotParams}">Simulador de vuelo <span aria-hidden="true">▶</span></a></div></section>
+    <section class="ship-intro"><div class="ship-heading"><span class="ship-eyebrow">HANGAR / EXPLORÁ TU NAVE</span><h1>${config.title}<span class="ship-title-number">${config.id}</span></h1></div><div class="ship-intro-actions"><nav class="ship-picker" aria-label="Naves del hangar">${Object.values(SHIPS).map(item=>`<a href="${base}spaceship.html?vehicle=${item.id}&${pilotParams}" ${item.id===config.id?'aria-current="page"':''}>${item.name}</a>`).join('')}</nav><a class="ship-simulator" href="${base}?vehicle=${config.id}&${pilotParams}">Simulador de vuelo <span aria-hidden="true">▶</span></a></div></section>
     <div class="ship-workspace">
       <section class="ship-viewport" aria-label="Hangar 3D de ${config.title}" data-vehicle="${config.id}" data-hat="${choice.hat}" data-ready="false">
         <canvas class="ship-canvas" tabindex="0" aria-label="Nave 3D. Arrastrá para girar, rueda para acercar y clic para identificar una pieza."></canvas>
@@ -44,18 +47,18 @@ export async function createSpaceship() {
   const viewport=$('.ship-viewport'), canvas=$('.ship-canvas'), loader=$('.ship-loader');
   let renderer;
   const fail=message=>{loader.hidden=false;loader.replaceChildren();const p=document.createElement('p');p.textContent=message;const button=document.createElement('button');button.textContent='Reintentar';button.onclick=()=>location.reload();loader.append(p,button);};
-  try {renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});}
-  catch {fail('No pudimos iniciar el visor 3D. Probá con un navegador con WebGL habilitado.');return;}
+  try {renderer=await createGameRenderer(canvas,{alpha:true});viewport.dataset.backend=canvas.dataset.backend;}
+  catch {fail('No pudimos iniciar el visor 3D. Probá con un navegador con aceleración gráfica habilitada.');return;}
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
   renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
   const scene=new THREE.Scene();
   const camera=new THREE.PerspectiveCamera(36,1,.1,100);
   const controls=new OrbitControls(camera,canvas);
   controls.enableDamping=!reducedMotion.matches;controls.dampingFactor=.08;controls.minDistance=4;controls.maxDistance=18;
   controls.maxPolarAngle=Math.PI*.48;controls.enablePan=false;controls.autoRotateSpeed=.55;
-  const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();
-  const environment=pmrem.fromScene(room,.04);scene.environment=environment.texture;scene.environmentIntensity=.5;room.dispose();pmrem.dispose();
+  const pmrem=new PMREMGenerator(renderer),room=new RoomEnvironment();
+  const environment=await pmrem.fromSceneAsync(room,.04);scene.environment=environment.texture;scene.environmentIntensity=.5;room.dispose();pmrem.dispose();
   scene.add(new THREE.HemisphereLight(0xfaf8eb,0x798a75,1.25));
   const key=new THREE.DirectionalLight(0xfff9eb,2.5);key.position.set(-3,8,5);key.castShadow=true;key.shadow.mapSize.set(2048,2048);key.shadow.camera.left=-6;key.shadow.camera.right=6;key.shadow.camera.top=7;key.shadow.camera.bottom=-5;key.shadow.normalBias=.025;key.shadow.bias=-.00015;key.shadow.radius=3;scene.add(key);
   const fill=new THREE.DirectionalLight(0xd4e5ff,1.1);fill.position.set(5,4,-5);scene.add(fill);
@@ -94,7 +97,7 @@ export async function createSpaceship() {
   const canopyRest=canopy?.position.clone();
   let pilot;try{pilot=await createSelectablePilot({...choice,offset:config.pilotOffset,fit:config.pilotFit});}catch{fail('No se pudo cargar el piloto. Intentá de nuevo.');renderer.dispose();return;}systems.cockpit.add(pilot.root);
   const pilotMeshes=[];pilot.root.traverse(mesh=>{if(mesh.isMesh)pilotMeshes.push(mesh);});
-  const comic=createCharacterComic(renderer);let comicEnabled=true;
+  const comic=createComicView(renderer,scene,camera);let comicEnabled=true;
   // Plumes point backwards (-Z). Their scale and emission follow the flight timeline.
   for(const [x,y,z,radius] of config.exhausts){
     const plume=new THREE.Mesh(new THREE.ConeGeometry(radius,1.2,8,1,true),new THREE.MeshBasicMaterial({color:0xff9944,transparent:true,opacity:.3,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
@@ -133,7 +136,7 @@ export async function createSpaceship() {
     if(playing){if(elapsed>=FLIGHT_DURATION)elapsed=0;$('#ship-canopy').checked=!!canopy&&$('#ship-pilot').checked;$('#ship-explode').checked=false;}
     updateTransport();
   }
-  function reset(){stopFlight();selectPart(null,{focus:false});$('#ship-hide-canopy').checked=false;$('#ship-pilot').checked=false;pilot.root.visible=false;comicEnabled=true;$('#ship-comic').setAttribute('aria-pressed','true');$('.ship-simulator').href=`${base}simulator.html?vehicle=${config.id}&${pilotParams}`;syncCanopyControls();$('#ship-canopy').checked=false;$('#ship-explode').checked=false;$('#ship-label-toggle').checked=true;goToView(viewPositions.perspective,'perspective');}
+  function reset(){stopFlight();selectPart(null,{focus:false});$('#ship-hide-canopy').checked=false;$('#ship-pilot').checked=false;pilot.root.visible=false;comicEnabled=true;$('#ship-comic').setAttribute('aria-pressed','true');$('.ship-simulator').href=`${base}?vehicle=${config.id}&${pilotParams}`;syncCanopyControls();$('#ship-canopy').checked=false;$('#ship-explode').checked=false;$('#ship-label-toggle').checked=true;goToView(viewPositions.perspective,'perspective');}
   document.querySelectorAll('[data-part],[data-hotspot]').forEach(button=>button.addEventListener('click',()=>selectPart(button.dataset.part??button.dataset.hotspot)));
   document.querySelectorAll('[data-ship-view]').forEach(button=>button.addEventListener('click',()=>goToView(viewPositions[button.dataset.shipView],button.dataset.shipView)));
   $('#ship-play').addEventListener('click',togglePlay);$('#ship-reset').addEventListener('click',reset);
@@ -156,7 +159,7 @@ export async function createSpaceship() {
     if(event.target.checked){$('#ship-hide-canopy').checked=!!canopy;goToView([4.9,7.4,7.4]);}
     syncCanopyControls();
   });
-  $('#ship-comic').addEventListener('click',event=>{comicEnabled=!comicEnabled;event.currentTarget.setAttribute('aria-pressed',String(comicEnabled));$('.ship-simulator').href=`${base}simulator.html?vehicle=${config.id}&${pilotParams}&comic=${comicEnabled?'1':'0'}`;});
+  $('#ship-comic').addEventListener('click',event=>{comicEnabled=!comicEnabled;event.currentTarget.setAttribute('aria-pressed',String(comicEnabled));$('.ship-simulator').href=`${base}?vehicle=${config.id}&${pilotParams}&comic=${comicEnabled?'1':'0'}`;});
   reducedMotion.addEventListener('change',()=>{controls.enableDamping=!reducedMotion.matches;if(reducedMotion.matches){playing=false;loop=false;viewTween=null;controls.autoRotate=false;$('#ship-loop').setAttribute('aria-pressed','false');$('#ship-rotate').setAttribute('aria-pressed','false');updateTransport();}});
   const pointer=new THREE.Vector2(),raycaster=new THREE.Raycaster();let down=null;
   canvas.addEventListener('pointerdown',event=>{down=event.isPrimary?{x:event.clientX,y:event.clientY}:null;});
@@ -178,7 +181,9 @@ export async function createSpaceship() {
   const splitMeshes=Object.fromEntries(parts.filter(p=>p.split).map(p=>[p.id,meshes.filter(m=>m.userData.system===p.id)]));
   const hotVanes=meshes.filter(mesh=>/aleta[_ ]caliente/.test(mesh.name));
   const projected=new THREE.Vector3();const clock=new THREE.Clock();let lastPhase='';
+  let rendering=false,disposed=false,renderTask=Promise.resolve();
   function frame(){
+    if(rendering||disposed)return;
     const dt=Math.min(clock.getDelta(),.05);
     if(document.hidden)return;
     if(playing){elapsed+=dt*speed;if(elapsed>=FLIGHT_DURATION){if(loop)elapsed%=FLIGHT_DURATION;else {elapsed=FLIGHT_DURATION;playing=false;updateTransport();}}}
@@ -222,12 +227,12 @@ export async function createSpaceship() {
     timeInput.value=String(elapsed);const timeText=`00:${String(Math.floor(elapsed)).padStart(2,'0')} / 00:18`;if(timeLabel.textContent!==timeText)timeLabel.textContent=timeText;
     viewport.dataset.altitude=pose.altitude.toFixed(3);viewport.dataset.canopy=open.toFixed(2);viewport.dataset.exploded=explode.toFixed(2);
     viewport.dataset.canopyHidden=String(canopy?!canopy.visible:false);viewport.dataset.pilot=String(pilot.root.visible);viewport.dataset.comic=String(comicEnabled);
-    if(comicEnabled)comic.render(scene,camera,'#e8e9e2');else renderer.render(scene,camera);
+    rendering=true;renderTask=comic.render(comicEnabled,'#e8e9e2').then(()=>{viewport.dataset.frame=String(Number(viewport.dataset.frame??0)+1);viewport.dataset.ready='true';loader.hidden=true;}).catch(error=>{if(!disposed){console.error(error);renderer.setAnimationLoop(null);fail('Se interrumpió la vista 3D. Recargá el hangar para continuar.');}}).finally(()=>{rendering=false;});
   }
   document.querySelectorAll('.ship-app [disabled]').forEach(element=>element.disabled=false);
   if(!canopy){$('#ship-canopy').closest('label').hidden=true;$('#ship-hide-canopy').closest('label').hidden=true;}
-  syncCanopyControls();viewport.dataset.ready='true';viewport.dataset.meshCount=String(meshes.length);loader.hidden=true;
+  syncCanopyControls();viewport.dataset.meshCount=String(meshes.length);
   updateTransport();renderer.setAnimationLoop(frame);
-  canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();playing=false;renderer.setAnimationLoop(null);fail('Se interrumpió la vista 3D. Recargá el hangar para continuar.');});
-  window.addEventListener('pagehide',()=>{renderer.setAnimationLoop(null);sizeObserver.disconnect();controls.dispose();comic.dispose();pilot.dispose();environment.dispose();renderer.dispose();},{once:true});
+  for(const event of ['webglcontextlost','graphicslost'])canvas.addEventListener(event,event=>{event.preventDefault();playing=false;renderer.setAnimationLoop(null);fail('Se interrumpió la vista 3D. Recargá el hangar para continuar.');});
+  window.addEventListener('pagehide',()=>{disposed=true;renderer.setAnimationLoop(null);sizeObserver.disconnect();controls.dispose();renderTask.finally(()=>{comic.dispose();pilot.dispose();environment.dispose();renderer.dispose();});},{once:true});
 }

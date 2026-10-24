@@ -1,4 +1,4 @@
-import {createDialKit,createDialRoot} from 'dialkit/vanilla';
+import {createDialKit,createDialRoot} from './dev-dials.js';
 import 'dialkit/vanilla/styles.css';
 
 const originalHull={halfWidth:1.52,halfLength:2.4,capsuleRadius:1.25,capsuleSpacing:.9,capsuleBottom:1.2,capsuleTop:2.45};

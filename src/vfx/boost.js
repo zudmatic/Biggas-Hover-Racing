@@ -1,41 +1,42 @@
 import * as THREE from 'three/webgpu';
-import {uniform,uv,float,smoothstep,mix,vec4} from 'three/tsl';
+import {uniform,uv,float,smoothstep,mix,vec4,step} from 'three/tsl';
 import {VFXParticles,Appearance,Blending} from 'vanilla-vfx';
-import {createDialKit} from 'dialkit/vanilla';
+import {createDialKit} from '../dev-dials.js';
 import {createFlameMaterial} from './flame-material.js';
 import {createFlameTrail} from './flame-trail.js';
 import {createEngineCore} from './engine-core.js';
 
 export async function createBoost(renderer,scene,ship){
   const nozzles=ship.config.exhausts,flame=createFlameMaterial(),trail=createFlameTrail(scene,flame.material,nozzles),engine=createEngineCore(ship.root,nozzles);
-  const color=uniform(new THREE.Color('#ff6b16')),hot=uniform(new THREE.Color('#fff1bc')),opacity=uniform(.18);
-  const round=float(1).sub(smoothstep(0,1,uv().mul(2).sub(1).length()));
+  const color=uniform(new THREE.Color('#ff6b16')),hot=uniform(new THREE.Color('#fff1bc')),opacity=uniform(.13);
+  const round=float(1).sub(smoothstep(.72,1,uv().mul(2).sub(1).length()));
   const fragments=new VFXParticles(renderer,{autoStart:false,maxParticles:1800,size:[.36,.6],lifetime:[.25,.5],speed:[6,9],
     fadeSize:[1,0],fadeOpacity:[1,0],appearance:Appearance.DEFAULT,blending:Blending.NORMAL,gravity:[0,.8,0],
-    turbulence:{intensity:2,frequency:2.3,speed:2.5},alphaTestNode:float(.01),opacityNode:()=>opacity.mul(round),
-    colorNode:({progress},base)=>vec4(mix(hot,color,smoothstep(0,.55,progress)),base.a)});
+    friction:{intensity:.12},turbulence:{intensity:8,frequency:2.3,speed:2.5},alphaTestNode:float(.01),opacityNode:()=>opacity.mul(round),
+    colorNode:({progress},base)=>vec4(mix(hot,color,step(.25,progress)),flame.ditherAlpha(base.a))});
   const embers=new VFXParticles(renderer,{autoStart:false,maxParticles:400,size:[.04,.1],lifetime:[.26,.65],speed:[9,15],gravity:[0,-.3,0],
-    fadeSize:[1,0],fadeOpacity:[1,0],appearance:Appearance.GRADIENT,blending:Blending.ADDITIVE,turbulence:{intensity:8,frequency:2,speed:1},colorNode:(_d,base)=>vec4(color.mul(2.5),base.a)});
-  const lineGeometry=new THREE.CapsuleGeometry(.035,1,2,6);
+    fadeSize:[1,0],fadeOpacity:[1,0],appearance:Appearance.GRADIENT,blending:Blending.ADDITIVE,turbulence:{intensity:8,frequency:2,speed:1},stretchBySpeed:{factor:.15,maxStretch:4},colorNode:(_d,base)=>vec4(new THREE.Color('#ff861f'),flame.ditherAlpha(base.a))});
+  const lineGeometry=new THREE.CapsuleGeometry(.025,.4,2,6);
   const lines=new VFXParticles(renderer,{autoStart:false,maxParticles:200,geometry:lineGeometry,orientToDirection:true,orientAxis:'y',size:[.3,.55],lifetime:[.2,.4],speed:[10,18],gravity:[0,.1,0],
-    fadeSize:[1,0],fadeOpacity:[1,0],blending:Blending.ADDITIVE,turbulence:{intensity:2,frequency:2,speed:1},colorNode:(_d,base)=>vec4(hot.mul(3),base.a)});
+    fadeSize:[1,0],fadeOpacity:[1,0],blending:Blending.ADDITIVE,turbulence:{intensity:2,frequency:2,speed:1},stretchBySpeed:{factor:.15,maxStretch:6},opacityNode:()=>float(.8),colorNode:(_d,base)=>vec4(new THREE.Color('#ffd18a'),flame.ditherAlpha(base.a))});
   const systems=[fragments,embers,lines];
   try{for(const system of systems){await system.init();system.stop();scene.add(system.object3D);}}
   catch(error){for(const system of systems)system.dispose();trail.dispose();engine.dispose();flame.material.dispose();lineGeometry.dispose();throw error;}
   const kit=createDialKit('Propulsor · WebGPU',{
-    Llama:true,Motor:true,'Densidad llama':[.82,.1,1,.01],Longitud:[2.7,.2,9,.1],Ancho:[.7,.1,3,.02],Turbulencia:[1.3,0,6,.1],
+    Llama:true,Motor:true,'Densidad llama':[1,.1,1,.01],Longitud:[4.6,.2,9,.1],Ancho:[1.22,.1,3,.02],Turbulencia:[.4,0,6,.1],
     Trama:{type:'select',options:['Apagado','Damero','Dither'],default:'Dither'},
-    'Estela partículas':[3,.5,8,.1],'Seguir nave':[.9,0,1,.05],
-    Fragmentos:true,'Cantidad fragmentos':[600,0,600,5],'Tamaño fragmentos':[.32,.05,1.2,.01],'Duración fragmentos':[.22,.09,1,.01],
-    'Opacidad fragmentos':[.28,0,1,.01],Brasas:true,
-    'Cantidad brasas':[100,0,300,5],'Tamaño brasas':[.14,.03,.4,.01],'Duración brasas':[.3,.09,1,.01],
-    'Chispas lineales':true,'Cantidad chispas':[60,0,150,5],'Tamaño chispas':[.75,.1,1.5,.05],'Duración chispas':[.24,.09,1,.01],
-    Calor:true,'Intensidad calor':[.25,0,2,.05],
+    'Intensidad trama':[.6,0,1,.05],'Tamaño trama':[2,1,8,1],
+    'Estela partículas':[8,.5,8,.1],'Seguir nave':[1,0,1,.05],
+    Fragmentos:true,'Cantidad fragmentos':[600,0,600,5],'Tamaño fragmentos':[.6,.05,1.2,.01],'Duración fragmentos':[.5,.09,1,.01],
+    'Opacidad fragmentos':[.13,0,1,.01],Brasas:true,
+    'Cantidad brasas':[71,0,300,1],'Tamaño brasas':[.1,.03,.4,.01],'Duración brasas':[.65,.09,1,.01],
+    'Chispas lineales':true,'Cantidad chispas':[22,0,150,1],'Tamaño chispas':[.55,.1,1.5,.05],'Duración chispas':[.4,.09,1,.01],
+    Calor:true,'Intensidad calor':[2,0,2,.05],
   },{id:'webgpu-boost',persist:false,defaultCollapsed:true});
   const unsubscribe=kit.subscribe(v=>{
     opacity.value=v['Opacidad fragmentos'];fragments.setProps({size:[v['Tamaño fragmentos']*.6,v['Tamaño fragmentos']],lifetime:[v['Duración fragmentos']*.5,v['Duración fragmentos']]});
-    embers.setProps({size:[v['Tamaño brasas']*.5,v['Tamaño brasas']]});
-    lines.setProps({size:[v['Tamaño chispas']*.6,v['Tamaño chispas']]});
+    embers.setProps({size:[v['Tamaño brasas']*.4,v['Tamaño brasas']]});
+    lines.setProps({size:[v['Tamaño chispas']*.55,v['Tamaño chispas']]});
     [v.Fragmentos,v.Brasas,v['Chispas lineales']].forEach((on,i)=>{systems[i].object3D.visible=on;if(!on)systems[i].clear();});
   });
   let power=0,time=0,quality=1;const previous=new THREE.Vector3(),worldPosition=new THREE.Vector3(),velocity=new THREE.Vector3();let positioned=false;const accumulators=[0,0,0],origin=new THREE.Vector3(),direction=new THREE.Vector3();
@@ -55,7 +56,7 @@ export async function createBoost(renderer,scene,ship){
       ship.root.updateMatrixWorld(true);trail.record(time,ship.root);
       trail.update(time,{Activa:enabled&&v.Llama,Longitud:v.Longitud,Ancho:v.Ancho,Pulsación:.02},power,7.5,.8);
       engine.update(dt,time,power,{Activo:enabled&&v.Motor,Profundidad:2.25,Intensidad:1.1,Tamaño:1.225,Enfriamiento:.85,Pulsación:.04,'Luz cercana':.5,'Color borde':blue?'#42a4ff':'#ff5812','Color centro':'#fff1b0'});
-      const rates=[v.Fragmentos?v['Cantidad fragmentos']:0,v.Brasas?v['Cantidad brasas']:0,v['Chispas lineales']?v['Cantidad chispas']:0],speeds=[7.5,12,14],spread=[.33,1,1.2];
+      const rates=[v.Fragmentos?v['Cantidad fragmentos']:0,v.Brasas?v['Cantidad brasas']:0,v['Chispas lineales']?v['Cantidad chispas']:0],speeds=[7.5,12,14],spread=[.33,.64,.22];
       const durations=[v['Duración fragmentos'],v['Duración brasas'],v['Duración chispas']];
       for(let j=0;j<systems.length;j++){
         // Keep small accents in low quality; reduce only the dense flame filler.
@@ -77,7 +78,7 @@ export async function createBoost(renderer,scene,ship){
         if(dt>0)await systems[j].system.update(dt);
       }
     },
-    updateHeat(heat){const v=kit.values;heat.setNozzles(nozzles);heat.update(ship.root,time*3,power,v.Calor?v['Intensidad calor']:0,v.Longitud*.9/1.5,8,1.2);},
+    updateHeat(heat){const v=kit.values;heat.setNozzles(nozzles);heat.update(ship.root,time*3,power,v.Calor?v['Intensidad calor']:0,.9,8,1.2);},
     dispose(){unsubscribe();kit.destroy();systems.forEach(s=>s.dispose());lineGeometry.dispose();trail.dispose();engine.dispose();flame.material.dispose();},
   };
 }
