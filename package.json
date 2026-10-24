@@ -10,6 +10,7 @@
     "test": "playwright test"
   },
   "dependencies": {
+    "dialkit": "^2.0.2",
     "three": "^0.180.0"
   },
   "devDependencies": {
