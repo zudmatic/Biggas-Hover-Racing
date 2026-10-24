@@ -22,7 +22,7 @@ test('both riders fit the saddle, keep their supports while turning and use the 
       },before=points(),plates=[],grips=[],textures=[],lamps=[],plumes=[];
       ship.root.traverse(m=>{if(!m.isMesh)return;if(m.name==='Estribo adaptado al piloto')plates.push(m);if(m.name==='Agarre de la Nómada')grips.push(m);if(m.material.map)textures.push(!!m.geometry.attributes.uv);if(m.material.userData.headlight)lamps.push(m.material);if(m.geometry.type==='ConeGeometry')plumes.push(m);});
       const materialOff=lamps.map(m=>m.emissiveIntensity);ship.setHeadlights(true);const materialOn=lamps.map(m=>m.emissiveIntensity);ship.setHeadlights(false);
-      const short=plumes[0].scale.y;ship.update(1,50,true,false);const long=plumes[0].scale.y;ship.update(0,0,false,true);
+      const short=ship.exhaust.jets[0].group.scale.z;for(let i=1;i<=60;i++)ship.update(i/60,50,true,false);const long=ship.exhaust.jets[0].group.scale.z;ship.update(0,0,false,true);
       ship.root.rotation.set(.2,1.2,-.3);ship.root.scale.setScalar(.75);ship.update(2,0,false,true);const after=points();
       const gripErrors=grips.map((g,i)=>new THREE.Vector3(...after[i]).distanceTo(ship.root.worldToLocal(g.getWorldPosition(new THREE.Vector3()))));
       const supportPositions=plates.map(m=>m.position.toArray());

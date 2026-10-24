@@ -1,3 +1,5 @@
+import {SHIPS,prepareShipModel} from '../../src/ship-catalog.js';
+import {createShipCloth} from '../../src/ship-cloth.js';
 import {createStudioCamera} from './studio-camera.js';
 import {createDither} from './dither.js';
 import {createEngineCore} from './engine-core.js';
@@ -19,11 +21,11 @@ async function main(){
   const orbit=new OrbitControls(camera,renderer.domElement);orbit.target.set(0,.6,-2);orbit.enableDamping=true;
   scene.add(new THREE.HemisphereLight(0xdff5ff,0x62432a,2));const light=new THREE.DirectionalLight(0xffe9ca,3);light.position.set(4,6,-5);scene.add(light);
   const grid=new THREE.GridHelper(30,30,0x6a8894,0x3c505b);grid.position.y=-.4;scene.add(grid);
-  const vehicles={
-    '033':{file:'zud-033.glb',nozzles:[[-.68,.62,-2.14,.24],[.68,.62,-2.14,.24]]},
-    '037':{file:'oliva-037.glb',nozzles:[[-1.24,.86,-2.68,.31],[0,1,-2.72,.28],[1.24,.86,-2.68,.31]]},
-  };
-  await Promise.all(Object.values(vehicles).map(async v=>{v.model=(await new GLTFLoader().loadAsync('/models/spaceship/'+v.file)).scene;}));
+  const vehicles=Object.fromEntries(Object.values(SHIPS).map(config=>[config.id,{...config,nozzles:config.exhausts,cloth:[]}]));
+  await Promise.all(Object.values(vehicles).map(async v=>{
+    v.model=prepareShipModel((await new GLTFLoader().loadAsync('/models/spaceship/'+v.file)).scene,v);
+    v.model.traverse(mesh=>{if(mesh.isMesh&&v.clothName?.test(mesh.name))v.cloth.push(createShipCloth(mesh,mesh.matrixWorld));});
+  }));
   const ship=new THREE.Group();scene.add(ship);ship.add(vehicles['033'].model);
   let nozzles=vehicles['033'].nozzles;
 
@@ -99,7 +101,7 @@ async function main(){
   }));
   let previousView,previousVehicle;
   unsubscribers.push(kits.studio.subscribe(v=>{
-    const id=v.Vehículo.startsWith('037')?'037':'033';
+    const id=v.Vehículo.slice(0,3);
     if(id!==previousVehicle){
       flameTrail.dispose();engineCore.dispose();
       for(const vehicle of Object.values(vehicles))ship.remove(vehicle.model);
@@ -143,6 +145,7 @@ async function main(){
       studioCamera.update(stepDt,power,studio.Pausa);
       document.body.dataset.camera=kits.camera.values['Cámara'];
       document.body.dataset.shipPosition=ship.position.toArray().join(',');
+      for(const cloth of vehicles[previousVehicle].cloth)cloth.update(time,power*52,studio.Modo==='Turbo',false);
       engineCore.update(studio.Pausa?0:stepDt,time,power,kits.engine.values);
       flameTrail.update(time,flame,power,fragment.Velocidad,fragment.Elevación);
       document.body.dataset.time=time.toFixed(3);

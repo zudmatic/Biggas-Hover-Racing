@@ -193,3 +193,22 @@ Esta etapa no cambia el renderer predeterminado ni migra la selección/hangar.
 El mapa adjunto está integrado con sus texturas y colores originales, ruta de 1,50 km, colisiones de pista, terreno y obstáculos, 16 checkpoints y récord independiente. Comparte el shader cómic, luz global, sombras, faros, ciclo día/noche, efectos e ítems de los otros circuitos. Se puede elegir en el menú o con `?selection=map&map=mario-raceway`.
 
 El FBX original está en `assets/maps/mario-raceway/`. `node scripts/build-mario-raceway.mjs` regenera los GLB y datos de carrera de `public/models/mario-raceway/`, conservando las texturas embebidas y derivando la ruta de los bordes del asfalto. La escala de importación es 0,0015 (15 m de ancho de pista).
+
+### Integración Mario Raceway y Nómada en WebGPU
+
+`simulator.html?selection=map&renderer=webgpu&map=mario-raceway&vehicle=038&camera=klipp`
+permite probar juntos el mapa y la nave nuevos. `renderer=webgl2` usa el fallback;
+`pilot=zudmatic` cambia el piloto. Se conservan el ajuste de manos y apoyos,
+la bandera animada, las colisiones, los checkpoints y los récords de Fran.
+El reactor único usa los efectos TSL, calor y turbo azul del simulador.
+
+El preview (`webgpu-preview.html?map=mario-raceway&vehicle=038`) toma sus opciones
+del catálogo compartido. El estudio de `experiments/vfx-lab` ofrece también
+Nómada en DialKit, con la orientación, reactor y bandera del mismo catálogo.
+La bandera mantiene la deformación de geometría compartida con WebGL: sus
+materiales, silueta y sombras funcionan en WebGPU sin duplicar la animación.
+
+Las pruebas `webgpu-fran.spec.js` verifican texturas, colores de vértices,
+recortes de transparencia, doble cara y bandera con materiales TSL;
+`webgpu-driving.spec.js` incluye Mario Raceway / Nómada en ambos backends.
+El hangar y la selección siguen usando su renderer original.

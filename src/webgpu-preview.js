@@ -1,3 +1,5 @@
+import {CIRCUIT_MAPS,circuitMap} from './circuit-maps.js';
+import {SHIPS,shipConfig} from './ship-catalog.js';
 import {createBoost} from './vfx/boost.js';
 import {createSmokeMaterial} from './vfx/smoke-material.js';
 import {createOilPreview} from './vfx/oil.js';
@@ -70,8 +72,8 @@ async function main(){
   const unsubscribeSmoke=smokeKit?.subscribe(v=>{smoke.configure({size:v.Tamaño,lifetime:v.Duración,color:v['Color humo'],density:v.Densidad,grain:v.Trama,fourSupports:v['Cuatro ruedas']});smoke.setStyle({'Híbrido':'hybrid',Procedural:'procedural',Mixto:'mixed'}[v.Estilo]);});
   const unsubscribeFx=fxKit?.subscribe(v=>{if(!v.Activos)clearFx();});
   const kit=createDialKit('Validación · cómic',{
-    Mapa:{type:'select',options:['Ruinas','Nexus'],default:query.get('map')==='nexus'?'Nexus':'Ruinas'},
-    Nave:{type:'select',options:['033','037'],default:query.get('vehicle')==='033'?'033':'037'},
+    Mapa:{type:'select',options:Object.values(CIRCUIT_MAPS).map(m=>m.name),default:circuitMap(query.get('map')).name},
+    Nave:{type:'select',options:Object.keys(SHIPS),default:shipConfig(query.get('vehicle')??'037').id},
     'Cómic':query.get('look')!=='base','Trama':[1.03,0,2,.01],'Puntos':true,'Rayado':true,'Contornos':true,'Color cómic':true,
     'Espacio trama':{type:'select',options:['Objeto','Pantalla'],default:'Objeto'},
     Noche:false,Faros:false,Sombras:true,Recorrer:false,'Velocidad recorrido':[15,0,50,1],
@@ -79,7 +81,7 @@ async function main(){
   },{id:'webgpu-base-preview',persist:false,onAction:()=>frameShip()});
   let lastRoute=0;
   const unsubscribe=kit.subscribe(v=>{
-    const map=v.Mapa==='Nexus'?'nexus':'ruins',vehicle=v.Nave;
+    const map=Object.values(CIRCUIT_MAPS).find(m=>m.name===v.Mapa).id,vehicle=v.Nave;
     if(map!==(query.get('map')??'ruins')||vehicle!==(query.get('vehicle')??'037')){const url=new URL(location.href);url.searchParams.set('map',map);url.searchParams.set('vehicle',vehicle);location.assign(url);return;}
     comicMaterials?.setEnabled(v['Cómic']);comicStyle.strength.value=v.Trama;comicStyle.hatch.value=Number(v.Rayado);comicStyle.dots.value=Number(v.Puntos);comicStyle.screenSpace.value=Number(v['Espacio trama']==='Pantalla');
     if(comicPost){comicPost.outline.value=Number(v.Contornos);comicPost.grading.value=Number(v['Color cómic']);}
