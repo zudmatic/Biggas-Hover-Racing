@@ -90,7 +90,7 @@ export function chooseFlight(){
     function selectVehicle(id){
       selectedVehicle=shipConfig(id).id;const config=SHIPS[selectedVehicle];root.dataset.vehicle=selectedVehicle;
       root.querySelectorAll('[data-vehicle-choice]').forEach(button=>{const selected=button.dataset.vehicleChoice===selectedVehicle;button.classList.toggle('is-selected',selected);button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-label',`${SHIPS[button.dataset.vehicleChoice].name}${selected?', seleccionado':''}`);button.querySelector('.lobby-slot-player').hidden=!selected;});
-      $('[data-screen="2"] .lobby-section-title>span').textContent=selectedVehicle==='033'?'01 / 09':'02 / 09';
+      $('[data-screen="2"] .lobby-section-title>span').textContent=`${String(Object.keys(SHIPS).indexOf(selectedVehicle)+1).padStart(2,'0')} / 09`;
       $('[data-screen="2"] .lobby-selected-name>span').textContent=config.id;
       $('[data-screen="2"] .lobby-selected-name strong').textContent=config.title.toUpperCase();
       $('[data-screen="2"] .lobby-profile-brand').innerHTML=`${config.id}<span>HOVERCRAFT</span>`;

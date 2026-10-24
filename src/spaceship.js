@@ -3,11 +3,12 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {flightPose, FLIGHT_DURATION} from './spaceship-parts.js';
+import {createShipCloth} from './ship-cloth.js';
 import {createSelectablePilot} from './selectable-pilot.js';
 import {pilotChoice,pilotConfig,pilotQuery} from './pilot-catalog.js';
 import {createCharacterComic} from './character-comic.js';
 import './spaceship.css';
-import {SHIPS,shipConfig,shipUrl,shipCanopy} from './ship-catalog.js';
+import {SHIPS,shipConfig,shipUrl,shipCanopy,prepareShipModel} from './ship-catalog.js';
 
 export async function createSpaceship() {
   const config=shipConfig(new URLSearchParams(location.search).get('vehicle')),parts=config.parts,choice=pilotChoice(),pilotParams=pilotQuery(choice);
@@ -74,7 +75,7 @@ export async function createSpaceship() {
   let model,canopy;const meshes=[],exhausts=[];
   try {model=(await new GLTFLoader().loadAsync(shipUrl(config.id,base))).scene;}
   catch {fail('No se pudo cargar la nave. Comprobá la conexión e intentá de nuevo.');renderer.dispose();return;}
-  model.updateMatrixWorld(true);
+  prepareShipModel(model,config);
   const dimensions=new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());$('.ship-stage-specs p').textContent=`${[dimensions.x,dimensions.y,dimensions.z].map(value=>value.toFixed(2).replace('.',',')).join(' × ')} u.`;
   canopy=shipCanopy(model,config);
   const canopyMeshes=new Set();canopy?.traverse(o=>{if(o.isMesh)canopyMeshes.add(o);});
@@ -88,8 +89,10 @@ export async function createSpaceship() {
   }
   if(canopy)systems.cockpit.attach(canopy);
   for(const mesh of meshes)mesh.userData.rest=mesh.position.clone();
+  const cloth=meshes.filter(mesh=>config.clothName?.test(mesh.name)).map(mesh=>createShipCloth(mesh,mesh.matrixWorld.clone()));
+  let clothIdleTime=0;
   const canopyRest=canopy?.position.clone();
-  let pilot;try{pilot=await createSelectablePilot({...choice,offset:config.pilotOffset});}catch{fail('No se pudo cargar el piloto. Intentá de nuevo.');renderer.dispose();return;}systems.cockpit.add(pilot.root);
+  let pilot;try{pilot=await createSelectablePilot({...choice,offset:config.pilotOffset,fit:config.pilotFit});}catch{fail('No se pudo cargar el piloto. Intentá de nuevo.');renderer.dispose();return;}systems.cockpit.add(pilot.root);
   const pilotMeshes=[];pilot.root.traverse(mesh=>{if(mesh.isMesh)pilotMeshes.push(mesh);});
   const comic=createCharacterComic(renderer);let comicEnabled=true;
   // Plumes point backwards (-Z). Their scale and emission follow the flight timeline.
@@ -117,7 +120,7 @@ export async function createSpaceship() {
     $('#ship-description').textContent=part?.name??'';
     for(const mesh of meshes){const active=mesh.userData.system===id;mesh.material.emissive.copy(active?new THREE.Color(0xd6632e):mesh.userData.originalEmission);mesh.material.emissiveIntensity=active?.2:mesh.userData.originalIntensity;}
     if(part&&focus)goToView(part.view);
-    if(id==='cockpit'){$('#ship-canopy').checked=true;stopFlight();}
+    if(id==='cockpit'){$('#ship-canopy').checked=!!canopy;stopFlight();}
   }
   function updateTransport(){
     $('#ship-play').textContent=playing?'Ⅱ':'▶';$('#ship-play').setAttribute('aria-label',playing?'Pausar vuelo':elapsed>=FLIGHT_DURATION?'Repetir secuencia de vuelo':'Iniciar vuelo');
@@ -127,14 +130,14 @@ export async function createSpaceship() {
   function stopFlight(){playing=false;elapsed=0;updateTransport();}
   function togglePlay(){
     playing=!playing;
-    if(playing){if(elapsed>=FLIGHT_DURATION)elapsed=0;$('#ship-canopy').checked=$('#ship-pilot').checked;$('#ship-explode').checked=false;}
+    if(playing){if(elapsed>=FLIGHT_DURATION)elapsed=0;$('#ship-canopy').checked=!!canopy&&$('#ship-pilot').checked;$('#ship-explode').checked=false;}
     updateTransport();
   }
   function reset(){stopFlight();selectPart(null,{focus:false});$('#ship-hide-canopy').checked=false;$('#ship-pilot').checked=false;pilot.root.visible=false;comicEnabled=true;$('#ship-comic').setAttribute('aria-pressed','true');$('.ship-simulator').href=`${base}simulator.html?vehicle=${config.id}&${pilotParams}`;syncCanopyControls();$('#ship-canopy').checked=false;$('#ship-explode').checked=false;$('#ship-label-toggle').checked=true;goToView(viewPositions.perspective,'perspective');}
   document.querySelectorAll('[data-part],[data-hotspot]').forEach(button=>button.addEventListener('click',()=>selectPart(button.dataset.part??button.dataset.hotspot)));
   document.querySelectorAll('[data-ship-view]').forEach(button=>button.addEventListener('click',()=>goToView(viewPositions[button.dataset.shipView],button.dataset.shipView)));
   $('#ship-play').addEventListener('click',togglePlay);$('#ship-reset').addEventListener('click',reset);
-  $('#ship-time').addEventListener('input',event=>{playing=false;elapsed=Number(event.target.value);$('#ship-canopy').checked=$('#ship-pilot').checked;$('#ship-explode').checked=false;updateTransport();});
+  $('#ship-time').addEventListener('input',event=>{playing=false;elapsed=Number(event.target.value);$('#ship-canopy').checked=!!canopy&&$('#ship-pilot').checked;$('#ship-explode').checked=false;updateTransport();});
   $('#ship-speed').addEventListener('change',event=>speed=Number(event.target.value));
   $('#ship-loop').addEventListener('click',event=>{loop=!loop;event.currentTarget.setAttribute('aria-pressed',String(loop));});
   $('#ship-rotate').addEventListener('click',event=>{viewTween=null;controls.autoRotate=!controls.autoRotate;event.currentTarget.setAttribute('aria-pressed',String(controls.autoRotate));});
@@ -142,14 +145,15 @@ export async function createSpaceship() {
   function syncCanopyControls(){
     const hidden=$('#ship-hide-canopy').checked,occupied=$('#ship-pilot').checked;
     // Zud's hat needs more clearance than the closed cover provides.
-    $('#ship-canopy').disabled=hidden||occupied;
-    if(occupied)$('#ship-canopy').checked=true;
+    $('#ship-canopy').disabled=!canopy||hidden||occupied;
+    $('#ship-hide-canopy').disabled=!canopy;
+    if(occupied&&canopy)$('#ship-canopy').checked=true;
     if(canopy)canopy.visible=!hidden;
   }
   $('#ship-hide-canopy').addEventListener('change',syncCanopyControls);
   $('#ship-pilot').addEventListener('change',event=>{
     pilot.root.visible=event.target.checked;
-    if(event.target.checked){$('#ship-hide-canopy').checked=true;goToView([4.9,7.4,7.4]);}
+    if(event.target.checked){$('#ship-hide-canopy').checked=!!canopy;goToView([4.9,7.4,7.4]);}
     syncCanopyControls();
   });
   $('#ship-comic').addEventListener('click',event=>{comicEnabled=!comicEnabled;event.currentTarget.setAttribute('aria-pressed',String(comicEnabled));$('.ship-simulator').href=`${base}simulator.html?vehicle=${config.id}&${pilotParams}&comic=${comicEnabled?'1':'0'}`;});
@@ -180,6 +184,8 @@ export async function createSpaceship() {
     if(playing){elapsed+=dt*speed;if(elapsed>=FLIGHT_DURATION){if(loop)elapsed%=FLIGHT_DURATION;else {elapsed=FLIGHT_DURATION;playing=false;updateTransport();}}}
     const pose=flightPose(reducedMotion.matches ? elapsed<2?0:elapsed<6?4:elapsed<13?9:elapsed<17?15:18 : elapsed);
     if(reducedMotion.matches){pose.roll=0;pose.pitch=0;pose.bob=0;}
+    if(!reducedMotion.matches&&elapsed===0)clothIdleTime+=dt;
+    for(const flag of cloth)flag.update(elapsed>0?elapsed:clothIdleTime,pose.power*28,false,reducedMotion.matches);
     const ease=1-Math.exp(-dt*6);
     explode=THREE.MathUtils.lerp(explode,explodeInput.checked?1:0,reducedMotion.matches||keyboardInput?1:ease);
     open=THREE.MathUtils.lerp(open,canopyInput.checked?1:0,reducedMotion.matches||keyboardInput?1:ease);
@@ -219,7 +225,8 @@ export async function createSpaceship() {
     if(comicEnabled)comic.render(scene,camera,'#e8e9e2');else renderer.render(scene,camera);
   }
   document.querySelectorAll('.ship-app [disabled]').forEach(element=>element.disabled=false);
-  viewport.dataset.ready='true';viewport.dataset.meshCount=String(meshes.length);loader.hidden=true;
+  if(!canopy){$('#ship-canopy').closest('label').hidden=true;$('#ship-hide-canopy').closest('label').hidden=true;}
+  syncCanopyControls();viewport.dataset.ready='true';viewport.dataset.meshCount=String(meshes.length);loader.hidden=true;
   updateTransport();renderer.setAnimationLoop(frame);
   canvas.addEventListener('webglcontextlost',event=>{event.preventDefault();playing=false;renderer.setAnimationLoop(null);fail('Se interrumpió la vista 3D. Recargá el hangar para continuar.');});
   window.addEventListener('pagehide',()=>{renderer.setAnimationLoop(null);sizeObserver.disconnect();controls.dispose();comic.dispose();pilot.dispose();environment.dispose();renderer.dispose();},{once:true});

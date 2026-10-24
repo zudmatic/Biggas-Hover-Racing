@@ -1,6 +1,6 @@
 # Biggas Hover Racing
 
-Juego de carreras hover en 3D con Zud y Zudmatic, las naves 033 y Oliva 037, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
+Juego de carreras hover en 3D con Zud y Zudmatic, las naves 033, Oliva 037 y Nómada 038, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
 
 ## Desarrollo
 
@@ -15,11 +15,13 @@ npm run dev
 
 En la landing, **Jugar** abre la selección de personaje, nave, circuito y modo. El enlace **Hangar** permite inspeccionar las naves y sus componentes. Desde el hangar se puede volver al inicio o abrir la selección de partida con la nave elegida.
 
-Las rutas del juego aceptan `?vehicle=033|037`, `?map=ruins|nexus|mario-raceway` y `?comic=0|1`. El hangar acepta `?vehicle=033|037`. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
+Las rutas del juego aceptan `?vehicle=033|037|038`, `?map=ruins|nexus|mario-raceway` y `?comic=0|1`. El hangar acepta `?vehicle=033|037|038`. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
 
 **Zud** permite elegir el gorro original o los sombreros Samurai Kasa, Cloud Chef y Crescent Wizard. Los tres GLB y sus ajustes de encaje se recuperaron del historial anterior a `b0233e0`. La selección se conserva al cambiar de nave, entrar en pista y visitar el hangar.
 
-**Zudmatic** usa el GLB con rig y animaciones del paquete `Personaje-rig-shader-animaciones-5-paletas`. Sus cinco paletas se eligen en la selección de personaje; Bosque conserva los colores particulares de sus piezas. La vista previa reproduce Reposo y las naves usan una pose sentada con escala uniforme de `0.31`, pelvis anclada al asiento y el desplazamiento de cabina de cada vehículo. La elección acompaña al jugador en la pista, el hangar y el regreso a la selección.
+**Zudmatic** usa el GLB con rig y animaciones del paquete `Personaje-rig-shader-animaciones-5-paletas`. Sus cinco paletas se eligen en la selección de personaje; Bosque conserva los colores particulares de sus piezas. La vista previa reproduce Reposo y las naves 033 y 037 usan una pose sentada con escala uniforme de `0.31`, pelvis anclada al asiento y el desplazamiento de cabina de cada vehículo. La elección acompaña al jugador en la pista, el hangar y el regreso a la selección.
+
+La **Nómada 038** es una hoverbike de cabina abierta, con reactor único y faro ámbar. Está disponible en selección, hangar, vuelo libre y contrarreloj. Conserva sus texturas PBR y usa las mismas animaciones de vuelo, turbo, frenado y derrape que las otras naves. Zud y Zudmatic tienen una postura específica a horcajadas, escala uniforme propia, extensiones al manillar y estribos elevados. La bandera y sus flecos flamean con más intensidad al acelerar o usar turbo; se detienen al pausar la carrera y respetan movimiento reducido. El hangar ofrece inspección de sus ocho grupos de piezas, desarmado y secuencia de despegue/aterrizaje; al no tener cubierta, no muestra controles de cabina.
 
 ## Controles
 
@@ -45,7 +47,7 @@ Para experimentar con el aceite, DialKit ofrece **Ralentizacion** de 0 a 95%. **
 
 Los botones **Probar: fuerte y fina** (65%) y **Probar: salpicado** (75%) aplican combinaciones iniciales; **Volver al clásico** recupera el 30% y la estela uniforme. Los ajustes se guardan en el navegador. Los cambios de forma afectan a las nuevas manchas; las existentes conservan tamaño y vencimiento. Vertido se toma al activar cada barril. La ralentización y la respuesta se actualizan en vivo tanto para la nave como para el bot.
 
-Durante la carrera, el panel DialKit de abajo a la izquierda permite ajustar **Escala** de la nave y su piloto juntos: `0.75` es el tamaño inicial, `1.00` el original, con un rango de `0.35` a `1.25`. El cambio es inmediato y se guarda en el navegador para ambas naves y mapas. Las colisiones y los faros acompañan la escala. El hangar y las vistas de selección conservan su presentación original. Para acordar el tamaño definitivo, basta compartir el número del deslizador.
+Durante la carrera, el panel DialKit de abajo a la izquierda permite ajustar **Escala** de la nave y su piloto juntos: `0.75` es el tamaño inicial, `1.00` el original, con un rango de `0.35` a `1.25`. El cambio es inmediato y se guarda en el navegador para todas las naves y mapas. Las colisiones y los faros acompañan la escala. El hangar y las vistas de selección conservan su presentación original. Para acordar el tamaño definitivo, basta compartir el número del deslizador.
 
 | Tecla | Acción |
 | --- | --- |
