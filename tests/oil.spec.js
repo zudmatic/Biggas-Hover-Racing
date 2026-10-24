@@ -110,6 +110,14 @@ for(const map of ['ruins','nexus'])test(`barrel and bot work in ${map}; pause fr
 test('bot lays oil ahead of the player; player slows and recovers',async({page})=>{
   test.setTimeout(90000);await page.goto('/simulator.html');await launchFromLobby(page);
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
+  // Use a continuous trail and a fixed speed so this checks contact/recovery,
+  // independently of the currently selected art-direction defaults.
+  await page.getByText('Aceite · prueba',{exact:true}).click();
+  await page.getByRole('button',{name:'Volver al clásico',exact:true}).click();
+  const botSpeed=page.getByRole('slider',{name:'Velocidad Bot',exact:true});
+  await botSpeed.focus();await page.keyboard.press('Home');
+  for(let i=0;i<14;i++)await page.keyboard.press('ArrowRight');
+  await expect(botSpeed).toHaveAttribute('aria-valuenow','22');
   await page.getByRole('button',{name:'Bot tira aceite',exact:true}).click();
   await expect(app).toHaveAttribute('data-oil-source','bot');
   await expect(app).toHaveAttribute('data-oil-contact','true',{timeout:15000});

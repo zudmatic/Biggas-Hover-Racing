@@ -90,6 +90,7 @@ export async function createFlightSimulator({launchMode,entryTransition}={}){
     if(next==='paused')$('#flight-menu-title').textContent='En pausa.';
     if(next==='finished')$('#flight-menu-title').textContent='Meta.';
     if(moving)canvas.focus({preventScroll:true});else if(next==='paused')$('#flight-resume').focus({preventScroll:true});else if(next==='finished')$('#flight-race-start').focus({preventScroll:true});
+    if(next==='paused'){lastHud=-1;updateHud(performance.now()/1000);}
   }
   function notice(text){setText($('.flight-notice'),text);$('.flight-notice').hidden=false;noticeUntil=performance.now()+2300;}
   function resetFlight(){state=freshState();elapsed=0;simulationTime=0;gateIndex=0;penalty=0;accumulator=0;world.setGate(0);world.reset();oil?.reset(state,mode==='free');syncShip();updateCamera(1,true);lastHud=-1;}
