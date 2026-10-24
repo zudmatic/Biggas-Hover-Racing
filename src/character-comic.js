@@ -39,6 +39,7 @@ export function createCharacterComic(renderer,{samples=4,glowSamples=12,lite=fal
   }
   function restore(){for(let i=0;i<restored.length;i++)restored[i].material=sources[i];restored.length=sources.length=0;}
   return {
+    get depthTexture(){return pass.material.uniforms.tDepth.value;},
     setQuality(options){samples=options.samples??samples;glowSamples=options.glowSamples??glowSamples;lite=options.lite??lite;},
     async prepare(scene,camera){
       retroStyle.setLook('comic');retroStyle.setLite(lite);apply(scene);

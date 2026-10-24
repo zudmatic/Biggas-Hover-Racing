@@ -105,7 +105,6 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false}={}
     hover.position.set(state.x,state.y-state.hover+.06,state.z);hover.scale.set(1.1+state.speed*.004,1,1.65);hover.rotation.y=state.yaw;hover.material.opacity=state.boosting||state.drifting?.32:.16;hover.material.color.setHex(state.drifting?0xffb24c:0x64ddc7);
     if(!reduced&&dt>0&&phase==='flying'){
       if(state.impactSerial!==impactSerial){impactSerial=state.impactSerial;if(state.impact>1)for(let i=0;i<18;i++)emit(state.impactX,state.y+.2,state.impactZ,-state.vx*.1,-state.vz*.1,true);}
-      if(state.speed>8&&!state.drifting&&!state.braking){const amount=state.boosting?5:2;for(let i=0;i<amount;i++)emit(state.x-Math.sin(state.yaw)*2,state.y-.35,state.z-Math.cos(state.yaw)*2,-state.vx*.06,-state.vz*.06);}
     }
     particles.forEach((p,i)=>{if(dt>0){p.life-=dt;if(p.life>0){p.x+=p.vx*dt;p.y+=p.vy*dt;p.z+=p.vz*dt;if(p.spark)p.vy-=12*dt;}}positions[i*3]=p.life>0?p.x:-999;positions[i*3+1]=p.life>0?p.y:-999;positions[i*3+2]=p.life>0?p.z:-999;});geometry.attributes.position.needsUpdate=true;geometry.attributes.color.needsUpdate=true;
     batches.forEach(batch=>batch.update());

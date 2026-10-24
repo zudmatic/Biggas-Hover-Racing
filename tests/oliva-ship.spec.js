@@ -37,7 +37,8 @@ test('flight meshes preserve Oliva UVs and toggle only the headlamp emissions',a
     const {createFlightShip}=await import('/src/flight-ship.js');const results=[];
     for(const id of ['033','037']){
       const ship=await createFlightShip(id);ship.update(0,0,false,true);const lamps=[],textures=[],plumes=[];
-      ship.root.traverse(mesh=>{if(!mesh.isMesh)return;if(mesh.material.userData.headlight)lamps.push(mesh.material);if(/pintura|seguridad|oliva militar/.test(mesh.material.name))textures.push({map:!!mesh.material.map,uv:!!mesh.geometry.attributes.uv});if(mesh.geometry.type==='ConeGeometry')plumes.push(mesh.position.toArray());});
+      ship.root.traverse(mesh=>{if(!mesh.isMesh)return;if(mesh.material.userData.headlight)lamps.push(mesh.material);if(/pintura|seguridad|oliva militar/.test(mesh.material.name))textures.push({map:!!mesh.material.map,uv:!!mesh.geometry.attributes.uv});});
+      plumes.push(...ship.exhaust.jets.map(j=>j.group.position.toArray()));
       const off=lamps.map(m=>m.emissiveIntensity);ship.setHeadlights(true);const on=lamps.map(m=>m.emissiveIntensity);ship.setHeadlights(false);
       results.push({id,textures,plumes,off,on,again:lamps.map(m=>m.emissiveIntensity),pilot:ship.pilot.root.visible});ship.dispose();
     }return results;

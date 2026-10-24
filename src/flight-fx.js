@@ -56,20 +56,20 @@ const fragmentShader=`
     #include <colorspace_fragment>
   }`;
 
-function batch(root,capacity,texture,ground){
+function batch(root,capacity,texture,ground,materialFactory){
   const geometry=new THREE.BufferGeometry();
   for(const [name,size] of [['position',3],['uv',2],['fx',3]])geometry.setAttribute(name,new THREE.BufferAttribute(new Float32Array(capacity*6*size),size).setUsage(THREE.DynamicDrawUsage));
   geometry.setDrawRange(0,0);
-  const material=new THREE.ShaderMaterial({uniforms:{...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),atlas:{value:texture},ground:{value:ground},style:{value:0},smokeColor:{value:new THREE.Color('#bababa')},smokeDensity:{value:1},screenGrain:{value:1.5}},vertexShader,fragmentShader,fog:true,side:THREE.DoubleSide,depthWrite:true,polygonOffset:ground,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+  const material=materialFactory?materialFactory(texture,ground):new THREE.ShaderMaterial({uniforms:{...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),atlas:{value:texture},ground:{value:ground},style:{value:0},smokeColor:{value:new THREE.Color('#bababa')},smokeDensity:{value:1},screenGrain:{value:1.5}},vertexShader,fragmentShader,fog:true,side:THREE.DoubleSide,depthWrite:true,polygonOffset:ground,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
   material.userData.retro=true;
   const mesh=new THREE.Mesh(geometry,material);mesh.name=ground?'FX · roces de hover':'FX · humo y chispas';mesh.frustumCulled=false;root.add(mesh);
   return {geometry,material,mesh,write(i,point,u,v,fade,frame,warm=0){geometry.attributes.position.setXYZ(i,...point);geometry.attributes.uv.setXY(i,u,v);geometry.attributes.fx.setXYZ(i,fade,frame,warm);},finish(count){geometry.setDrawRange(0,count*6);for(const a of Object.values(geometry.attributes))a.needsUpdate=true;},dispose(){geometry.dispose();material.dispose();mesh.removeFromParent();}};
 }
 
 /** Cosmetic only. Pools are bounded; no vehicle state or collision data is mutated. */
-export function createFlightFx(root,{surfaceHeight,texture,mobile=false,random=Math.random}={}){
+export function createFlightFx(root,{surfaceHeight,texture,mobile=false,random=Math.random,materialFactory}={}){
   const group=new THREE.Group();group.name='FX · pixel-cómic';root.add(group);
-  const air=batch(group,mobile?40:96,texture,false),ground=batch(group,mobile?64:160,texture,true);
+  const air=batch(group,mobile?40:96,texture,false,materialFactory),ground=batch(group,mobile?64:160,texture,true,materialFactory);
   const particles=Array.from({length:mobile?40:96},()=>({life:0})),marks=Array.from({length:mobile?64:160},()=>({life:0}));
   let cursor=0,markCursor=0,emission=0,last=null,trailDistance=0,disposed=false,style='hybrid',nextEmission=1,supportCursor=0;
   const settings={size:1.3,lifetime:1.5,fourSupports:false};

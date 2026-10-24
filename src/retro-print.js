@@ -266,11 +266,11 @@ export function createPrintPass(renderer,{transparent=false,comic=!transparent,s
         material.uniforms.uPerspective.value=camera.isPerspectiveCamera?1:0;
         if(style.params.paper!==paperHex)setPaper(style.params.paper);
       }
-      const clear=renderer.getClearAlpha();
+      const output=renderer.getRenderTarget(),clear=renderer.getClearAlpha();
       renderer.setRenderTarget(target);renderer.setClearAlpha(0);renderer.clear();
       renderer.render(scene,camera);
       afterScene?.(target);
-      renderer.setRenderTarget(null);renderer.setClearAlpha(clear);
+      renderer.setRenderTarget(output);renderer.setClearAlpha(clear);
       renderer.render(screen,flat);
     },
     dispose(){target.dispose();depthTexture?.dispose();material.dispose();quad.geometry.dispose();},

@@ -5,14 +5,14 @@ const modes=['auto','high','performance'];
 // Keep HUD/text at native resolution; only resize the 3D drawing buffer.
 // Long windows and a slower recovery prevent flicker and resolution oscillation.
 export function createFlightPerformance({width,height,pixelRatio=1,mobile=false,onChange=()=>{},storage}={}){
-  let mode='high',level=0,elapsed=0,total=0,frames=0,slow=0,fastWindows=0,cooldown=2000,fps=0;
+  let mode='high',level=0,elapsed=0,total=0,frames=0,slow=0,fastWindows=0,cooldown=2000,fps=0,stalls=0;
   try{storage??=globalThis.localStorage;const saved=storage?.getItem(preferenceKey);if(modes.includes(saved))mode=saved;}catch{}
   function settings(){
     const base=Math.min(pixelRatio,mobile?1.25:1.5,Math.sqrt((mobile?900000:1600000)/Math.max(1,width*height)));
     const scale=mode==='high'?1:mode==='performance'?.7:scales[level];
     return {mode,scale,pixelRatio:mode==='high'?Math.min(pixelRatio,1.5):base*scale,samples:mode==='high'?4:0,glowSamples:mode==='high'?12:4,lite:mode==='performance'||mode==='auto'&&level>=3,shadowInterval:mode==='high'?0:1/30};
   }
-  function reset(wait=1200){elapsed=total=frames=slow=fastWindows=0;cooldown=wait;}
+  function reset(wait=1200){stalls=0;elapsed=total=frames=slow=fastWindows=0;cooldown=wait;}
   function publish(){onChange(settings());}
   return {
     get mode(){return mode;},get fps(){return fps;},get settings(){return settings();},
@@ -22,7 +22,7 @@ export function createFlightPerformance({width,height,pixelRatio=1,mobile=false,
     sample(milliseconds){
       // Loading, a background tab, and a lone long task are not a GPU benchmark.
       if(!Number.isFinite(milliseconds)||milliseconds<=0)return;
-      if(milliseconds>250){reset();return;}
+      if(milliseconds>250){if(++stalls<3)return;milliseconds=Math.min(milliseconds,1000);}else stalls=0;
       if(cooldown>0){cooldown-=milliseconds;return;}
       elapsed+=milliseconds;total+=milliseconds;frames++;if(milliseconds>22)slow++;
       if(elapsed<1000||frames<8)return;

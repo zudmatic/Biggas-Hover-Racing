@@ -70,3 +70,10 @@ test('graphics modes change only the 3D resolution and preserve driving, pause a
   await page.reload();await launchFromLobby(page);await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
   await expect(app).toHaveAttribute('data-quality','performance');expect(errors).toEqual([]);
 });
+
+
+test('automatic quality responds to repeated stalls, but ignores an isolated loading frame',()=>{
+  const control=createFlightPerformance(options);control.setMode('auto');
+  run(control,1000/60,4);control.sample(700);run(control,1000/60,4);expect(control.settings.scale).toBe(1);
+  run(control,400,20);expect(control.settings.scale).toBeLessThan(1);
+});

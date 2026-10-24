@@ -11,7 +11,7 @@ import {createNexusDetails} from './nexus-details.js';
 import {loadFlightFx} from './flight-fx.js';
 export const createRoadSurface=createSurfaceIndex;
 
-export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotropy=4,map='ruins'}={}){
+export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotropy=4,map='ruins',fxMaterialFactory}={}){
   const config=circuitMap(map),city=config.id==='nexus',base=`${import.meta.env.BASE_URL}models/${config.folder}/`,loader=new GLTFLoader(),colliderLoader=new GLTFLoader().register(collisionMaterials);
   const json=async file=>{const response=await fetch(base+file);if(!response.ok)throw new Error(`Circuito: ${response.status} ${file}`);return response.json();};
   const results=await Promise.allSettled([loader.loadAsync(base+config.model,e=>{if(e.total)onProgress(e.loaded/e.total*.8);}),colliderLoader.loadAsync(base+config.collider),json('route_gltf.json'),json('gameplay.json')]);
@@ -51,7 +51,7 @@ export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotr
   function setGate(index){const gate=landscape.gates[Math.min(index,landscape.gates.length-1)];marker.position.set(gate.x,gate.y-.65+.08,gate.z);marker.rotation.y=Math.atan2(gate.nx,gate.nz);}
   const details=createCircuitDetails(root,landscape,{mobile,city});
   const urban=city?createNexusDetails(root,anchors,{mobile}):null;textures.applyRoot(root);
-  const fx=await loadFlightFx(root,{surfaceHeight,mobile});
+  const fx=await loadFlightFx(root,{surfaceHeight,mobile,materialFactory:fxMaterialFactory});
   setGate(0);onProgress(1);
   return {root,landscape,textures,surfaceHeight,fx,clipCamera:collision?.clipCamera,setGate,detailCount:details.detailCount+(urban?.detailCount??0),step(state,dt,previous){collision?.step(state,dt,landscape,previous);details.step(state,dt);},reset(){details.reset();fx.reset();},update(time,reduced,context){
     details.update(time,reduced,context);urban?.update(time,reduced,context);

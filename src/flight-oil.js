@@ -5,7 +5,7 @@ import {createFlightShip} from './flight-ship.js';
 import {createOilSimulation,updateOilResistance,clearOilEffect} from './oil-simulation.js';
 import './flight-oil.css';
 
-export async function createFlightOil({scene,landscape,surfaceHeight,app,clearInput,onPrepare,onNotice}){
+export async function createFlightOil({scene,landscape,surfaceHeight,app,clearInput,onPrepare,onNotice,materialFactory}){
   const base=import.meta.env.BASE_URL;
   const results=await Promise.allSettled([new GLTFLoader().loadAsync(`${base}models/items/oil-barrel.glb`),createFlightShip('037')]);
   if(results.some(r=>r.status==='rejected')){
@@ -34,7 +34,7 @@ export async function createFlightOil({scene,landscape,surfaceHeight,app,clearIn
   const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3).setUsage(THREE.DynamicDrawUsage));geometry.setAttribute('color',new THREE.BufferAttribute(colors,4).setUsage(THREE.DynamicDrawUsage));geometry.setAttribute('uv',new THREE.BufferAttribute(uvs,2).setUsage(THREE.DynamicDrawUsage));geometry.setDrawRange(0,0);
   // World-space shading keeps overlapping drops visually continuous. A thin-film
   // sheen and broad sky highlight vary with viewing angle, without tiled pixels.
-  const oilMaterial=new THREE.ShaderMaterial({
+  const oilMaterial=materialFactory?materialFactory():new THREE.ShaderMaterial({
     transparent:true,depthWrite:false,side:THREE.DoubleSide,
     polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2,
     vertexShader:`
@@ -124,7 +124,7 @@ export async function createFlightOil({scene,landscape,surfaceHeight,app,clearIn
     geometry.setDrawRange(0,at);geometry.attributes.position.needsUpdate=true;geometry.attributes.color.needsUpdate=true;geometry.attributes.uv.needsUpdate=true;
   }
   const projected=new THREE.Vector3();
-  return {sim,bot,use,get lookingBack(){return enabled&&lookingBack;},
+  return {sim,bot,botShip,use,get lookingBack(){return enabled&&lookingBack;},
     reset(player,active){pourOwner='player';lookingBack=false;$('.oil-look').setAttribute('aria-pressed','false');$('.oil-look').textContent='Mirar atrás';enabled=active;root.visible=active;sim.reset();hits=0;behindPlayer(player);clearOilEffect(player);},
     prepare(player,botDrops=false){
       sim.reset();hits=0;behindPlayer(player);pourOwner=botDrops?'bot':'player';

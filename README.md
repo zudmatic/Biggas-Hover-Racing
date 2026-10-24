@@ -23,6 +23,8 @@ Las rutas del juego aceptan `?vehicle=033|037`, `?map=ruins|nexus` y `?comic=0|1
 
 ## Controles
 
+**Propulsor · A · Chorro** en DialKit ajusta la llama de cada tobera: longitud, ancho, intensidad tramada, variación y colores del fuego/núcleo. El chorro crece suavemente con turbo, se acorta al frenar y sigue la posición y escala de la nave. La 033 emite desde dos toberas y Oliva desde tres. Los ajustes se guardan en el navegador.
+
 Para comparar el nuevo humo, abrí **Humo · comparación** en DialKit: **A · Fragmentos procedurales**, **B · Humo híbrido** (predeterminado) o **C · Mixto**. Los valores iniciales son tamaño 1,3, duración 1,5, color `#bababa`, densidad 1, trama 1,5 y emisión desde cuatro ruedas desactivada. Podés cambiar el color y el tramado en vivo; los ajustes se guardan en el navegador. Acelerá con W y combiná E con A/D para derrapar: en recta no aparece humo de derrape. Cada variante introduce formas, giros y tiempos distintos por partícula. El selector devuelve el foco al juego y limpia el humo anterior.
 
 El derrape (**E**) y el frenado (**Espacio**) tienen un primer pase de efectos pixel-cómic: humo coloreable, chispas y marcas cortas que siguen la superficie de la pista. La intensidad del derrape depende del deslizamiento; los efectos acompañan la escala de la nave, se congelan al pausar y se limpian al recuperar o reiniciar. Con movimiento reducido se omiten. Detalles y siguientes etapas en [el plan de efectos](assets/fx/IMPLEMENTACION.md).
@@ -98,3 +100,89 @@ TEST_PORT=43179 npm test -- --workers=1
 El repositorio contiene únicamente el juego y el hangar. La escena de la casa, sus editores y su compilación independiente fueron retirados. El modelo de Zud y el renderizado compartido permanecen porque los utilizan el piloto y las vistas previas.
 
 Más información: [acabado cómic](docs/comic-print.md), [superficies del piloto](docs/surfaces.md) y [banda sonora](public/audio/README.md).
+
+
+## Validación WebGPU / TSL
+
+`webgpu-preview.html` es la vista aislada de migración. La etapa 1 conserva mapa,
+nave, texturas y luces con materiales base; la etapa 2 añade el acabado cómic en
+TSL: posterización, puntos, rayado, contornos por profundidad y acabado de color.
+La etapa 3 incorpora propulsor, motor incandescente, partículas, calor, humo,
+marcas de frenado y aceite. El simulador ofrece WebGPU de forma optativa desde
+la etapa 4; el render original sigue siendo el predeterminado.
+
+- `webgpu-preview.html`: WebGPU con cómic; fallback automático si no hay WebGPU.
+- `webgpu-preview.html?backend=webgl`: referencia GLSL original con el mismo encuadre.
+- `webgpu-preview.html?backend=webgl2`: fuerza el fallback del renderer nuevo.
+- `look=base`, `map=nexus` y `vehicle=033` permiten cambiar la comparación inicial.
+
+DialKit permite alternar cómic, puntos, rayado, contornos, color, trama en objeto
+u pantalla, día/noche, faros, sombras y recorrido. `Recorrer` desplaza la nave por
+la pista para revisar el render; todavía no es una prueba de conducción.
+
+Esta etapa valida el acabado diurno de cómic sobre las luces del circuito,
+incluida su transición nocturna. No migra todavía modos monocromo/normal,
+rebotes de luz de otras escenas ni la transición de papel del hangar.
+Las pruebas `webgpu-preview.spec.js` y `webgpu-comic.spec.js` comprueban ambos
+mapas/naves, cambios de controles, redimensionado y la paleta frente a GLSL.
+
+
+En etapa 3, `VFX · pruebas` permite activar Turbo (azul), Aceleración (rojo),
+Reposo o Soltar, simular derrape/frenado, pausar y soltar aceite. `Recorrer`
+mueve la nave por el circuito. `Propulsor · WebGPU` ajusta llama, partículas y
+calor; `Humo · comparación` conserva los tres estilos y los cuatro apoyos.
+`vfx=off` reproduce la comparación de etapa 2 sin efectos.
+
+El propulsor reutiliza Three VFX (`vanilla-vfx` 0.6.0), con simulación GPU en
+WebGPU y CPU en WebGL2. La estela conserva posiciones anteriores al girar; humo,
+marcas y aceite mantienen simulaciones acotadas y usan materiales TSL. El calor
+se compone en la misma pasada que el cómic, con prueba de profundidad para no
+distorsionar objetos delante de la estela. La prueba de aceite es visual: no
+activa penalizaciones de conducción en esta vista. Todavía no hay mecánica de
+bombas para migrar. Los recursos compartidos del estudio están en `src/vfx/`.
+
+`webgpu-vfx.spec.js` valida color de turbo, emisión, recorrido, humo y marcas,
+aceite, pausa, desactivación, redimensionado y los backends WebGPU/WebGL2.
+
+
+## Etapa 4: conducción con WebGPU
+
+`simulator.html?selection=map&renderer=webgpu&camera=klipp&vehicle=037`
+abre el flujo de selección y permite conducir con el renderer nuevo. Usar
+`renderer=webgl2` fuerza su fallback; omitir `renderer` conserva el WebGL
+original para comparar. El cambio por defecto de todo el producto queda separado
+de esta integración del simulador.
+
+La física a paso fijo, la interpolación visual, las cámaras, el HUD, la
+contrarreloj y el aceite siguen en el simulador compartido. El material de aceite
+TSL usa los mismos parches y contactos que el original, incluidos el bot y la
+penalización de velocidad. Shift activa el turbo azul; el modo normal usa rojo.
+Pausa congela los efectos y recuperación/reinicio limpia las estelas. El cielo,
+noche, faros y líneas de velocidad se renderizan también en el nuevo backend.
+Los controles existentes de calidad ajustan resolución y frecuencia de sombras.
+La selección/hangar todavía conservan su render original.
+
+`webgpu-driving.spec.js` valida conducción, turbo, derrape, recuperación, aceite,
+noche, faros, cambio de calidad, pausa, redimensionado y reinicio de contrarreloj.
+
+## Etapa 5: rendimiento y estabilidad del simulador
+
+El selector de calidad del menú de pausa controla también el render WebGPU y
+su fallback WebGL2. Alta conserva 4 muestras de antialiasing y 12 muestras de
+resplandor; Rendimiento usa 0 y 4 respectivamente, reduce la resolución y emite
+el 55% de partículas, conservando la llama continua. Automático reduce primero
+la resolución y activa la variante ligera ante caídas sostenidas. Un cuadro
+aislado de carga no baja la calidad, pero las pausas repetidas sí se contabilizan.
+Las variantes del postprocesado se reutilizan y se liberan al salir.
+
+La longitud del propulsor incluye ahora el desplazamiento de la nave y su escala:
+acelerar no estira indefinidamente el historial de la llama. Las partículas
+también acortan su vida según la velocidad; son más pequeñas y tienen bordes
+suaves. DialKit añade `Densidad llama` (0,82), con longitud base 2,7, ancho 0,7,
+fragmentos de tamaño 0,24 y duración máxima de 0,18 segundos. Turbo sigue azul.
+El historial está limitado a 240 poses reutilizables y no crece durante la pausa.
+
+`flame-trail.spec.js` valida longitud a 0, 52 y 100 m/s, giros y recuperación;
+`flight-performance.spec.js` comprueba el ajuste automático y las preferencias;
+`webgpu-driving.spec.js` verifica los cambios de calidad en ambos backends.
+Esta etapa no cambia el renderer predeterminado ni migra la selección/hangar.
