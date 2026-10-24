@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {launchFromLobby} from './helpers/flight.js';
 import {classifyShipPart,flightPose,FLIGHT_DURATION} from '../src/spaceship-parts.js';
 
 test('named model parts and flight endpoints remain coherent',()=>{
@@ -89,6 +90,6 @@ test('comic defaults on, toggles cleanly and carries an explicit opt-out into fl
   await comic.click();await expect(stage).toHaveAttribute('data-comic','false');
   const restored=await canvas.screenshot();expect(restored.equals(normal)).toBe(true);
   await page.getByRole('button',{name:'Restablecer vista y nave'}).click();await expect(stage).toHaveAttribute('data-comic','true');
-  await comic.click();await page.getByRole('link',{name:'Simulador de vuelo'}).click();await expect(page.locator('.flight-app')).toHaveAttribute('data-ready','true',{timeout:60000});await expect(page.locator('.flight-app')).toHaveAttribute('data-comic','false');
+  await comic.click();await page.getByRole('link',{name:'Simulador de vuelo'}).click();await launchFromLobby(page);await expect(page.locator('.flight-app')).toHaveAttribute('data-ready','true',{timeout:60000});await expect(page.locator('.flight-app')).toHaveAttribute('data-comic','false');
   expect(errors).toEqual([]);
 });

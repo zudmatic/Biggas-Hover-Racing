@@ -3,21 +3,22 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {flightPose, FLIGHT_DURATION} from './spaceship-parts.js';
-import {createSpaceshipPilot} from './spaceship-pilot.js';
+import {createSelectablePilot} from './selectable-pilot.js';
+import {pilotChoice,pilotConfig,pilotQuery} from './pilot-catalog.js';
 import {createCharacterComic} from './character-comic.js';
 import './spaceship.css';
 import {SHIPS,shipConfig,shipUrl,shipCanopy} from './ship-catalog.js';
 
 export async function createSpaceship() {
-  const config=shipConfig(new URLSearchParams(location.search).get('vehicle')),parts=config.parts;
+  const config=shipConfig(new URLSearchParams(location.search).get('vehicle')),parts=config.parts,choice=pilotChoice(),pilotParams=pilotQuery(choice);
   document.title=`${config.id} · ${config.title}`;
   const base=import.meta.env.BASE_URL;
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   document.body.innerHTML=`<main class="ship-app"><div class="ship-paper-surface" aria-hidden="true"></div>
-    <header class="ship-header"><a class="ship-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span class="ship-mark" aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong><span class="ship-header-tag">Hangar</span></a><nav aria-label="Navegación del hangar"><a class="ship-back" href="${base}"><span aria-hidden="true">←</span> Volver al inicio</a></nav></header>
-    <section class="ship-intro"><div class="ship-heading"><span class="ship-eyebrow">HANGAR / EXPLORÁ TU NAVE</span><h1>${config.title}<span class="ship-title-number">${config.id}</span></h1></div><div class="ship-intro-actions"><nav class="ship-picker" aria-label="Naves del hangar">${Object.values(SHIPS).map(item=>`<a href="${base}spaceship.html?vehicle=${item.id}" ${item.id===config.id?'aria-current="page"':''}>${item.name}</a>`).join('')}</nav><a class="ship-simulator" href="${base}simulator.html?vehicle=${config.id}">Simulador de vuelo <span aria-hidden="true">▶</span></a></div></section>
+    <header class="ship-header"><a class="ship-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span class="ship-mark" aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong><span class="ship-header-tag">Hangar</span></a><nav aria-label="Navegación del hangar"><a class="ship-back" href="${base}?vehicle=${config.id}&${pilotParams}"><span aria-hidden="true">←</span> Volver al inicio</a></nav></header>
+    <section class="ship-intro"><div class="ship-heading"><span class="ship-eyebrow">HANGAR / EXPLORÁ TU NAVE</span><h1>${config.title}<span class="ship-title-number">${config.id}</span></h1></div><div class="ship-intro-actions"><nav class="ship-picker" aria-label="Naves del hangar">${Object.values(SHIPS).map(item=>`<a href="${base}spaceship.html?vehicle=${item.id}&${pilotParams}" ${item.id===config.id?'aria-current="page"':''}>${item.name}</a>`).join('')}</nav><a class="ship-simulator" href="${base}simulator.html?vehicle=${config.id}&${pilotParams}">Simulador de vuelo <span aria-hidden="true">▶</span></a></div></section>
     <div class="ship-workspace">
-      <section class="ship-viewport" aria-label="Hangar 3D de ${config.title}" data-vehicle="${config.id}" data-ready="false">
+      <section class="ship-viewport" aria-label="Hangar 3D de ${config.title}" data-vehicle="${config.id}" data-hat="${choice.hat}" data-ready="false">
         <canvas class="ship-canvas" tabindex="0" aria-label="Nave 3D. Arrastrá para girar, rueda para acercar y clic para identificar una pieza."></canvas>
         <div class="ship-stage-top"><span>HANGAR / ${config.id}</span><span class="ship-status"><i class="ship-dot"></i><span id="ship-phase" role="status">EN HANGAR</span></span></div>
         <div class="ship-labels">${parts.map(p=>`<button class="ship-hotspot" disabled data-hotspot="${p.id}" aria-label="Identificar ${p.name}" aria-pressed="false" title="${p.name}">${p.tag}</button>`).join('')}</div>
@@ -28,7 +29,7 @@ export async function createSpaceship() {
       <aside class="ship-panel" aria-label="Componentes de la nave"><div class="ship-panel-top"><h2>Componentes</h2><span>08</span></div>
       <div class="ship-part-list">${parts.map(p=>`<button class="ship-part" data-part="${p.id}" aria-pressed="false" disabled><span class="ship-part-number">${p.tag}</span><span><span class="ship-part-name">${p.name}</span></span></button>`).join('')}</div>
       <p class="sr-only" id="ship-description" aria-live="polite"></p>
-      <div class="ship-toggles"><label class="ship-switch">${config.windshield?'Abrir parabrisas':'Abrir cabina'}<input id="ship-canopy" type="checkbox" disabled></label><label class="ship-switch">${config.windshield?'Ocultar parabrisas':'Ocultar cabina'}<input id="ship-hide-canopy" type="checkbox" disabled></label><label class="ship-switch">Zud al mando<input id="ship-pilot" type="checkbox" disabled></label><label class="ship-switch">Desarmar<input id="ship-explode" type="checkbox" disabled></label><label class="ship-switch">Etiquetas<input id="ship-label-toggle" type="checkbox" checked disabled></label><button id="ship-comic" class="ship-comic" aria-pressed="true" disabled><span aria-hidden="true">◐</span> Cómic</button></div>
+      <div class="ship-toggles"><label class="ship-switch">${config.windshield?'Abrir parabrisas':'Abrir cabina'}<input id="ship-canopy" type="checkbox" disabled></label><label class="ship-switch">${config.windshield?'Ocultar parabrisas':'Ocultar cabina'}<input id="ship-hide-canopy" type="checkbox" disabled></label><label class="ship-switch">${pilotConfig(choice.pilot).name} al mando<input id="ship-pilot" type="checkbox" disabled></label><label class="ship-switch">Desarmar<input id="ship-explode" type="checkbox" disabled></label><label class="ship-switch">Etiquetas<input id="ship-label-toggle" type="checkbox" checked disabled></label><button id="ship-comic" class="ship-comic" aria-pressed="true" disabled><span aria-hidden="true">◐</span> Cómic</button></div>
       </aside>
     </div>
     <section class="ship-transport" aria-label="Animación de la nave"><button class="ship-play" id="ship-play" aria-label="Iniciar vuelo" disabled>▶</button><div><p class="ship-track-title">Vuelo</p><div class="ship-track-status" id="ship-play-status" role="status">18 SEGUNDOS</div></div><div class="ship-track"><input class="ship-timeline" id="ship-time" aria-label="Tiempo de la animación" type="range" min="0" max="18" step="0.01" value="0" disabled><div class="ship-track-labels"><span>Encendido</span><span>Despegue</span><span>Vuelo</span><span>Aterrizaje</span></div></div><div class="ship-playback"><span id="ship-time-label">00:00 / 00:18</span><select id="ship-speed" aria-label="Velocidad de animación" disabled><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select><button id="ship-loop" aria-label="Repetir vuelo" aria-pressed="false" title="Repetir vuelo" disabled>↻</button></div></section>
@@ -88,7 +89,7 @@ export async function createSpaceship() {
   if(canopy)systems.cockpit.attach(canopy);
   for(const mesh of meshes)mesh.userData.rest=mesh.position.clone();
   const canopyRest=canopy?.position.clone();
-  const pilot=createSpaceshipPilot({offset:config.pilotOffset});systems.cockpit.add(pilot.root);
+  let pilot;try{pilot=await createSelectablePilot({...choice,offset:config.pilotOffset});}catch{fail('No se pudo cargar el piloto. Intentá de nuevo.');renderer.dispose();return;}systems.cockpit.add(pilot.root);
   const pilotMeshes=[];pilot.root.traverse(mesh=>{if(mesh.isMesh)pilotMeshes.push(mesh);});
   const comic=createCharacterComic(renderer);let comicEnabled=true;
   // Plumes point backwards (-Z). Their scale and emission follow the flight timeline.
@@ -129,7 +130,7 @@ export async function createSpaceship() {
     if(playing){if(elapsed>=FLIGHT_DURATION)elapsed=0;$('#ship-canopy').checked=$('#ship-pilot').checked;$('#ship-explode').checked=false;}
     updateTransport();
   }
-  function reset(){stopFlight();selectPart(null,{focus:false});$('#ship-hide-canopy').checked=false;$('#ship-pilot').checked=false;pilot.root.visible=false;comicEnabled=true;$('#ship-comic').setAttribute('aria-pressed','true');$('.ship-simulator').href=`${base}simulator.html?vehicle=${config.id}`;syncCanopyControls();$('#ship-canopy').checked=false;$('#ship-explode').checked=false;$('#ship-label-toggle').checked=true;goToView(viewPositions.perspective,'perspective');}
+  function reset(){stopFlight();selectPart(null,{focus:false});$('#ship-hide-canopy').checked=false;$('#ship-pilot').checked=false;pilot.root.visible=false;comicEnabled=true;$('#ship-comic').setAttribute('aria-pressed','true');$('.ship-simulator').href=`${base}simulator.html?vehicle=${config.id}&${pilotParams}`;syncCanopyControls();$('#ship-canopy').checked=false;$('#ship-explode').checked=false;$('#ship-label-toggle').checked=true;goToView(viewPositions.perspective,'perspective');}
   document.querySelectorAll('[data-part],[data-hotspot]').forEach(button=>button.addEventListener('click',()=>selectPart(button.dataset.part??button.dataset.hotspot)));
   document.querySelectorAll('[data-ship-view]').forEach(button=>button.addEventListener('click',()=>goToView(viewPositions[button.dataset.shipView],button.dataset.shipView)));
   $('#ship-play').addEventListener('click',togglePlay);$('#ship-reset').addEventListener('click',reset);
@@ -151,7 +152,7 @@ export async function createSpaceship() {
     if(event.target.checked){$('#ship-hide-canopy').checked=true;goToView([4.9,7.4,7.4]);}
     syncCanopyControls();
   });
-  $('#ship-comic').addEventListener('click',event=>{comicEnabled=!comicEnabled;event.currentTarget.setAttribute('aria-pressed',String(comicEnabled));$('.ship-simulator').href=`${base}simulator.html?vehicle=${config.id}&comic=${comicEnabled?'1':'0'}`;});
+  $('#ship-comic').addEventListener('click',event=>{comicEnabled=!comicEnabled;event.currentTarget.setAttribute('aria-pressed',String(comicEnabled));$('.ship-simulator').href=`${base}simulator.html?vehicle=${config.id}&${pilotParams}&comic=${comicEnabled?'1':'0'}`;});
   reducedMotion.addEventListener('change',()=>{controls.enableDamping=!reducedMotion.matches;if(reducedMotion.matches){playing=false;loop=false;viewTween=null;controls.autoRotate=false;$('#ship-loop').setAttribute('aria-pressed','false');$('#ship-rotate').setAttribute('aria-pressed','false');updateTransport();}});
   const pointer=new THREE.Vector2(),raycaster=new THREE.Raycaster();let down=null;
   canvas.addEventListener('pointerdown',event=>{down=event.isPrimary?{x:event.clientX,y:event.clientY}:null;});
