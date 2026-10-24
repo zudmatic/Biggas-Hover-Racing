@@ -22,7 +22,6 @@
 
 @media(max-width:360px){.flight-app[data-map] .flight-brand{font-size:0!important;gap:0!important}.flight-brand strong{display:block;font-size:24px}}
 
-.flight-map-picker{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:20px}.flight-map-picker a{display:flex;justify-content:space-between;padding:11px 10px;border:1px solid #cbd1c1;border-radius:5px;font-size:11px}.flight-map-picker a[aria-current=page]{background:#334b44;color:#fff7e6;border-color:#334b44}.flight-map-picker span{font:10px monospace;opacity:.7}@media(hover:hover){.flight-map-picker a:hover{border-color:#b94b2a}}
 
 
 .flight-team-link{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 0;margin-bottom:14px;border-top:1px solid #cbd0bf;border-bottom:1px solid #cbd0bf;font-size:10px}.flight-team-link span:last-child{color:#a84326;font-size:9px}.flight-team-link:focus-visible{outline-color:#ba4b2a}
@@ -36,3 +35,8 @@
 @media(max-width:400px){.flight-header{gap:7px}.flight-app[data-map] .flight-brand{padding:4px 8px}.flight-header nav{gap:3px}.flight-header button,.flight-header a{min-width:36px;padding-inline:7px}.flight-app[data-map] .flight-race{top:106px}}
 
 .flight-header{z-index:7}
+
+.flight-exit-links{display:grid;gap:8px;margin-top:8px}
+.flight-exit-links a{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:45px;padding:0 16px;border:1px solid #bbc5b6;border-radius:5px;font-size:12px;background:#f4f1e8}
+.flight-exit-links a:focus-visible{outline-color:var(--flight-orange)}
+@media(hover:hover){.flight-exit-links a:hover{border-color:var(--flight-orange);color:var(--flight-orange)}}

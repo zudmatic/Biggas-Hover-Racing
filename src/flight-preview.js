@@ -6,10 +6,11 @@ import {createCharacterComic} from './character-comic.js';
 
 // One small scene for the front end; disposed before loading a circuit.
 export async function createFlightPreview(canvas,{reducedMotion,signal,initialKind='pilot',paper=true,vehicle='033',onStatus=()=>{}}){
+  if(signal.aborted)return null;
   const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true,powerPreference:'low-power'});
   renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
   const comic=createCharacterComic(renderer,{samples:0,glowSamples:4});let paperEnabled=paper;
-  function renderScene(){if(paperEnabled)comic.render(scene,camera,'#ffffff');else renderer.render(scene,camera);canvas.dataset.paper=String(paperEnabled);}
+  function renderScene(){updateActors();if(paperEnabled)comic.render(scene,camera,'#ffffff');else renderer.render(scene,camera);canvas.dataset.paper=String(paperEnabled);}
   const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(34,1,.1,100);
   scene.add(new THREE.HemisphereLight(0xffffff,0x747474,3));
   const key=new THREE.DirectionalLight(0xffe2b7,4);key.position.set(-4,7,6);scene.add(key);
@@ -35,7 +36,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   function size(){if(disposed)return;const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return;renderer.setSize(rect.width,rect.height,false);camera.aspect=rect.width/rect.height;camera.updateProjectionMatrix();frameCamera();dirty=true;renderScene();}
   const resize=new ResizeObserver(size);resize.observe(canvas);
   function frameCamera(){const pilot=kind==='pilot',distance=Math.max(pilot?7.5:10.8,(pilot?4.2:6.8)/(2*Math.tan(THREE.MathUtils.degToRad(camera.fov/2))*camera.aspect));camera.position.set(0,pilot?2.35:4.7,distance);camera.lookAt(0,pilot?1.5:1.7,0);}
-  function setKind(next){kind=next==='pilot'?'pilot':'vehicle';yaw=kind==='pilot'?-.14:.52;for(const [id,root] of Object.entries(actors))root.visible=id===activeId();canvas.dataset.vehicle=selectedVehicle;canvas.dataset.ready=String(!!actors[activeId()]);onStatus(actors[activeId()]?'ready':'loading');frameCamera();pedestal.scale.setScalar(kind==='pilot'?.83:1.24);dirty=true;size();}
+  function setKind(next){kind=next==='pilot'?'pilot':'vehicle';yaw=kind==='pilot'?-.14:.52;for(const [id,root] of Object.entries(actors))root.visible=id===activeId();canvas.dataset.kind=kind;canvas.dataset.vehicle=selectedVehicle;frameCamera();pedestal.scale.setScalar(kind==='pilot'?.83:1.24);dirty=true;size();canvas.dataset.ready=String(!!actors[activeId()]);onStatus(actors[activeId()]?'ready':'loading');}
   canvas.addEventListener('pointerdown',event=>{if(drag!==null)return;drag={id:event.pointerId,x:event.clientX};canvas.setPointerCapture(event.pointerId);},{signal});
   canvas.addEventListener('pointermove',event=>{if(event.pointerId!==drag?.id)return;yaw+=(event.clientX-drag.x)*.009;drag.x=event.clientX;dirty=true;},{signal});
   const release=event=>{if(event.pointerId===drag?.id)drag=null;};
@@ -48,13 +49,16 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
     const dt=Math.min((now-last)/1000,.05);last=now;
     if(!reducedMotion.matches)time+=dt;
     if(reducedMotion.matches&&!dirty)return;dirty=false;
+    renderScene();
+  });
+  // Apply the final pose before every render, including the first visible frame.
+  function updateActors(){
     for(const [id,root] of Object.entries(actors)){
       if(!root.visible)continue;
       root.rotation.y=yaw+(reducedMotion.matches||drag?0:Math.sin(time*.45)*.12);
       root.position.y=floor[id]+(id.startsWith('vehicle:')?.22:0)+(reducedMotion.matches?0:Math.sin(time*(id==='pilot'?1.8:1.2))*(id==='pilot'?.025:.08));
     }
-    renderScene();
-  });
+  }
   async function setVehicle(id){
     selectedVehicle=shipConfig(id).id;const requested=selectedVehicle;setKind(kind);
     if(ships.has(requested))return;
@@ -65,7 +69,8 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
     }).catch(error=>{pending.delete(requested);if(!disposed&&requested===selectedVehicle&&kind==='vehicle')onStatus('fallback');}));
     await pending.get(requested);
   }
-  await setVehicle(selectedVehicle);
-  if(signal.aborted){dispose();return null;}
+  // Keep navigation responsive while the vehicle model loads in the background.
+  signal.addEventListener('abort',dispose,{once:true});
+  void setVehicle(selectedVehicle);
   return {setKind,setVehicle,setPaper(enabled){paperEnabled=enabled;dirty=true;if(canvas.clientWidth)renderScene();},dispose};
 }

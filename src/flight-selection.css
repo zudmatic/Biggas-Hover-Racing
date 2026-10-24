@@ -58,8 +58,10 @@
 .lobby-preview-canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab;opacity:0}
 .lobby-preview-canvas:active{cursor:grabbing}
 .race-lobby[data-preview=ready] .lobby-preview-canvas{opacity:1}
-.lobby-preview-fallback{position:absolute;inset:5%;width:90%;height:90%;object-fit:contain}
-.race-lobby[data-preview=ready] .lobby-preview-fallback{display:none}
+.lobby-preview-fallback{display:none;position:absolute;inset:5%;width:90%;height:90%;object-fit:contain}
+.race-lobby[data-preview=fallback] .lobby-preview-fallback{display:block}
+.lobby-preview-loading{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;color:#777}
+.race-lobby:is([data-preview=ready],[data-preview=fallback]) .lobby-preview-loading{display:none}
 .lobby-drag-hint{position:absolute;bottom:0;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:#777}
 .race-lobby:not([data-preview=ready]) .lobby-drag-hint{visibility:hidden}
 .lobby-footer{position:absolute;bottom:0;left:0;right:0;height:91px;z-index:4;display:flex;align-items:center;justify-content:space-between;gap:22px;padding:0 5vw;background:#fff}
