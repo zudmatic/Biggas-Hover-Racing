@@ -52,9 +52,17 @@ export async function createAjoModel({seated=false,offset=[0,0,0],fit}={}){
   }
   if(seated){
     model.scale.setScalar(bike?1:.72);root.updateMatrixWorld(true);
+    const extremityRotations=new Map(['foot_l','foot_r','hand_l','hand_r'].map(name=>[name,bones[name].getWorldQuaternion(new THREE.Quaternion())]));
+    if(bike){
+      // Hinge forward from the hips, while keeping his gaze on the road.
+      const headRotation=bones.Head.getWorldQuaternion(new THREE.Quaternion());
+      rotation.setFromAxisAngle(new THREE.Vector3(1,0,0),THREE.MathUtils.degToRad(38)).multiply(bones.pelvis.getWorldQuaternion(parentRotation));
+      bones.pelvis.quaternion.copy(bones.pelvis.parent.getWorldQuaternion(parentRotation).invert().multiply(rotation));bones.pelvis.updateWorldMatrix(false,true);
+      bones.Head.quaternion.copy(bones.Head.parent.getWorldQuaternion(parentRotation).invert().multiply(headRotation));bones.Head.updateWorldMatrix(false,true);
+    }
     for(const side of ['l','r']){
       const sign=side==='l'?1:-1,foot=bones[`foot_${side}`],hand=bones[`hand_${side}`];
-      const footRotation=foot.getWorldQuaternion(new THREE.Quaternion()),handRotation=hand.getWorldQuaternion(new THREE.Quaternion());
+      const footRotation=extremityRotations.get(foot.name),handRotation=extremityRotations.get(hand.name);
       aim(bones[`thigh_${side}`],bones[`calf_${side}`],new THREE.Vector3(sign*(bike?.95:.12),bike?-.55:-.08,1));
       aim(bones[`calf_${side}`],foot,new THREE.Vector3(sign*(bike?.2:0),-1,bike?.15:0));
       foot.quaternion.copy(foot.parent.getWorldQuaternion(parentRotation).invert().multiply(footRotation));foot.updateWorldMatrix(false,true);
@@ -63,7 +71,7 @@ export async function createAjoModel({seated=false,offset=[0,0,0],fit}={}){
       hand.quaternion.copy(hand.parent.getWorldQuaternion(parentRotation).invert().multiply(handRotation));hand.updateWorldMatrix(false,true);
     }
     const pelvis=bones.pelvis.getWorldPosition(new THREE.Vector3());
-    model.position.add(new THREE.Vector3(0,bike?1.35:1.16,bike?.30:-.32).sub(pelvis));root.updateMatrixWorld(true);
+    model.position.add(new THREE.Vector3(0,bike?1.35:1.16,bike?0:-.32).sub(pelvis));root.updateMatrixWorld(true);
     if(bike){
       // Midpoints between the authored grip rings 001/002 and 007/008 in
       // nomada-038.glb, after its +X to +Z conversion. No arm scaling.

@@ -53,6 +53,7 @@ test('Ajo retains independent rigs, animation and textures; driving poses stay s
     const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');const {prepareShipModel,shipConfig}=await import('/src/ship-catalog.js');
     const nomada=(await new GLTFLoader().loadAsync('/models/spaceship/nomada-038.glb')).scene;prepareShipModel(nomada,shipConfig('038'));
     const gripTargets=[['007','008'],['001','002']].map(rings=>rings.map(suffix=>new THREE.Box3().setFromObject(nomada.getObjectByName(`Anillo_empuñadura${suffix}`)).getCenter(new THREE.Vector3())).reduce((a,b)=>a.add(b)).multiplyScalar(.5));
+    const saddle=new THREE.Box3().setFromObject(nomada.getObjectByName('Asiento_cuero_cojin_1'));
     const a=await createAjoModel(),b=await createAjoModel();a.update(1.5);b.update(0);
     const independent=a.bones.Head!==b.bones.Head&&a.meshes[0].geometry!==b.meshes[0].geometry&&a.meshes[0].material.map!==b.meshes[0].material.map;
     const animated=a.bones.Head.quaternion.angleTo(b.bones.Head.quaternion)>1e-4;
@@ -71,16 +72,20 @@ test('Ajo retains independent rigs, animation and textures; driving poses stay s
         for(let i=0;i<mesh.geometry.attributes.position.count;i++){mesh.getVertexPosition(i,vertex).applyMatrix4(mesh.matrixWorld);center.add(vertex);}
         center.divideScalar(mesh.geometry.attributes.position.count);return ship.root.worldToLocal(center).distanceTo(gripTargets[index]);
       }):[];
-      fits.push({id,scale:actor.model.scale.toArray(),pelvis:pelvis.toArray(),offset:ship.config.pilotOffset,handDrift:before.distanceTo(after),min:box.min.toArray(),max:box.max.toArray(),controls,gripErrors});ship.dispose();
+      fits.push({id,scale:actor.model.scale.toArray(),pelvis:pelvis.toArray(),torso:local(actor.bones.spine_03).sub(pelvis).toArray(),offset:ship.config.pilotOffset,handDrift:before.distanceTo(after),min:box.min.toArray(),max:box.max.toArray(),controls,gripErrors});ship.dispose();
     }
-    return {independent,animated,maps,survivor,fits};
+    return {independent,animated,maps,survivor,fits,saddle:{min:saddle.min.toArray(),center:saddle.getCenter(new THREE.Vector3()).toArray()}};
   });
   expect(result.independent).toBe(true);expect(result.animated).toBe(true);expect(result.survivor).toBe(true);expect(result.maps).toBeGreaterThan(5);
   for(const fit of result.fits){
     const bike=fit.id==='038';expect(fit.scale).toEqual(Array(3).fill(bike?1:.72));
-    expect(fit.pelvis[1]).toBeCloseTo((bike?1.35:1.16)+fit.offset[1]);expect(fit.pelvis[2]).toBeCloseTo((bike?.30:-.32)+fit.offset[2]);
+    expect(fit.pelvis[1]).toBeCloseTo((bike?1.35:1.16)+fit.offset[1]);
     expect(fit.handDrift).toBeLessThan(.0001);expect(fit.max[0]-fit.min[0]).toBeLessThan(bike?1.2:1);expect(fit.max[1]).toBeLessThan(2.8);expect(fit.min[1]).toBeGreaterThan(.7);
-    if(bike){expect(fit.controls).toEqual([]);for(const error of fit.gripErrors)expect(error).toBeLessThan(.005);}
+    if(bike){
+      expect(fit.pelvis[2]).toBeGreaterThan(result.saddle.min[2]);expect(fit.pelvis[2]).toBeLessThan(result.saddle.center[2]);
+      expect(fit.torso[2]).toBeGreaterThan(.2);expect(fit.torso[1]).toBeGreaterThan(0);
+      expect(fit.controls).toEqual([]);for(const error of fit.gripErrors)expect(error).toBeLessThan(.005);
+    }else expect(fit.pelvis[2]).toBeCloseTo(-.32+fit.offset[2]);
   }
 });
 

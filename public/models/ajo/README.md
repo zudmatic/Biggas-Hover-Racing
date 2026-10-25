@@ -10,8 +10,9 @@ This is the combined bundle loaded by that PR's movement scene, including the
 updated rig, denim and sneaker textures, face atlas, and relaxed idle. Selection
 uses `Ajo Relaxed Idle`; the racing adapter poses the same rig for the cockpit
 and the Nómada saddle without modifying the supplied file or body proportions.
-Nómada is Ajo's signature vehicle. His palms meet its original rubber grips via
-a two-bone arm pose, with no handlebar extensions or stretched limbs. The pose
+Nómada is Ajo's signature vehicle. He sits back on the second cushion, hinges
+forward at the hips, and keeps his head upright. His palms meet its original
+rubber grips via a two-bone arm pose, with no handlebar extensions or stretched limbs. The pose
 test measures contact against grip meshes in the actual bike GLB, including
 after the vehicle rotates and scales. Raised footrests support his short legs.
 The full source animation bundle is retained (7,217,624 bytes).
