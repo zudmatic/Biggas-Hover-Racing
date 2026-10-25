@@ -1,4 +1,5 @@
 import {test,expect} from '@playwright/test';
+import {withFlightOptions} from './helpers/flight.js';
 import fs from 'node:fs';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
