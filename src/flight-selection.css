@@ -161,6 +161,8 @@
 .race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-profile-brand{display:none}
 .race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-selected-name strong{font-size:clamp(24px,3.4vw,53px)}
 .lobby-slot img[data-lobby-image=zudmatic-face]{width:100%;height:calc(100% - 18px);left:0;top:0;object-fit:cover}
+.lobby-slot img[data-lobby-image=ajo-face]{width:100%;height:calc(100% - 18px);left:0;top:0;object-fit:cover}
+@media(max-width:760px){.lobby-slot img[data-lobby-image=ajo-face]{height:calc(100% - 16px)}}
 @media(max-width:760px){
   .race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-selected-name{width:68vw}
   .race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-profile{width:45%}

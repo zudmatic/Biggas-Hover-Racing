@@ -4,6 +4,7 @@ const finiteMotion=page=>page.evaluate(()=>document.getAnimations().filter(a=>a.
 
 test('pointer navigation animates, interruption stays clean and keyboard remains immediate',async({page})=>{
   await page.setViewportSize({width:960,height:640});await page.goto('/simulator.html');
+  await page.locator('.lobby-start').waitFor({state:'visible'});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const snapshot=await page.evaluate(()=>{
     document.querySelector('.lobby-start').dispatchEvent(new MouseEvent('click',{detail:1,bubbles:true}));
