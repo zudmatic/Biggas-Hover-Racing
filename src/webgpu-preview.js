@@ -19,6 +19,8 @@ import {createCircuitLighting} from './circuit-lighting.js';
 import {createFlightShip} from './flight-ship.js';
 import {createBaseMaterials} from './base-materials.js';
 import {createHoverState} from './circuit-physics.js';
+import {createFlightBoostPads} from './flight-boost-pads.js';
+import {createBoostPadControls} from './boost-pad-controls.js';
 import './webgpu-preview.css';
 
 const query=new URLSearchParams(location.search),status=document.querySelector('#status');
@@ -60,6 +62,10 @@ async function main(){
   const boost=legacy?null:await createBoost(renderer,scene,ship);
   const smoke=legacy?null:await loadFlightFx(scene,{surfaceHeight:world.surfaceHeight,materialFactory:createSmokeMaterial});
   const oil=legacy?null:createOilPreview(scene,world);
+  const pads=legacy?null:await createFlightBoostPads({scene,landscape:world.landscape,surfaceHeight:world.surfaceHeight,distances:[12]});
+  const focusPad=()=>{const p=pads.sim.entries[0];orbit.target.set(p.x,p.y,p.z);camera.position.copy(orbit.target).add(new THREE.Vector3(7,7,-9).applyAxisAngle(new THREE.Vector3(0,1,0),Math.atan2(p.nx,p.nz)));orbit.update();};
+  const padControls=pads?createBoostPadControls(pads,state,focusPad):null;
+  if(pads&&query.get('effect')==='pad')focusPad();
   function clearFx(){boost?.clear();smoke?.reset();oil?.clear();}
   const fxKit=legacy?null:createDialKit('VFX · pruebas',{
     Activos:query.get('vfx')!=='off',Pausa:false,Modo:{type:'select',options:['Aceleración','Turbo','Reposo','Soltar'],default:'Aceleración'},
@@ -107,15 +113,22 @@ async function main(){
     if(busy)return;busy=true;
     try{
       const dt=fxKit?.values.Pausa?0:Math.min((now-previous)/1000,.05);previous=now;time+=dt;
+      const previousPadPosition={x:state.x,y:state.y,z:state.z};
       if(kit.values.Recorrer){route=(route+dt*kit.values['Velocidad recorrido'])%world.landscape.length;place();delta.subVectors(ship.root.position,lastPosition);camera.position.add(delta);orbit.target.add(delta);lastPosition.copy(ship.root.position);}
       if(boost){
         const v=fxKit.values;state.speed=kit.values.Recorrer?kit.values['Velocidad recorrido']:15;
         state.vx=Math.sin(state.yaw)*state.speed;state.vz=Math.cos(state.yaw)*state.speed;
         state.drifting=v.Derrape;state.braking=v.Frenado;state.slip=v.Derrape?.55:0;state.boosting=v.Activos&&v.Modo==='Turbo';state.hull=ship.config.hull?{halfWidth:ship.config.hull.halfWidth*.75,halfLength:ship.config.hull.halfLength*.75}:undefined;
-        await boost.update(dt,v.Modo,v.Activos);smoke.update(dt,{state,camera,scale:.75,reduced:!v.Activos});oil.update(dt,state);
+        state.padBoostRemaining=Math.max(0,(state.padBoostRemaining??0)-dt);
+        if(dt>0){pads.step(dt,state,previousPadPosition);padControls.update();}
+        pads.update(dt,false);
+        const padTurbo=state.padBoostRemaining>0;state.boosting=state.boosting||padTurbo;
+        await boost.update(dt,padTurbo?'Turbo':v.Modo,v.Activos,padTurbo);smoke.update(dt,{state,camera,scale:.75,reduced:!v.Activos});oil.update(dt,state);
+        document.body.dataset.boostPad=JSON.stringify({remaining:pads.sim.entries[0].remaining,activations:pads.sim.entries[0].activations,turbo:state.padBoostRemaining});
         document.body.dataset.vfx=JSON.stringify({enabled:v.Activos,mode:v.Modo,...boost.stats,smoke:smoke.stats.air,marks:smoke.stats.marks,oil:oil.sim.patches.length,time});
       }
       ship.pilot.update(time,true);orbit.update();lighting.update(state,time,{dt});boost?.updateHeat(comicPost.heat);
+      if(comicPost)comicPost.heat.updatePadFields(pads?.heatFields??[]);
       comicStyle.pixelRatio.value=renderer.getPixelRatio();renderer.getDrawingBufferSize(comicStyle.resolution.value);comicMaterials?.sync();
       if(comicPost)comicPost.comic.value=Number(kit.values['Cómic']);
       if(kit.values['Cómic']||fxKit?.values.Activos){if(legacy)originalComic.render(scene,camera,`#${scene.background.getHexString()}`);else await comicPost.render();}
@@ -123,6 +136,6 @@ async function main(){
       document.body.dataset.frame=String(Number(document.body.dataset.frame??0)+1);
     }catch(error){renderer.setAnimationLoop(null);status.textContent=`Error: ${error.message}`;console.error(error);}finally{busy=false;}
   });
-  window.addEventListener('pagehide',()=>{renderer.setAnimationLoop(null);window.removeEventListener('resize',resize);unsubscribe();unsubscribeSmoke?.();unsubscribeFx?.();fxKit?.destroy();smokeKit?.destroy();boost?.dispose();smoke?.dispose();oil?.dispose();kit.destroy();root.destroy();orbit.dispose();comicMaterials?.dispose();comicPost?.dispose();originalComic?.dispose();baseline.dispose();lighting.dispose();ship.dispose();world.dispose();renderer.dispose();},{once:true});
+  window.addEventListener('pagehide',()=>{renderer.setAnimationLoop(null);window.removeEventListener('resize',resize);unsubscribe();unsubscribeSmoke?.();unsubscribeFx?.();fxKit?.destroy();smokeKit?.destroy();padControls?.dispose();pads?.dispose();boost?.dispose();smoke?.dispose();oil?.dispose();kit.destroy();root.destroy();orbit.dispose();comicMaterials?.dispose();comicPost?.dispose();originalComic?.dispose();baseline.dispose();lighting.dispose();ship.dispose();world.dispose();renderer.dispose();},{once:true});
 }
 main().catch(error=>{status.textContent=`No se pudo iniciar: ${error.message}`;document.body.dataset.error=error.message;console.error(error);});

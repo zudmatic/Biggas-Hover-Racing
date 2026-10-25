@@ -7,10 +7,11 @@ export function createHeatField(renderer,camera,depthAt){
   const aspect=uniform(1),pixel=uniform(new THREE.Vector2());
   let nozzles=[[-.68,.62,-2.14,.24],[.68,.62,-2.14,.24]];
   const segments=[0,1,2].map(()=>({a:uniform(new THREE.Vector3()),b:uniform(new THREE.Vector3()),radius:uniform(.04),visible:uniform(0)}));
-  function mask(sample){
+  const padSegments=[0,1,2].map(()=>({a:uniform(new THREE.Vector3()),b:uniform(new THREE.Vector3()),radius:uniform(.04),visible:uniform(0)}));
+  function mask(sample,sources=segments){
   const p=sample.mul(vec2(aspect,1));
   let coverage=float(0);
-  for(const segment of segments){
+  for(const segment of sources){
     const a=segment.a.xy.mul(vec2(aspect,1)),b=segment.b.xy.mul(vec2(aspect,1));
     const ab=b.sub(a),local=p.sub(a);
     const along=local.dot(ab).div(ab.dot(ab).max(.00001)).clamp(0,1);
@@ -36,7 +37,9 @@ export function createHeatField(renderer,camera,depthAt){
   // Check the displaced sample as well: otherwise background pixels pull the
   // ship silhouette into the plume at high strength. Fade across depth edges.
   const destination=screenUV.add(offset).clamp(.001,.999);
-  const sampleUV=screenUV.add(offset.mul(mask(destination))).clamp(.001,.999);
+  const padOffset=vec2(dx,dy).mul(pixel).mul(mask(screenUV,padSegments)).mul(1.35);
+  const padDestination=screenUV.add(padOffset).clamp(.001,.999);
+  const sampleUV=screenUV.add(offset.mul(mask(destination))).add(padOffset.mul(mask(padDestination,padSegments).min(1))).clamp(.001,.999);
   const world=new THREE.Vector3(),view=new THREE.Vector3(),size=new THREE.Vector2();
   function project(x,y,z,out,ship){
     world.set(x,y,z).applyMatrix4(ship.matrixWorld);
@@ -56,6 +59,19 @@ export function createHeatField(renderer,camera,depthAt){
         project(x,y+.28,z-Math.max(.1,length*power*1.5),segment.b.value,ship);
         segment.visible.value=segment.a.value.z>camera.near&&segment.b.value.z>camera.near?1:0;
         segment.radius.value=.65*width*(radius/.24)/(Math.max(1,segment.a.value.z)*Math.tan(THREE.MathUtils.degToRad(camera.fov*.5))*2);
+      });
+    },
+    updatePadFields(fields){
+      // Bounded work: only nearby active plates, with foreground depth protection.
+      const nearby=fields.filter(p=>p.intensity>.001&&Math.hypot(p.x-camera.position.x,p.z-camera.position.z)<80)
+        .sort((a,b)=>Math.hypot(a.x-camera.position.x,a.z-camera.position.z)-Math.hypot(b.x-camera.position.x,b.z-camera.position.z)).slice(0,3);
+      const projectWorld=(x,y,z,out)=>{world.set(x,y,z);view.copy(world).applyMatrix4(camera.matrixWorldInverse);world.project(camera);out.set(world.x*.5+.5,.5-world.y*.5,-view.z);};
+      padSegments.forEach((s,i)=>{
+        const p=nearby[i];if(!p){s.visible.value=0;return;}
+        projectWorld(p.x-p.nx*3,p.y+.16+p.height*.35,p.z-p.nz*3,s.a.value);
+        projectWorld(p.x+p.nx*3,p.y+.16+p.height*.35,p.z+p.nz*3,s.b.value);
+        s.visible.value=s.a.value.z>camera.near&&s.b.value.z>camera.near?p.intensity:0;
+        s.radius.value=(1.5+p.height*.25)/(Math.max(1,Math.min(s.a.value.z,s.b.value.z))*Math.tan(THREE.MathUtils.degToRad(camera.fov*.5))*2);
       });
     },
     uv:sampleUV,

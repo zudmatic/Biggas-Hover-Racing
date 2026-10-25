@@ -16,7 +16,7 @@ export async function createRenderer(canvas,forceWebGL){
 }
 
 // Rendering adapter only: the simulator owns physics, race timing and cameras.
-export async function createFlightWebGPU(renderer,scene,camera,vehicle,oil){
+export async function createFlightWebGPU(renderer,scene,camera,vehicle,oil,boostPads){
   const baseline=createBaseMaterials(scene),style=createComicStyle(),materials=createComicMaterials(scene,style);
   const passes=new Map();let quality={samples:4,glowSamples:12,lite:false},lastComic=null;
   const stats={glowSamples:12,samples:4};
@@ -37,11 +37,12 @@ export async function createFlightWebGPU(renderer,scene,camera,vehicle,oil){
       if(lastComic!==comic){materials.setEnabled(comic);lastComic=comic;}materials.sync();style.pixelRatio.value=renderer.getPixelRatio();renderer.getDrawingBufferSize(style.resolution.value);
       const running=phase==='flying'||phase==='countdown';
       const mode=state.boosting?'Turbo':state.speed>1?'Aceleración':'Reposo';
-      await boost.update(running?dt:0,mode,!reduced);
+      await boost.update(running?dt:0,mode,!reduced,state.boosting&&state.padBoostRemaining>0);
       scene.updateMatrixWorld(true);
       botFlame.update(oil.sim.time,botSettings,false);botTrail.record(oil.sim.time,oil.botShip.root);
       botTrail.update(oil.sim.time,{...botSettings,Activa:oil.botShip.root.visible&&oil.botShip.root.parent.visible&&!reduced},.45,7.5,.8);
       const post=currentPost();camera.updateMatrixWorld();boost.updateHeat(post.heat);post.comic.value=Number(comic);
+      post.heat.updatePadFields(reduced?[]:boostPads?.heatFields??[]);
       await post.render();
     },
     dispose(){botTrail.dispose();botFlame.material.dispose();boost.dispose();materials.dispose();for(const post of passes.values())post.dispose();passes.clear();baseline.dispose();},
