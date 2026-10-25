@@ -39,6 +39,15 @@ test('WebGPU legacy race links launch free driving, pause and restart',async({pa
  await page.keyboard.press('Escape');await expect(app).toHaveAttribute('data-phase','paused');
  await page.getByRole('button',{name:'Continuar',exact:true}).click();await expect(app).toHaveAttribute('data-phase','flying',{timeout:15000});
  await page.locator('.flight-canvas').focus();await page.keyboard.down('KeyW');await expect.poll(async()=>Number(await app.getAttribute('data-time')),{timeout:15000}).toBeGreaterThan(.2);await page.keyboard.up('KeyW');
- await page.keyboard.press('Escape');await page.locator('#flight-restart').click();await expect(app).toHaveAttribute('data-phase','flying');
- expect(Number(await app.getAttribute('data-time'))).toBeLessThan(.2);expect(errors).toEqual([]);
+  await page.keyboard.press('Escape');
+  // Read the first HUD tick after restart. Browser round trips can otherwise
+  // let a correctly reset simulation advance past the 0.2 s assertion window.
+  const restartedAt=await page.locator('#flight-restart').evaluate(button=>new Promise(resolve=>{
+    const app=document.querySelector('.flight-app'),observer=new MutationObserver(()=>{
+      observer.disconnect();resolve(Number(app.dataset.time));
+    });
+    observer.observe(app,{attributes:true,attributeFilter:['data-time']});button.click();
+  }));
+  await expect(app).toHaveAttribute('data-phase','flying');
+  expect(restartedAt).toBeLessThan(.2);expect(errors).toEqual([]);
 });
