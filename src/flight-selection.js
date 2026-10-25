@@ -70,7 +70,7 @@ export function chooseFlight(){
     function selectPilot(id){
       selectedPilot=pilotConfig(id).id;const config=PILOTS[selectedPilot];root.dataset.pilot=selectedPilot;root.dataset.palette=selectedPalette;root.dataset.hat=selectedHat;
       root.querySelectorAll('[data-pilot-choice]').forEach(button=>{const selected=button.dataset.pilotChoice===selectedPilot;button.classList.toggle('is-selected',selected);button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-label',`${PILOTS[button.dataset.pilotChoice].name}${selected?', seleccionado':''}`);button.querySelector('.lobby-slot-player').hidden=!selected;});
-      $('[data-screen="1"] .lobby-section-title>span').textContent=selectedPilot==='zud'?'01 / 09':'02 / 09';
+      $('[data-screen="1"] .lobby-section-title>span').textContent=`${String(Object.keys(PILOTS).indexOf(selectedPilot)+1).padStart(2,'0')} / 09`;
       $('[data-screen="1"] .lobby-selected-name strong').textContent=config.name.toUpperCase();
       $('.lobby-hats').hidden=selectedPilot!=='zud';$('.lobby-hat-name').textContent=zudHat(selectedHat).name;root.querySelectorAll('button[data-hat]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.hat===selectedHat)));
       $('.lobby-palettes').hidden=selectedPilot!=='zudmatic';$('.lobby-palette-name').textContent=selectedPalette;

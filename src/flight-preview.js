@@ -95,7 +95,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
     for(const [id,root] of Object.entries(actors)){
       if(!root.visible)continue;
       if(id.startsWith('vehicle:'))ships.get(id)?.update(time,0,false,reducedMotion.matches);
-      if(id==='pilot:zudmatic')pilots.get('zudmatic')?.update(time);
+      if(id.startsWith('pilot:'))pilots.get(id.slice(6))?.update?.(time);
       root.rotation.y=yaw+(reducedMotion.matches||drag?0:Math.sin(time*.45)*.12);
       root.position.y=floor[id]+(id.startsWith('vehicle:')?.22:0)+(reducedMotion.matches?0:Math.sin(time*(id.startsWith('pilot:')?1.8:1.2))*(id.startsWith('pilot:')?.025:.08));
     }
@@ -114,11 +114,15 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
     selectedPilot=pilotConfig(id).id;selectedPalette=pilotPalette(palette).name;selectedHat=zudHat(hat).id;
     applyHat(zud);ships.forEach(ship=>applyHat(ship.pilot.actor));
     pilots.get('zudmatic')?.setPalette(selectedPalette);ships.forEach(ship=>ship.pilot.actor.setPalette?.(selectedPalette));setKind(kind);
-    if(selectedPilot==='zudmatic'&&!pilots.has('zudmatic')&&!pending.has('pilot:zudmatic')){
-      pending.set('pilot:zudmatic',import('./zudmatic-model.js').then(({createZudmaticModel})=>createZudmaticModel({palette:selectedPalette})).then(actor=>{
+    const requestedPilot=selectedPilot,pilotKey=`pilot:${requestedPilot}`;
+    if(requestedPilot!=='zud'&&!pilots.has(requestedPilot)&&!pending.has(pilotKey)){
+      const actorPromise=requestedPilot==='ajo'
+        ?import('./ajo-model.js').then(({createAjoModel})=>createAjoModel())
+        :import('./zudmatic-model.js').then(({createZudmaticModel})=>createZudmaticModel({palette:selectedPalette}));
+      pending.set(pilotKey,actorPromise.then(actor=>{
         if(disposed||signal.aborted){actor.dispose();return;}
-        actor.setPalette(selectedPalette);pilots.set('zudmatic',actor);addActor('pilot:zudmatic',actor.root);setKind(kind);
-      }).catch(()=>{pending.delete('pilot:zudmatic');if(!disposed&&activeId()==='pilot:zudmatic')onStatus('fallback');}));
+        actor.setPalette?.(selectedPalette);pilots.set(requestedPilot,actor);addActor(pilotKey,actor.root);setKind(kind);
+      }).catch(()=>{pending.delete(pilotKey);if(!disposed&&activeId()===pilotKey)onStatus('fallback');}));
     }
     void loadVehicle();
   }

@@ -10,10 +10,10 @@ export function createNomadaPilotSupports(root,{hands,soles}){
   const plateGeometry=new THREE.BoxGeometry(.17,.035,.19);
   const up=new THREE.Vector3(0,1,0),direction=new THREE.Vector3(),target=new THREE.Vector3();
   function mesh(geometry,material,name){const m=new THREE.Mesh(geometry,material);m.name=name;m.castShadow=true;m.receiveShadow=true;m.userData.system='cockpit';root.add(m);return m;}
-  const controls=[-1,1].map((side,i)=>({
-    base:new THREE.Vector3(side*.56,1.67,.51),
+  const controls=hands.map((hand,i)=>({
+    base:new THREE.Vector3((i===0?-1:1)*.56,1.67,.51),
     rod:mesh(rodGeometry,metal,'Extensión del manillar'),
-    grip:mesh(gripGeometry,rubber,'Agarre de la Nómada'),hand:hands[i],
+    grip:mesh(gripGeometry,rubber,'Agarre de la Nómada'),hand,
   }));
   const rests=[-1,1].map((side,i)=>({
     base:new THREE.Vector3(side*.72,.3,.65),sole:soles[i],

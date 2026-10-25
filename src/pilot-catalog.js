@@ -4,6 +4,7 @@ import palettes from './zudmatic-palettes.json';
 export const PILOTS={
   zud:{id:'zud',name:'Zud',image:'zud-face',preview:'zud'},
   zudmatic:{id:'zudmatic',name:'Zudmatic',image:'zudmatic-face',preview:'zudmatic'},
+  ajo:{id:'ajo',name:'Ajo',image:'ajo-face',preview:'ajo'},
 };
 export const ZUDMATIC_PALETTES=palettes;
 export const pilotConfig=id=>PILOTS[id]??PILOTS.zud;
