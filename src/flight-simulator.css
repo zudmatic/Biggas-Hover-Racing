@@ -151,15 +151,14 @@ button:disabled{cursor:not-allowed;opacity:.45}
 
 /* Existing tuning tools belong to the same visual system, clear of the speed card. */
 .flight-dials .dialkit-root[data-theme=light]{--dial-glass-bg:var(--race-paper);--dial-dropdown-bg:var(--race-paper);--dial-border:var(--race-ink);--dial-focus-ring:var(--race-blue);--dial-text-root:var(--race-ink);--dial-text-primary:var(--race-ink);--dial-text-label:var(--race-muted);--dial-shadow:var(--race-shadow);--dial-shadow-collapsed:var(--race-shadow);--dial-backdrop-blur:0px;font-family:var(--race-font)}
-.flight-dials .dialkit-panel[data-position=bottom-left]{left:250px;bottom:69px;max-width:calc(100vw - 280px);z-index:8}
-.flight-dials .dialkit-panel-inner{border:var(--race-border);border-radius:var(--race-radius);max-height:min(340px,calc(100dvh - 250px))!important;overflow-y:auto}
+.flight-dials .dialkit-panel{z-index:10000;max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px)}
+.flight-dials .dialkit-panel[data-position=top-right]{right:16px;top:16px;bottom:auto;left:auto}
+.flight-dials .dialkit-panel-inner{border:var(--race-border);border-radius:var(--race-radius);max-height:calc(100dvh - 32px)!important;overflow-y:auto;scrollbar-width:thin}
+.flight-dials .dialkit-panel-inner:not([data-collapsed=true]){width:min(390px,calc(100vw - 32px))!important}
+.flight-dials .dialkit-panel-inner::-webkit-scrollbar{display:block;width:6px}
 @media(max-width:760px){
-  .flight-dials .dialkit-panel[data-position=bottom-left]{left:17px;bottom:auto;top:205px;max-width:calc(100vw - 34px)}
-  .flight-dials .dialkit-panel-inner{max-height:calc(100dvh - 370px)!important}
-}
-@media(max-height:520px) and (orientation:landscape){
-  .flight-dials .dialkit-panel[data-position=bottom-left]{left:240px;top:auto;bottom:17px}
-  .flight-dials .dialkit-panel-inner{max-height:calc(100dvh - 150px)!important}
+  .flight-dials .dialkit-panel[data-position=top-right]{right:12px;top:12px}
+  .flight-dials .dialkit-panel-inner{max-height:calc(100dvh - 24px)!important}
 }
 @media(max-height:520px) and (orientation:landscape){
   .flight-telemetry .flight-hud-label,.flight-key-hint{display:none}

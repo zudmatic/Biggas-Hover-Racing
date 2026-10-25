@@ -40,8 +40,10 @@ export function createControls(actions){
     Limpiar:{type:'action',label:'Limpiar partículas'},Restablecer:{type:'action',label:'Restablecer todo'},
   });
   add('camera','Cámara de prueba',{
-    'Cámara':{type:'select',options:['Actual','Klipp'],default:'Klipp'},
+    'Cámara':{type:'select',options:['Actual','Klipp','Fija'],default:'Klipp'},
     'Recorrido de prueba':true,'Velocidad recorrido':[.3,0,.8,.01],'Tamaño recorrido':[8,2,12,.5],
+    Trayectoria:{type:'select',options:['Vueltas','Recto sobre la placa'],default:'Vueltas'},
+    'Impulso de la placa':[3,1,6,.25],
     Distancia:[12,5,24,.5],Altura:[4,1,10,.25],Lateral:[0,-6,6,.25],
     'Suavizado posición':[.3,0,2,.05],'Suavizado giro':[.35,0,2,.05],
     'Suavizado mirada':[.2,0,1,.05],'Anticipación':[.15,0,1,.05],

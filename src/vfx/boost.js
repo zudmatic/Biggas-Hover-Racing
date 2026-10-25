@@ -2,11 +2,14 @@ import * as THREE from 'three/webgpu';
 import {uniform,uv,float,smoothstep,mix,vec4,step} from 'three/tsl';
 import {VFXParticles,Appearance,Blending} from 'vanilla-vfx';
 import {createDialKit} from '../dev-dials.js';
+import {createPadBoostPalette,smoothBoostPower} from './pad-boost-palette.js';
 import {createFlameMaterial} from './flame-material.js';
 import {createFlameTrail} from './flame-trail.js';
 import {createEngineCore} from './engine-core.js';
 
 export async function createBoost(renderer,scene,ship){
+  const padPalette=createPadBoostPalette(),fireColor=new THREE.Color(),coreColor=new THREE.Color(),edgeColor=new THREE.Color(),engineColor=new THREE.Color();
+  const emberTint=uniform(new THREE.Color('#ff861f')),lineTint=uniform(new THREE.Color('#ffd18a'));
   const nozzles=ship.config.exhausts,flame=createFlameMaterial(),trail=createFlameTrail(scene,flame.material,nozzles),engine=createEngineCore(ship.root,nozzles);
   const color=uniform(new THREE.Color('#ff6b16')),hot=uniform(new THREE.Color('#fff1bc')),opacity=uniform(.13);
   const round=float(1).sub(smoothstep(.72,1,uv().mul(2).sub(1).length()));
@@ -15,10 +18,10 @@ export async function createBoost(renderer,scene,ship){
     friction:{intensity:.12},turbulence:{intensity:8,frequency:2.3,speed:2.5},alphaTestNode:float(.01),opacityNode:()=>opacity.mul(round),
     colorNode:({progress},base)=>vec4(mix(hot,color,step(.25,progress)),flame.ditherAlpha(base.a))});
   const embers=new VFXParticles(renderer,{autoStart:false,maxParticles:400,size:[.04,.1],lifetime:[.26,.65],speed:[9,15],gravity:[0,-.3,0],
-    fadeSize:[1,0],fadeOpacity:[1,0],appearance:Appearance.GRADIENT,blending:Blending.ADDITIVE,turbulence:{intensity:8,frequency:2,speed:1},stretchBySpeed:{factor:.15,maxStretch:4},colorNode:(_d,base)=>vec4(new THREE.Color('#ff861f'),flame.ditherAlpha(base.a))});
+    fadeSize:[1,0],fadeOpacity:[1,0],appearance:Appearance.GRADIENT,blending:Blending.ADDITIVE,turbulence:{intensity:8,frequency:2,speed:1},stretchBySpeed:{factor:.15,maxStretch:4},colorNode:(_d,base)=>vec4(emberTint,flame.ditherAlpha(base.a))});
   const lineGeometry=new THREE.CapsuleGeometry(.025,.4,2,6);
   const lines=new VFXParticles(renderer,{autoStart:false,maxParticles:200,geometry:lineGeometry,orientToDirection:true,orientAxis:'y',size:[.3,.55],lifetime:[.2,.4],speed:[10,18],gravity:[0,.1,0],
-    fadeSize:[1,0],fadeOpacity:[1,0],blending:Blending.ADDITIVE,turbulence:{intensity:2,frequency:2,speed:1},stretchBySpeed:{factor:.15,maxStretch:6},opacityNode:()=>float(.8),colorNode:(_d,base)=>vec4(new THREE.Color('#ffd18a'),flame.ditherAlpha(base.a))});
+    fadeSize:[1,0],fadeOpacity:[1,0],blending:Blending.ADDITIVE,turbulence:{intensity:2,frequency:2,speed:1},stretchBySpeed:{factor:.15,maxStretch:6},opacityNode:()=>float(.8),colorNode:(_d,base)=>vec4(lineTint,flame.ditherAlpha(base.a))});
   const systems=[fragments,embers,lines];
   try{for(const system of systems){await system.init();system.stop();scene.add(system.object3D);}}
   catch(error){for(const system of systems)system.dispose();trail.dispose();engine.dispose();flame.material.dispose();lineGeometry.dispose();throw error;}
@@ -43,24 +46,29 @@ export async function createBoost(renderer,scene,ship){
   const stats={emitted:0,power:0,palette:'Rojo',capacity:2400,particleLifetimes:[0,0,0],emittedByLayer:[0,0,0]};
   function clear(){systems.forEach(s=>s.clear());trail.clear();accumulators.fill(0);stats.emitted=0;stats.emittedByLayer.fill(0);positioned=false;}
   return {kit,stats,clear,setQuality(lite){quality=lite?.55:1;},
-    async update(dt,mode,enabled){
+    async update(dt,mode,enabled,padBoost=false){
       ship.root.getWorldPosition(worldPosition);
       const distance=positioned?worldPosition.distanceTo(previous):0;
       const motionSpeed=dt>0&&distance<15?distance/dt:0;
       velocity.subVectors(worldPosition,previous).multiplyScalar(dt>0&&positioned&&distance<15?1/dt:0);
       if(distance>=15)clear();previous.copy(worldPosition);positioned=true;
       time+=dt;const v=kit.values,target=enabled?({Turbo:1,Aceleración:.45,Reposo:.13,Soltar:0}[mode]??0):0;
-      power+=(target-power)*(1-Math.exp(-dt*(target>power?12:18)));if(!enabled)power=0;
-      const blue=mode==='Turbo';stats.power=power;stats.palette=blue?'Azul':'Rojo';
-      flame.update(time,v,blue);color.value.set(blue?'#86a5ff':'#ff6b16');
+      power=smoothBoostPower(power,target,dt);if(!enabled)power=0;
+      const blue=mode==='Turbo';stats.power=power;stats.palette=padBoost?'Verde · placa':blue?'Azul':'Rojo';
+      padPalette.update(dt,enabled&&padBoost);
+      flame.update(time,v,blue);
+      padPalette.apply(fireColor,blue?'#42a4ff':'#ff6b16');padPalette.apply(coreColor,blue?'#9e8c00':'#fff1bc',true);flame.setColors(fireColor,coreColor);
+      padPalette.apply(color.value,blue?'#86a5ff':'#ff6b16');padPalette.apply(hot.value,'#fff1bc',true);
+      padPalette.apply(emberTint.value,'#ff861f');padPalette.apply(lineTint.value,'#ffd18a',true);
+      padPalette.apply(edgeColor,blue?'#42a4ff':'#ff5812');padPalette.apply(engineColor,'#fff1b0',true);
       ship.root.updateMatrixWorld(true);trail.record(time,ship.root);
       trail.update(time,{Activa:enabled&&v.Llama,Longitud:v.Longitud,Ancho:v.Ancho,Pulsación:.02},power,7.5,.8);
-      engine.update(dt,time,power,{Activo:enabled&&v.Motor,Profundidad:2.25,Intensidad:1.1,Tamaño:1.225,Enfriamiento:.85,Pulsación:.04,'Luz cercana':.5,'Color borde':blue?'#42a4ff':'#ff5812','Color centro':'#fff1b0'});
+      engine.update(dt,time,power,{Activo:enabled&&v.Motor,Profundidad:2.25,Intensidad:1.1,Tamaño:1.225,Enfriamiento:.85,Pulsación:.04,'Luz cercana':.5,'Color borde':edgeColor,'Color centro':engineColor});
       const rates=[v.Fragmentos?v['Cantidad fragmentos']:0,v.Brasas?v['Cantidad brasas']:0,v['Chispas lineales']?v['Cantidad chispas']:0],speeds=[7.5,12,14],spread=[.33,.64,.22];
       const durations=[v['Duración fragmentos'],v['Duración brasas'],v['Duración chispas']];
       for(let j=0;j<systems.length;j++){
         // Keep small accents in low quality; reduce only the dense flame filler.
-        accumulators[j]+=dt*rates[j]*Math.sqrt(target)*(j===0?quality:1);const count=Math.floor(accumulators[j]);accumulators[j]-=count;
+        accumulators[j]+=dt*rates[j]*Math.sqrt(power)*(j===0?quality:1);const count=Math.floor(accumulators[j]);accumulators[j]-=count;
         const relativeSpeed=motionSpeed*(1-v['Seguir nave'])+speeds[j]*1.25;
         const budget=v['Estela partículas']*ship.root.scale.x*(j===0?.75:1.7);
         // A minimum visible lifespan avoids deleting a newly emitted spark in one update.

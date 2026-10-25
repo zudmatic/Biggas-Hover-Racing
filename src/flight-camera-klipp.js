@@ -1,3 +1,4 @@
+import {smoothCameraFov} from './flight-camera-fov.js';
 import {Object3D,Vector3} from 'three';
 import {KlippThree,VirtualCameraThree,FollowBodyThree,RotationComposerAimThree} from '@pmndrs/klipp/three';
 import {createDialKit} from './dev-dials.js';
@@ -57,7 +58,7 @@ export function createFlightCameraKlipp(camera,{enabled=true,element=null,canOrb
       const v=kit.values;
       target.position.set(state.x,state.y,state.z);target.rotation.set(0,state.yaw,0);target.updateMatrixWorld(true);
       collisionWorld=world;
-      fov=snap||!wasActive||reduced?profile.fov:fov+(profile.fov-fov)*(1-Math.exp(-dt*4));
+      fov=smoothCameraFov(fov,profile.fov,dt,snap||!wasActive||reduced,profile.lens);
       if(snap||!wasActive){reset();snap=true;}
       if(snap){heading=state.yaw;orbitYaw=orbitHeight=idle=0;}
       else {

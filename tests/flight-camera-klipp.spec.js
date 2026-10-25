@@ -25,7 +25,7 @@ test('Klipp preserves framing after collision and resets after recovery',async({
   expect(result.enabled).toBe(true);
   for(const p of result.samples){expect(p[0]).toBeCloseTo(0,5);expect(p[1]).toBeCloseTo(-.15,5);}
   expect(result.reset[0]).toBeCloseTo(100,5);expect(result.reset[1]).toBeCloseTo(5,5);expect(result.reset[2]).toBeCloseTo(191.5,5);
-  expect(result.boostFov).toBeGreaterThan(62);expect(result.boostFov).toBeLessThan(64);
+  expect(result.boostFov).toBeGreaterThan(62);expect(result.boostFov).toBeLessThan(65);
 });
 
 test('chase camera stays behind through repeated turns without throttle input',async({page})=>{
