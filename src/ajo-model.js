@@ -51,12 +51,13 @@ export async function createAjoModel({seated=false,offset=[0,0,0],fit}={}){
     hand.quaternion.copy(hand.parent.getWorldQuaternion(parentRotation).invert().multiply(orientation));hand.updateWorldMatrix(false,true);
   }
   if(seated){
-    model.scale.setScalar(bike?1:.72);root.updateMatrixWorld(true);
+    // Match Zudmatic's visible head/body size; Ajo's tall ears sit above it.
+    model.scale.setScalar(bike?1.34:.96);root.updateMatrixWorld(true);
     const extremityRotations=new Map(['foot_l','foot_r','hand_l','hand_r'].map(name=>[name,bones[name].getWorldQuaternion(new THREE.Quaternion())]));
     if(bike){
       // Hinge forward from the hips, while keeping his gaze on the road.
       const headRotation=bones.Head.getWorldQuaternion(new THREE.Quaternion());
-      rotation.setFromAxisAngle(new THREE.Vector3(1,0,0),THREE.MathUtils.degToRad(38)).multiply(bones.pelvis.getWorldQuaternion(parentRotation));
+      rotation.setFromAxisAngle(new THREE.Vector3(1,0,0),THREE.MathUtils.degToRad(25)).multiply(bones.pelvis.getWorldQuaternion(parentRotation));
       bones.pelvis.quaternion.copy(bones.pelvis.parent.getWorldQuaternion(parentRotation).invert().multiply(rotation));bones.pelvis.updateWorldMatrix(false,true);
       bones.Head.quaternion.copy(bones.Head.parent.getWorldQuaternion(parentRotation).invert().multiply(headRotation));bones.Head.updateWorldMatrix(false,true);
     }
@@ -71,7 +72,7 @@ export async function createAjoModel({seated=false,offset=[0,0,0],fit}={}){
       hand.quaternion.copy(hand.parent.getWorldQuaternion(parentRotation).invert().multiply(handRotation));hand.updateWorldMatrix(false,true);
     }
     const pelvis=bones.pelvis.getWorldPosition(new THREE.Vector3());
-    model.position.add(new THREE.Vector3(0,bike?1.35:1.16,bike?0:-.32).sub(pelvis));root.updateMatrixWorld(true);
+    model.position.add(new THREE.Vector3(0,bike?1.41:1.16,bike?-.18:-.32).sub(pelvis));root.updateMatrixWorld(true);
     if(bike){
       // Midpoints between the authored grip rings 001/002 and 007/008 in
       // nomada-038.glb, after its +X to +Z conversion. No arm scaling.
@@ -82,7 +83,7 @@ export async function createAjoModel({seated=false,offset=[0,0,0],fit}={}){
     if(bike){
       supports=createNomadaPilotSupports(root,{
         hands:[],
-        soles:['r','l'].map(side=>target=>{bones[`foot_${side}`].getWorldPosition(target);root.worldToLocal(target);target.y-=.04;target.z+=.06;root.localToWorld(target);}),
+        soles:['r','l'].map(side=>target=>{bones[`foot_${side}`].getWorldPosition(target);root.worldToLocal(target);target.y-=.04*model.scale.x;target.z+=.06*model.scale.x;root.localToWorld(target);}),
       });supports.update();
     }else{
       // Short arms retain their proportions; control extensions meet the paws.
@@ -95,7 +96,8 @@ export async function createAjoModel({seated=false,offset=[0,0,0],fit}={}){
       }
     }
   }else{
-    const bounds=new THREE.Box3().setFromObject(model,true);model.scale.setScalar(3.2/bounds.getSize(new THREE.Vector3()).y);
+    const bodyBounds=new THREE.Box3();for(const mesh of meshes)if(!mesh.name.includes('Ear'))bodyBounds.expandByObject(mesh,true);
+    model.scale.setScalar(3.2/bodyBounds.getSize(new THREE.Vector3()).y);
   }
   const headRest=bones.Head.quaternion.clone();let lastTime=-1,lastMoving;
   function update(time=0,moving=false){
