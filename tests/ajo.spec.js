@@ -50,19 +50,27 @@ test('Ajo retains independent rigs, animation and textures; driving poses stay s
   test.setTimeout(60000);await page.goto('/');
   const result=await page.evaluate(async()=>{
     const THREE=await import('/node_modules/three/build/three.module.js');const {createAjoModel}=await import('/src/ajo-model.js');const {createFlightShip}=await import('/src/flight-ship.js');
+    const {createZudmaticModel}=await import('/src/zudmatic-model.js');
     const {GLTFLoader}=await import('/node_modules/three/examples/jsm/loaders/GLTFLoader.js');const {prepareShipModel,shipConfig}=await import('/src/ship-catalog.js');
     const nomada=(await new GLTFLoader().loadAsync('/models/spaceship/nomada-038.glb')).scene;prepareShipModel(nomada,shipConfig('038'));
     const gripTargets=[['007','008'],['001','002']].map(rings=>rings.map(suffix=>new THREE.Box3().setFromObject(nomada.getObjectByName(`Anillo_empuñadura${suffix}`)).getCenter(new THREE.Vector3())).reduce((a,b)=>a.add(b)).multiplyScalar(.5));
-    const saddle=new THREE.Box3().setFromObject(nomada.getObjectByName('Asiento_cuero_cojin_1'));
+    const saddle=new THREE.Box3().setFromObject(nomada.getObjectByName('Asiento_cuero_cojin_2'));
     const a=await createAjoModel(),b=await createAjoModel();a.update(1.5);b.update(0);
     const independent=a.bones.Head!==b.bones.Head&&a.meshes[0].geometry!==b.meshes[0].geometry&&a.meshes[0].material.map!==b.meshes[0].material.map;
     const animated=a.bones.Head.quaternion.angleTo(b.bones.Head.quaternion)>1e-4;
     const maps=b.meshes.filter(mesh=>mesh.material.map).length,pose=b.bones.Head.quaternion.toArray();a.dispose();b.update(0);
-    const survivor=pose.every((value,i)=>Math.abs(value-b.bones.Head.quaternion.toArray()[i])<1e-6);b.dispose();
+    const survivor=pose.every((value,i)=>Math.abs(value-b.bones.Head.quaternion.toArray()[i])<1e-6);
+    const standingReference=await createZudmaticModel(),bodyBounds=new THREE.Box3();b.root.updateMatrixWorld(true);standingReference.root.updateMatrixWorld(true);
+    for(const mesh of b.meshes)if(!mesh.name.includes('Ear'))bodyBounds.expandByObject(mesh,true);
+    const referenceBounds=new THREE.Box3().setFromObject(standingReference.model,true),referenceHead=new THREE.Box3().setFromObject(standingReference.meshes.find(mesh=>mesh.name.includes('Helmet_')),true);
+    const standingSizeRatio=bodyBounds.getSize(new THREE.Vector3()).y/(referenceHead.max.y-referenceBounds.min.y);standingReference.dispose();b.dispose();
     const fits=[];
     for(const id of ['033','037','038']){
       const ship=await createFlightShip(id,{pilot:'ajo',exhaust:false}),actor=ship.pilot.actor;
       ship.root.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(actor.model,true);
+      const head=new THREE.Box3().setFromObject(actor.meshes.find(mesh=>mesh.name.includes('Cat_Head')),true);
+      const reference=await createZudmaticModel({seated:true,fit:ship.config.pilotFit,offset:ship.config.pilotOffset});reference.update(0,false);reference.root.updateMatrixWorld(true);
+      const referenceBox=new THREE.Box3().setFromObject(reference.model,true),referenceCrown=new THREE.Box3().setFromObject(reference.meshes.find(mesh=>mesh.name.includes('Helmet_')),true).max.y;reference.dispose();
       const local=bone=>ship.root.worldToLocal(bone.getWorldPosition(new THREE.Vector3()));
       const before=local(actor.bones.hand_l);ship.root.rotation.set(.2,1.1,-.3);ship.root.scale.setScalar(.75);ship.update(2,0,false,true);ship.root.updateMatrixWorld(true);
       const after=local(actor.bones.hand_l),pelvis=local(actor.bones.pelvis);
@@ -72,17 +80,20 @@ test('Ajo retains independent rigs, animation and textures; driving poses stay s
         for(let i=0;i<mesh.geometry.attributes.position.count;i++){mesh.getVertexPosition(i,vertex).applyMatrix4(mesh.matrixWorld);center.add(vertex);}
         center.divideScalar(mesh.geometry.attributes.position.count);return ship.root.worldToLocal(center).distanceTo(gripTargets[index]);
       }):[];
-      fits.push({id,scale:actor.model.scale.toArray(),pelvis:pelvis.toArray(),torso:local(actor.bones.spine_03).sub(pelvis).toArray(),offset:ship.config.pilotOffset,handDrift:before.distanceTo(after),min:box.min.toArray(),max:box.max.toArray(),controls,gripErrors});ship.dispose();
+      fits.push({id,scale:actor.model.scale.toArray(),pelvis:pelvis.toArray(),torso:local(actor.bones.spine_03).sub(pelvis).toArray(),offset:ship.config.pilotOffset,handDrift:before.distanceTo(after),min:box.min.toArray(),max:box.max.toArray(),referenceWidth:referenceBox.getSize(new THREE.Vector3()).x,crown:head.max.y,referenceCrown,controls,gripErrors});ship.dispose();
     }
-    return {independent,animated,maps,survivor,fits,saddle:{min:saddle.min.toArray(),center:saddle.getCenter(new THREE.Vector3()).toArray()}};
+    return {independent,animated,maps,survivor,standingSizeRatio,fits,saddle:{min:saddle.min.toArray(),max:saddle.max.toArray()}};
   });
   expect(result.independent).toBe(true);expect(result.animated).toBe(true);expect(result.survivor).toBe(true);expect(result.maps).toBeGreaterThan(5);
+  expect(result.standingSizeRatio).toBeGreaterThan(.95);expect(result.standingSizeRatio).toBeLessThan(1.05);
   for(const fit of result.fits){
-    const bike=fit.id==='038';expect(fit.scale).toEqual(Array(3).fill(bike?1:.72));
-    expect(fit.pelvis[1]).toBeCloseTo((bike?1.35:1.16)+fit.offset[1]);
-    expect(fit.handDrift).toBeLessThan(.0001);expect(fit.max[0]-fit.min[0]).toBeLessThan(bike?1.2:1);expect(fit.max[1]).toBeLessThan(2.8);expect(fit.min[1]).toBeGreaterThan(.7);
+    const bike=fit.id==='038';expect(fit.scale[0]).toBe(fit.scale[1]);expect(fit.scale[1]).toBe(fit.scale[2]);
+    expect(fit.pelvis[1]).toBeCloseTo((bike?1.41:1.16)+fit.offset[1]);
+    expect((fit.max[0]-fit.min[0])/fit.referenceWidth).toBeGreaterThan(.95);expect((fit.max[0]-fit.min[0])/fit.referenceWidth).toBeLessThan(1.05);
+    expect(Math.abs(fit.crown-fit.referenceCrown)).toBeLessThan(.08);
+    expect(fit.handDrift).toBeLessThan(.0001);expect(fit.max[1]).toBeLessThan(bike?3.2:2.8);expect(fit.min[1]).toBeGreaterThan(.7);
     if(bike){
-      expect(fit.pelvis[2]).toBeGreaterThan(result.saddle.min[2]);expect(fit.pelvis[2]).toBeLessThan(result.saddle.center[2]);
+      expect(fit.pelvis[2]).toBeGreaterThan(result.saddle.min[2]);expect(fit.pelvis[2]).toBeLessThan(result.saddle.max[2]);
       expect(fit.torso[2]).toBeGreaterThan(.2);expect(fit.torso[1]).toBeGreaterThan(0);
       expect(fit.controls).toEqual([]);for(const error of fit.gripErrors)expect(error).toBeLessThan(.005);
     }else expect(fit.pelvis[2]).toBeCloseTo(-.32+fit.offset[2]);
