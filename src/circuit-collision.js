@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {Octree} from 'three/addons/math/Octree.js';
 import {Capsule} from 'three/addons/math/Capsule.js';
+import {MIN_HOVER_HEIGHT,MAX_HOVER_HEIGHT} from './circuit-physics.js';
 
 // Ignore collider materials and embedded albedo images: only geometry is needed.
 export const collisionMaterials=parser=>({name:'collision-materials',loadMaterial(index){return Promise.resolve(new THREE.MeshBasicMaterial({name:parser.json.materials?.[index]?.name??'Collider'}));}});
@@ -59,7 +60,15 @@ export function createCityCollision(root){
     const road=landscape.roadAt(state.x,state.z),offRoad=road.distanceToRoad>road.width/2+1;
     if(offRoad){const drag=Math.exp(-dt*.65);state.vx*=drag;state.vz*=drag;}
     state.offTrackTime=offRoad?(state.offTrackTime??0)+dt:0;
-    const floorY=surfaceHeight(state.x,state.z);if(floorY!==null)state.y=floorY+state.hover;
+    const floorY=surfaceHeight(state.x,state.z);
+    if(floorY!==null){
+      // A lateral collision can move the ship onto a different surface height.
+      // Preserve suspension momentum; only correct unsafe clearance.
+      state.hover=THREE.MathUtils.clamp(state.y-floorY,MIN_HOVER_HEIGHT,MAX_HOVER_HEIGHT);
+      if(state.y<floorY+MIN_HOVER_HEIGHT)state.hoverVelocity=Math.max(0,state.hoverVelocity);
+      if(state.y>floorY+MAX_HOVER_HEIGHT)state.hoverVelocity=Math.min(0,state.hoverVelocity);
+      state.y=floorY+state.hover;
+    }
     state.recoverNeeded=floorY===null||road.distanceToRoad>70||state.offTrackTime>10;
     state.speed=Math.hypot(state.vx,state.vz);
   }

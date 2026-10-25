@@ -2,6 +2,16 @@
 export const HOVER_HEIGHT=.65;
 export const CIRCUIT_SPEED=52;
 export const CIRCUIT_BOOST=72;
+export const MIN_HOVER_HEIGHT=.43;
+export const MAX_HOVER_HEIGHT=1.25;
+// Rates are per second, spring stiffness per second squared. Keep the handling
+// together so playtesting can tune the air cushion independently of propulsion.
+export const HOVER_HANDLING=Object.freeze({
+  grip:4.8,driftGrip:1.6,brakeGrip:9,
+  steeringResponse:8.5,steeringRelease:5.8,countersteerResponse:14,
+  liftStiffness:64,liftDamping:9,
+  pitchStiffness:65,pitchDamping:12,rollStiffness:55,rollDamping:10,
+});
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 const angle=n=>Math.atan2(Math.sin(n),Math.cos(n));
 
@@ -38,11 +48,15 @@ export function createCircuitLandscape(route,gameplay){
   const extent=Math.max(...samples.map(s=>Math.max(Math.abs(s.position[0]),Math.abs(s.position[2]))))+28;
   return {type:'circuit',seed:gameplay.road_width_m===18?35:34,samples,length,gates,spawn,yaw:Math.atan2(grid.forward_gltf[0],grid.forward_gltf[2]),roadAt,atDistance,mapHalf:extent,height:(x,z)=>roadAt(x,z).y};
 }
-export function createHoverState(landscape){return {...landscape.spawn,yaw:landscape.yaw,pitch:0,roll:0,speed:0,throttle:0,energy:1,boosting:false,boostLocked:false,cooldown:0,hoverTime:0,wallHit:false,vx:0,vz:0,yawRate:0,hover:HOVER_HEIGHT,hoverVelocity:0,slip:0,impact:0,impactSerial:0,acceleration:0,braking:false,drifting:false,driftBlend:0,offTrackTime:0,recoverNeeded:false,oilFactor:1,oilContact:false};}
-export function recoverHover(landscape,gateIndex){
-  if(gateIndex===0)return {...createHoverState(landscape),cooldown:1.2};
+export function createHoverState(landscape){return {...landscape.spawn,yaw:landscape.yaw,pitch:0,roll:0,pitchRate:0,rollRate:0,speed:0,throttle:0,energy:1,boosting:false,boostLocked:false,cooldown:0,hoverTime:0,wallHit:false,vx:0,vz:0,yawRate:0,hover:HOVER_HEIGHT,hoverVelocity:0,slip:0,impact:0,impactSerial:0,acceleration:0,braking:false,drifting:false,driftBlend:0,offTrackTime:0,recoverNeeded:false,oilFactor:1,oilContact:false};}
+export function recoverHover(landscape,gateIndex,surfaceHeight){
+  if(gateIndex===0){
+    const state=createHoverState(landscape);
+    state.y=(surfaceHeight?.(state.x,state.z)??state.y-HOVER_HEIGHT)+HOVER_HEIGHT;
+    return {...state,cooldown:1.2};
+  }
   const road=landscape.atDistance(landscape.gates[gateIndex-1].distance+5);
-  return {...createHoverState(landscape),x:road.x,y:road.y+HOVER_HEIGHT,z:road.z,yaw:Math.atan2(road.nx,road.nz),speed:0,throttle:0,pitch:Math.atan(road.grade),roll:0,cooldown:1.2};
+  return {...createHoverState(landscape),x:road.x,y:(surfaceHeight?.(road.x,road.z)??road.y)+HOVER_HEIGHT,z:road.z,yaw:Math.atan2(road.nx,road.nz),speed:0,throttle:0,pitch:Math.atan(road.grade),roll:0,cooldown:1.2};
 }
 export function advanceHover(state,input,dt,landscape,surfaceHeight=landscape.height){
   const previous={x:state.x,y:state.y,z:state.z},turn=clamp(input.turn??0,-1,1),oldSpeed=state.speed;
@@ -59,13 +73,14 @@ export function advanceHover(state,input,dt,landscape,surfaceHeight=landscape.he
   const target=(input.brake?0:state.boosting?CIRCUIT_BOOST:state.throttle)*(state.oilFactor??1),acceleration=input.brake?65:state.boosting?38:24;
   // A damped steering response and a separate velocity vector carry momentum into turns.
   const desiredYaw=-turn*(2.65-.9*state.speed/CIRCUIT_BOOST)*(1+state.driftBlend*.18);
-  state.yawRate+=(desiredYaw-state.yawRate)*(1-Math.exp(-dt*13));state.yaw+=state.yawRate*dt;
+  const steeringRate=desiredYaw*state.yawRate<0?HOVER_HANDLING.countersteerResponse:Math.abs(turn)<.001?HOVER_HANDLING.steeringRelease:HOVER_HANDLING.steeringResponse;
+  state.yawRate+=(desiredYaw-state.yawRate)*(1-Math.exp(-dt*steeringRate));state.yaw+=state.yawRate*dt;
   const fx=Math.sin(state.yaw),fz=Math.cos(state.yaw),rx=-fz,rz=fx;
   let longitudinal=Math.max(0,state.vx*fx+state.vz*fz),lateral=state.vx*rx+state.vz*rz;
   // Limit the total propulsion energy while sideways: drift must not grant speed.
   const forwardTarget=Math.sqrt(Math.max(0,target*target-lateral*lateral));
   longitudinal+=clamp(forwardTarget-longitudinal,-acceleration*dt,acceleration*dt);
-  const grip=state.braking?9:9-6.7*state.driftBlend;
+  const grip=state.braking?HOVER_HANDLING.brakeGrip:HOVER_HANDLING.grip+(HOVER_HANDLING.driftGrip-HOVER_HANDLING.grip)*state.driftBlend;
   lateral*=Math.exp(-grip*dt);
   state.vx=fx*longitudinal+rx*lateral;state.vz=fz*longitudinal+rz*lateral;
   state.x+=state.vx*dt;state.z+=state.vz*dt;
@@ -87,15 +102,26 @@ export function advanceHover(state,input,dt,landscape,surfaceHeight=landscape.he
   state.speed=Math.hypot(state.vx,state.vz);state.acceleration=(state.speed-oldSpeed)/dt;
   state.slip=Math.atan2(state.vx*rx+state.vz*rz,Math.max(1,state.vx*fx+state.vz*fz));
   state.hoverTime+=dt;
-  // Spring-damper suspension in road-relative coordinates remains safe on steep ramps.
-  const hoverTarget=HOVER_HEIGHT+(input.reducedMotion?0:Math.sin(state.hoverTime*3)*.025)+(state.boosting?.06:0);
-  state.hoverVelocity+=((hoverTarget-state.hover)*100-state.hoverVelocity*14)*dt;
-  state.hover=clamp(state.hover+state.hoverVelocity*dt,.43,.92);
-  const surface=surfaceHeight(state.x,state.z)??road.y;state.y=surface+state.hover;
-  const pitchTarget=Math.atan(road.grade*Math.cos(heading))-clamp(state.acceleration*.0007,-.045,.035);
-  state.pitch+=(pitchTarget-state.pitch)*(1-Math.exp(-dt*10));
-  const rollTarget=clamp(turn*.16*Math.min(1,state.speed/12)+state.slip*.18,-.28,.28);
-  state.roll+=(rollTarget-state.roll)*(1-Math.exp(-dt*8));
+  // Integrate height in world space: the hull carries vertical momentum over
+  // crests instead of snapping to road + hover every tick. Damping relative to
+  // the moving surface supports sustained climbs without sinking into ramps.
+  const surface=surfaceHeight(state.x,state.z)??road.y;
+  const surfaceVelocity=(surface-(previous.y-state.hover))/dt;
+  const hoverTarget=HOVER_HEIGHT+(input.reducedMotion?0:Math.sin(state.hoverTime*2.4)*.035)+(state.boosting?.08:0);
+  const predictedHover=state.y+state.hoverVelocity*dt-surface;
+  state.hoverVelocity+=((hoverTarget-predictedHover)*HOVER_HANDLING.liftStiffness-(state.hoverVelocity-surfaceVelocity)*HOVER_HANDLING.liftDamping)*dt;
+  state.y+=state.hoverVelocity*dt;
+  state.hover=clamp(state.y-surface,MIN_HOVER_HEIGHT,MAX_HOVER_HEIGHT);
+  // Do not accumulate an outward velocity at the safety limits.
+  if(state.y<surface+MIN_HOVER_HEIGHT)state.hoverVelocity=Math.max(surfaceVelocity,state.hoverVelocity);
+  if(state.y>surface+MAX_HOVER_HEIGHT)state.hoverVelocity=Math.min(surfaceVelocity,state.hoverVelocity);
+  state.y=surface+state.hover;
+  const pitchTarget=Math.atan(road.grade*Math.cos(heading))+clamp(state.acceleration*.0016,-.07,.055);
+  state.pitchRate+=((pitchTarget-state.pitch)*HOVER_HANDLING.pitchStiffness-state.pitchRate*HOVER_HANDLING.pitchDamping)*dt;
+  state.pitch+=state.pitchRate*dt;
+  const rollTarget=clamp((-state.yawRate*.11-state.slip*.18)*Math.min(1,state.speed/12),-.34,.34);
+  state.rollRate+=((rollTarget-state.roll)*HOVER_HANDLING.rollStiffness-state.rollRate*HOVER_HANDLING.rollDamping)*dt;
+  state.roll+=state.rollRate*dt;
   state.cooldown=Math.max(0,state.cooldown-dt);
   return previous;
 }

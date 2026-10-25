@@ -112,7 +112,7 @@ export async function createFlightSimulator({entryTransition}={}){
   function pause(){if(phase==='flying')setPhase('paused');else if(phase==='paused'){raceAudio.unlock();setPhase('flying');}}
   function recover(manual=false){
     world.fx.reset();gpuGraphics?.reset();
-    oil?.cancelPour();raceAudio.cue('recover');const checkpoint=recoverHover(landscape,gateIndex);
+    oil?.cancelPour();raceAudio.cue('recover');const checkpoint=recoverHover(landscape,gateIndex,world.surfaceHeight);
     Object.assign(state,createHoverState(landscape),checkpoint,{speed:0,pitch:0,roll:0,throttle:0,boosting:false,cooldown:1.2});
     notice(manual?'Nave recuperada':'Fuera de pista · nave recuperada');
     syncShip();updateCamera(1,true);

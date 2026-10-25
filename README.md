@@ -27,6 +27,11 @@ La **Nómada 038** es una hoverbike de cabina abierta, con reactor único y faro
 
 ## Controles
 
+La conducción conserva más inercia lateral al doblar y al soltar la dirección.
+La suspensión flota sobre cambios de pendiente y el casco se asienta gradualmente
+al acelerar, frenar y contravolantear. Espacio mantiene un frenado firme; E amplía
+el derrape. Ver [referencia, ajustes y pruebas de conducción](docs/hover-handling.md).
+
 **Propulsor · WebGPU** en DialKit ajusta la llama, el motor incandescente, los fragmentos, las brasas, las chispas lineales y el tramado. Turbo usa la paleta azul; la aceleración normal usa rojo. La estela sigue el movimiento y la escala de la nave. La 033 emite desde dos toberas, Oliva desde tres y Nómada desde una. Los ajustes se guardan en el navegador.
 
 Para comparar el nuevo humo, abrí **Humo · comparación** en DialKit: **A · Fragmentos procedurales**, **B · Humo híbrido** (predeterminado) o **C · Mixto**. Los valores iniciales son tamaño 1,3, duración 1,5, color `#bababa`, densidad 1, trama 1,5 y emisión desde cuatro ruedas desactivada. Podés cambiar el color y el tramado en vivo; los ajustes se guardan en el navegador. Acelerá con W y combiná E con A/D para derrapar: en recta no aparece humo de derrape. Cada variante introduce formas, giros y tiempos distintos por partícula. El selector devuelve el foco al juego y limpia el humo anterior.
