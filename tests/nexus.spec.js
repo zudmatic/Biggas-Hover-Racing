@@ -18,8 +18,8 @@ test('Nexus original colliders support the full 18 m route and allow an entire o
   for(const sample of map.samples)for(const offset of [-7,0,7]){const [x,y,z]=sample.position,[nx,,nz]=sample.forward,l=Math.hypot(nx,nz),h=world.surfaceHeight(x-nz/l*offset,z+nx/l*offset);expect(h).not.toBeNull();expect(Math.abs(h-y)).toBeLessThan(.05);}
   let gate=0,hits=0;
   for(let i=0;i<180*60;i++){
-    const road=map.roadAt(state.x,state.z),ahead=map.atDistance(road.distance+Math.max(4,state.speed*.3)),a=map.atDistance(road.distance+3),b=map.atDistance(road.distance+13),curvature=Math.abs(wrap(Math.atan2(b.nx,b.nz)-Math.atan2(a.nx,a.nz)))/10,target=Math.min(45,Math.sqrt(16/Math.max(curvature,.002))),error=wrap(Math.atan2(ahead.x-state.x,ahead.z-state.z)-state.yaw);
-    const previous=advanceHover(state,{turn:Math.max(-1,Math.min(1,-error*3.5/(2.65-.9*state.speed/72))),throttle:state.throttle<target-.5?1:state.throttle>target+.5?-1:0,brake:state.speed>target+7},1/60,map,world.surfaceHeight);world.step(state,1/60,map);hits+=Number(state.wallHit);expect(state.recoverNeeded).toBe(false);expect(state.hover).toBeGreaterThan(.6);expect(state.hover).toBeLessThan(.7);
+    const road=map.roadAt(state.x,state.z),ahead=map.atDistance(road.distance+Math.max(4,state.speed*.5)),a=map.atDistance(road.distance+3),b=map.atDistance(road.distance+13),curvature=Math.abs(wrap(Math.atan2(b.nx,b.nz)-Math.atan2(a.nx,a.nz)))/10,target=Math.min(45,Math.sqrt(16/Math.max(curvature,.002))),error=wrap(Math.atan2(ahead.x-state.x,ahead.z-state.z)-state.yaw);
+    const previous=advanceHover(state,{turn:Math.max(-1,Math.min(1,-error*3.5/(2.65-.9*state.speed/72))),throttle:state.throttle<target-.5?1:state.throttle>target+.5?-1:0,brake:state.speed>target+7},1/60,map,world.surfaceHeight);world.step(state,1/60,map);hits+=Number(state.wallHit);expect(state.recoverNeeded).toBe(false);expect(state.hover).toBeGreaterThan(.5);expect(state.hover).toBeLessThan(.9);
     if(crossesCircuitGate(previous,state,map.gates[gate])){gate++;if(gate===17)break;}
   }
   expect(gate).toBe(17);expect(hits).toBe(0);

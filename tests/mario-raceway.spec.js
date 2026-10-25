@@ -14,13 +14,13 @@ const wrap=n=>Math.atan2(Math.sin(n),Math.cos(n));
 test('Mario Raceway route, starting grid and recovery follow the imported asphalt',async()=>{
  const world=await collision(),map=track();expect(map.length).toBeCloseTo(1498.32,1);expect(map.gates).toHaveLength(17);
  for(const sample of map.samples){const [x,y,z]=sample.position;expect(world.surfaceHeight(x,z)).not.toBeNull();expect(Math.abs(world.surfaceHeight(x,z)-y)).toBeLessThan(.08);}
- for(let gate=0;gate<17;gate++){const state=recoverHover(map,gate);world.step(state,1/60,map);expect(state.wallHit).toBe(false);expect(state.recoverNeeded).toBe(false);expect(state.y-world.surfaceHeight(state.x,state.z)).toBeCloseTo(.65,3);}
+ for(let gate=0;gate<17;gate++){const state=recoverHover(map,gate,world.surfaceHeight);world.step(state,1/60,map);expect(state.wallHit).toBe(false);expect(state.recoverNeeded).toBe(false);expect(state.y-world.surfaceHeight(state.x,state.z)).toBeCloseTo(.65,3);}
 });
 
 test('a driven lap crosses every checkpoint and the pipe without a collision or recovery',async()=>{
  const world=await collision(),map=track(),state=createHoverState(map);let gate=0,hits=0;
  for(let i=0;i<180*60;i++){
-  const road=map.roadAt(state.x,state.z),ahead=map.atDistance(road.distance+Math.max(4,state.speed*.3)),a=map.atDistance(road.distance+3),b=map.atDistance(road.distance+13),curvature=Math.abs(wrap(Math.atan2(b.nx,b.nz)-Math.atan2(a.nx,a.nz)))/10,target=Math.min(45,Math.sqrt(16/Math.max(curvature,.002))),error=wrap(Math.atan2(ahead.x-state.x,ahead.z-state.z)-state.yaw);
+  const road=map.roadAt(state.x,state.z),ahead=map.atDistance(road.distance+Math.max(4,state.speed*.5)),a=map.atDistance(road.distance+3),b=map.atDistance(road.distance+13),curvature=Math.abs(wrap(Math.atan2(b.nx,b.nz)-Math.atan2(a.nx,a.nz)))/10,target=Math.min(45,Math.sqrt(16/Math.max(curvature,.002))),error=wrap(Math.atan2(ahead.x-state.x,ahead.z-state.z)-state.yaw);
   const previous=advanceHover(state,{turn:THREE.MathUtils.clamp(-error*3.5/(2.65-.9*state.speed/72),-1,1),throttle:state.throttle<target-.5?1:state.throttle>target+.5?-1:0,brake:state.speed>target+7},1/60,map,world.surfaceHeight);world.step(state,1/60,map,previous);hits+=Number(state.wallHit);expect(state.recoverNeeded).toBe(false);
   if(crossesCircuitGate(previous,state,map.gates[gate])){gate++;if(gate===17)break;}
  }

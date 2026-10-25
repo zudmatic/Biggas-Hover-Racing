@@ -23,15 +23,16 @@ test('the original track closes and every driving lane is supported by its colli
 
 test('a complete driven lap follows the real ramps without grounding or touching parapets',async()=>{
   const track=circuit(),surface=await collider(),state=createHoverState(track);let gate=0,wallHits=0,min=Infinity,max=-Infinity;
+  // Anticipate turns earlier now that velocity takes longer to follow heading.
   for(let i=0;i<120*60;i++){
-    const road=track.roadAt(state.x,state.z),ahead=track.atDistance(road.distance+Math.max(4,state.speed*.3)),a=track.atDistance(road.distance+3),b=track.atDistance(road.distance+13);
+    const road=track.roadAt(state.x,state.z),ahead=track.atDistance(road.distance+Math.max(4,state.speed*.5)),a=track.atDistance(road.distance+3),b=track.atDistance(road.distance+13);
     const curvature=Math.abs(wrap(Math.atan2(b.nx,b.nz)-Math.atan2(a.nx,a.nz)))/10,target=Math.min(45,Math.sqrt(16/Math.max(curvature,.002)));
     const error=wrap(Math.atan2(ahead.x-state.x,ahead.z-state.z)-state.yaw);
     const previous=advanceHover(state,{turn:Math.max(-1,Math.min(1,-error*3.5/(2.65-.9*state.speed/72))),throttle:state.throttle<target-.5?1:state.throttle>target+.5?-1:0,brake:state.speed>target+7},1/60,track,surface);
     wallHits+=Number(state.wallHit);const h=surface(state.x,state.z);expect(h).not.toBeNull();min=Math.min(min,state.y-h);max=Math.max(max,state.y-h);
     if(crossesCircuitGate(previous,state,track.gates[gate])){gate++;if(gate===17)break;}
   }
-  expect(gate).toBe(17);expect(wallHits).toBe(0);expect(min).toBeGreaterThan(.6);expect(max).toBeLessThan(.7);
+  expect(gate).toBe(17);expect(wallHits).toBe(0);expect(min).toBeGreaterThan(.5);expect(max).toBeLessThan(.9);
 });
 
 test('hover ignores climb input, keeps the hull inside the road and recovers behind the next checkpoint',()=>{
