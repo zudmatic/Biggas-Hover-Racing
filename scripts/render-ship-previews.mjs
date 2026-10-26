@@ -14,8 +14,8 @@ try{
     const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xffffff,0x747474,3));
     const key=new THREE.DirectionalLight(0xffe2b7,4);key.position.set(-4,7,6);scene.add(key);
     const rim=new THREE.DirectionalLight(0xd5e4ff,2);rim.position.set(5,4,-4);scene.add(rim);
-    // The TSL exhaust needs WebGPURenderer; thumbnails show the ship at rest.
-    const ship=await createFlightShip(id,{exhaust:false});ship.update(0,0,false,true);scene.add(ship.root);
+    // The TSL exhaust and plasma need WebGPURenderer; thumbnails show the ship at rest.
+    const ship=await createFlightShip(id,{exhaust:false,plasma:false});ship.update(0,0,false,true);scene.add(ship.root);
     const camera=new THREE.OrthographicCamera(-3.2,3.2,2.4,-2.4,.1,100);camera.position.set(7,5,8);camera.lookAt(0,1.45,0);
     renderer.render(scene,camera);const normal=renderer.domElement.toDataURL('image/png').split(',')[1];
     const comic=createCharacterComic(renderer);comic.render(scene,camera,'#ffffff');const paper=renderer.domElement.toDataURL('image/png').split(',')[1];

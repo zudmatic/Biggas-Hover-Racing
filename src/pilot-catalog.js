@@ -3,10 +3,11 @@ import palettes from './zudmatic-palettes.json';
 import {shipConfig} from './ship-catalog.js';
 
 export const PILOTS={
-  zud:{id:'zud',name:'Zud',image:'zud-face',preview:'zud'},
-  zudmatic:{id:'zudmatic',name:'Zudmatic',image:'zudmatic-face',preview:'zudmatic'},
-  ajo:{id:'ajo',name:'Ajo',image:'ajo-face',preview:'ajo'},
-  bluleet:{id:'bluleet',name:'Bluleet',image:'bluleet-pilot-face',preview:'bluleet-pilot'},
+  zud:{id:'zud',name:'Zud',image:'zud-face',preview:'zud',hats:true},
+  zudmatic:{id:'zudmatic',name:'Zudmatic',image:'zudmatic-face',preview:'zudmatic',palettes:true,paperImages:false,load:options=>import('./zudmatic-model.js').then(m=>m.createZudmaticModel(options))},
+  ajo:{id:'ajo',name:'Ajo',image:'ajo-face',preview:'ajo',load:options=>import('./ajo-model.js').then(m=>m.createAjoModel(options))},
+  bluleet:{id:'bluleet',name:'Bluleet',image:'bluleet-pilot-face',preview:'bluleet-pilot',load:options=>import('./bluleet-model.js').then(m=>m.createBluleetModel(options))},
+  lomi:{id:'lomi',name:'Lomi',image:'lomi-face',preview:'lomi',load:options=>import('./lomi-model.js').then(m=>m.createLomiModel(options))},
 };
 export const ZUDMATIC_PALETTES=palettes;
 export const pilotConfig=id=>PILOTS[id]??PILOTS.zud;

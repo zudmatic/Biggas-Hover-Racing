@@ -113,15 +113,11 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   function setPilot(id,palette=selectedPalette,hat=selectedHat){
     selectedPilot=pilotConfig(id).id;selectedPalette=pilotPalette(palette).name;selectedHat=zudHat(hat).id;
     applyHat(zud);ships.forEach(ship=>applyHat(ship.pilot.actor));
-    pilots.get('zudmatic')?.setPalette(selectedPalette);ships.forEach(ship=>ship.pilot.actor.setPalette?.(selectedPalette));setKind(kind);
+    pilots.forEach(actor=>actor.setPalette?.(selectedPalette));ships.forEach(ship=>ship.pilot.actor.setPalette?.(selectedPalette));setKind(kind);
     const requestedPilot=selectedPilot,pilotKey=`pilot:${requestedPilot}`;
-    if(requestedPilot!=='zud'&&!pilots.has(requestedPilot)&&!pending.has(pilotKey)){
-      const actorPromise=requestedPilot==='bluleet'
-        ?import('./bluleet-model.js').then(({createBluleetModel})=>createBluleetModel())
-        :requestedPilot==='ajo'
-        ?import('./ajo-model.js').then(({createAjoModel})=>createAjoModel())
-        :import('./zudmatic-model.js').then(({createZudmaticModel})=>createZudmaticModel({palette:selectedPalette}));
-      pending.set(pilotKey,actorPromise.then(actor=>{
+    const {load}=pilotConfig(requestedPilot);
+    if(load&&!pilots.has(requestedPilot)&&!pending.has(pilotKey)){
+      pending.set(pilotKey,load({palette:selectedPalette}).then(actor=>{
         if(disposed||signal.aborted){actor.dispose();return;}
         actor.setPalette?.(selectedPalette);pilots.set(requestedPilot,actor);addActor(pilotKey,actor.root);setKind(kind);
       }).catch(()=>{pending.delete(pilotKey);if(!disposed&&activeId()===pilotKey)onStatus('fallback');}));

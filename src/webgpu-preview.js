@@ -1,7 +1,8 @@
 import {createLegacySmokeMaterial} from './legacy-smoke-material.js';
 import {CIRCUIT_MAPS,circuitMap} from './circuit-maps.js';
 import {SHIPS,shipConfig} from './ship-catalog.js';
-import {createBoost} from './vfx/boost.js';
+import {createEngine} from './flight-webgpu.js';
+import {createLensUniforms} from './vfx/singularity-lens.js';
 import {createSmokeMaterial} from './vfx/smoke-material.js';
 import {createOilPreview} from './vfx/oil.js';
 import {loadFlightFx} from './flight-fx.js';
@@ -46,7 +47,7 @@ async function main(){
   const baseline=createBaseMaterials(scene),state={...createHoverState(world.landscape),modelScale:.75};
   const comicStyle=createComicStyle();
   const comicMaterials=legacy?null:createComicMaterials(scene,comicStyle);
-  const comicPost=legacy?null:createComicPost(renderer,scene,camera);
+  const lens=ship.config.engine==='singularity'?createLensUniforms():null,comicPost=legacy?null:createComicPost(renderer,scene,camera,{lens});
   const originalComic=legacy?createCharacterComic(renderer):null;
   let route=0,time=0,previous=performance.now(),busy=false;
   const lastPosition=new THREE.Vector3(),delta=new THREE.Vector3();
@@ -59,7 +60,7 @@ async function main(){
   function frameShip(){orbit.target.copy(ship.root.position).add(new THREE.Vector3(0,1,0));camera.position.copy(orbit.target).add(new THREE.Vector3(7,5,-10).applyAxisAngle(new THREE.Vector3(0,1,0),state.yaw));orbit.update();}
   place();lastPosition.copy(ship.root.position);frameShip();
   const root=createDialRoot({target:document.querySelector('#dials'),mode:'inline',defaultOpen:true,theme:'dark'});
-  const boost=legacy?null:await createBoost(renderer,scene,ship);
+  const boost=legacy?null:await createEngine(renderer,scene,ship,{camera,lens});
   const smoke=legacy?null:await loadFlightFx(scene,{surfaceHeight:world.surfaceHeight,materialFactory:createSmokeMaterial});
   const oil=legacy?null:createOilPreview(scene,world);
   const pads=legacy?null:await createFlightBoostPads({scene,landscape:world.landscape,surfaceHeight:world.surfaceHeight,distances:[12]});
@@ -123,11 +124,11 @@ async function main(){
         if(dt>0){pads.step(dt,state,previousPadPosition);padControls.update();}
         pads.update(dt,false);
         const padTurbo=state.padBoostRemaining>0;state.boosting=state.boosting||padTurbo;
-        await boost.update(dt,padTurbo?'Turbo':v.Modo,v.Activos,padTurbo);smoke.update(dt,{state,camera,scale:.75,reduced:!v.Activos});oil.update(dt,state);
+        await boost.update(dt,padTurbo?'Turbo':v.Modo,v.Activos,padTurbo,state);smoke.update(dt,{state,camera,scale:.75,reduced:!v.Activos});oil.update(dt,state);
         document.body.dataset.boostPad=JSON.stringify({remaining:pads.sim.entries[0].remaining,activations:pads.sim.entries[0].activations,turbo:state.padBoostRemaining});
         document.body.dataset.vfx=JSON.stringify({enabled:v.Activos,mode:v.Modo,...boost.stats,smoke:smoke.stats.air,marks:smoke.stats.marks,oil:oil.sim.patches.length,time});
       }
-      ship.pilot.update(time,true);orbit.update();lighting.update(state,time,{dt});boost?.updateHeat(comicPost.heat);
+      ship.pilot.update(time,true);orbit.update();lighting.update(state,time,{dt});boost?.updatePost(comicPost);
       if(comicPost)comicPost.heat.updatePadFields(pads?.heatFields??[]);
       comicStyle.pixelRatio.value=renderer.getPixelRatio();renderer.getDrawingBufferSize(comicStyle.resolution.value);comicMaterials?.sync();
       if(comicPost)comicPost.comic.value=Number(kit.values['Cómic']);

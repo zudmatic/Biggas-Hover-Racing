@@ -4,13 +4,16 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createShipCloth} from './ship-cloth.js';
 import {createShipEyes} from './ship-eyes.js';
-import {createSelectablePilot} from './selectable-pilot.js';
+import {createShipPilot} from './ship-pilot.js';
 import {shipConfig,shipUrl,shipCanopy,prepareShipModel} from './ship-catalog.js';
+import {createLomiPlasma} from './vfx/lomi-plasma.js';
+import {loadEnergyTextures} from './vfx/lomi-energy.js';
 
 export async function createFlightShip(id='033',choice={}){
   const config=shipConfig(id);
   const gltf=await new GLTFLoader().loadAsync(shipUrl(config.id)),source=gltf.scene;
   prepareShipModel(source,config);
+  const pilot=await createShipPilot(source,gltf.animations,config,{...choice,pilot:choice.pilot??config.defaultPilot});
   // Rigged parts (eye pivots, morphing lids and tongue) stay live; the rest is baked into batches.
   const live=[];if(config.liveNodes)source.traverse(node=>{if(config.liveNodes.test(node.name))live.push(node);});
   const liveParts=new Set();for(const node of live)node.traverse(part=>liveParts.add(part));
@@ -41,11 +44,13 @@ export async function createFlightShip(id='033',choice={}){
   for(const node of live){root.attach(node);node.traverse(part=>{if(part.isMesh){part.castShadow=true;part.receiveShadow=true;}});}
   source.traverse(mesh=>{if(mesh.isMesh)mesh.geometry.dispose();});
   const eyes=config.eyes?createShipEyes(root,{...config.eyes,clips:gltf.animations}):null;
-  const selectedPilot=choice.pilot??config.defaultPilot;
-  const pilot=await createSelectablePilot({...choice,pilot:selectedPilot,offset:config.pilotOffsets?.[selectedPilot]??config.pilotOffset,fit:config.pilotFit});pilot.root.visible=true;root.add(pilot.root);
+  pilot.root.visible=true;root.add(pilot.root);
   const exhaust=choice.exhaust===false?{jets:[],update(){},dispose(){}}:createLocalExhaust(root,config.exhausts);
-  return {root,pilot,config,exhaust,eyes,dispose(){
-    exhaust.dispose();eyes?.dispose();
+  // TSL plasma; the WebGL thumbnail script opts out.
+  const anchors=live.filter(node=>!node.isMesh&&node.userData.shader==='lomi_ship_thrust');
+  const plasma=config.engine==='singularity'&&choice.plasma!==false?createLomiPlasma(root,{crystals:live.filter(node=>node.userData.shader==='lomi_ship_crystal'),exhausts:anchors,nozzles:live.filter(node=>node.isMesh&&node.userData.shader==='lomi_ship_thrust'),scale:config.modelScale??1,textures:await loadEnergyTextures()}):null;
+  return {root,pilot,config,exhaust,eyes,anchors,plasma,dispose(){
+    exhaust.dispose();eyes?.dispose();plasma?.dispose();
     pilot.dispose();const geometries=new Set(),materials=new Set(),textures=new Set();
     for(const tree of [source,root])tree.traverse(mesh=>{if(!mesh.isMesh)return;geometries.add(mesh.geometry);for(const material of [].concat(mesh.material)){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value);}});
     for(const material of headlamps.values())materials.add(material);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());root.removeFromParent();
@@ -54,5 +59,6 @@ export async function createFlightShip(id='033',choice={}){
     for(const flag of cloth)flag.update(time,speed,boost,reduced);
     eyes?.update(time,state,reduced);
     exhaust.update(time,speed,boost,reduced,state);
+    if(plasma&&!plasma.driven)plasma.idle(time,reduced);
   }};
 }

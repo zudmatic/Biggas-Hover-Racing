@@ -1,6 +1,6 @@
 # Biggas Hover Racing
 
-Juego de carreras hover en 3D con Zud, Zudmatic, Ajo y Bluleet, las naves 033, Oliva 037, Nómada 038, Bulldog 039 y Bluleet Hover Kart, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
+Juego de carreras hover en 3D con Zud, Zudmatic, Ajo, Bluleet y Lomi, las naves 033, Oliva 037, Nómada 038, Bulldog 039, Bluleet Hover Kart y Lomi 040, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
 
 ## Desarrollo
 
@@ -18,13 +18,15 @@ npm run dev
 
 En la landing, **Jugar** abre la selección de personaje, nave, circuito y modo. El enlace **Hangar** permite inspeccionar las naves y sus componentes. Desde el hangar se puede volver al inicio o abrir la selección de partida con la nave elegida.
 
-Las rutas del juego aceptan `?vehicle=033|037|038|039|bluleet`, `?map=ruins|nexus|mario-raceway` y `?comic=0|1`. El hangar acepta las mismas naves. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic|ajo|bluleet` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
+Las rutas del juego aceptan `?vehicle=033|037|038|039|bluleet|040`, `?map=ruins|nexus|mario-raceway` y `?comic=0|1`. El hangar acepta las mismas naves. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic|ajo|bluleet|lomi` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
 
 **Bluleet** incluye el personaje original con ojos en espiral, acabado de tinta y contorno amarillo/rojo, junto con su hover kart texturizado. Se puede elegir en el menú, inspeccionar en el hangar y conducir en los circuitos. El kart selecciona a Bluleet por defecto cuando no se indica otro piloto; la tinta del personaje permanece activa con `comic=0`. El estudio permite ajustar la pose y el acabado por separado; el juego comparte la pose sentada y el agarre del volante. La integración conserva los GLB originales y calcula la pose sobre el esqueleto al cargar.
 
 **Zud** permite elegir el gorro original o los sombreros Samurai Kasa, Cloud Chef y Crescent Wizard. Los tres GLB y sus ajustes de encaje se recuperaron del historial anterior a `b0233e0`. La selección se conserva al cambiar de nave, entrar en pista y visitar el hangar.
 
 **Zudmatic** usa el GLB con rig y animaciones del paquete `Personaje-rig-shader-animaciones-5-paletas`. Sus cinco paletas se eligen en la selección de personaje; Bosque conserva los colores particulares de sus piezas. La vista previa reproduce Reposo y las naves 033 y 037 usan una pose sentada con escala uniforme de `0.31`, pelvis anclada al asiento y el desplazamiento de cabina de cada vehículo. La elección acompaña al jugador en la pista, el hangar y el regreso a la selección.
+
+**Lomi** comparte el esqueleto de Ajo; ambos se sientan con `src/mannequin-pilot.js`.
 
 La **Nómada 038** es una hoverbike de cabina abierta, con reactor único y faro ámbar. Está disponible en selección, hangar y conducción libre. Conserva sus texturas PBR y usa las mismas animaciones de vuelo, turbo, frenado y derrape que las otras naves. Zud y Zudmatic tienen una postura específica a horcajadas, escala uniforme propia, extensiones al manillar y estribos elevados. La bandera y sus flecos flamean con más intensidad al acelerar o usar turbo; se detienen al pausar la carrera y respetan movimiento reducido. El hangar ofrece inspección de sus ocho grupos de piezas, desarmado y secuencia de despegue/aterrizaje; al no tener cubierta, no muestra controles de cabina.
 
@@ -33,6 +35,8 @@ La **Bulldog 039** es una nave con forma de bulldog francés: cabina abierta tra
 **Expresiones de la Bulldog** (`src/ship-eyes.js`, contrato de `README_controles` del prototipo): las lentes giran hasta ±3° sobre `CTRL_Eye_L/R` hacia el lado del giro; los párpados `Lid_L/R` recorren sus cuatro morphs de trayectoria y parpadean con el clip `Blink` cada 3–6 s; un choque fuerte (≥ 3 m/s) reproduce el clip `Collision`: cierre, retroceso de lengua (`Tongue_Recoil`) y recuperación. Los roces leves no la disparan y, con movimiento reducido, la cara queda quieta.
 
 Al entrar a pista con la Bulldog se reproduce un **cameo cinematográfico** de 10 s en el circuito real: los ojos parpadean y se encienden, el motor arranca y la nave se eleva; luego un piloto automático la conduce con la física del juego (frena antes de las curvas cerradas y activa el turbo) mientras la cámara corta entre cuatro planos (encendido, salida, turbina y pasada con rótulo). `Enter`, `Espacio`, `Esc` o **Saltar** terminan la intro; una cortina vuelve la nave a la parrilla y empieza la conducción. No se muestra con movimiento reducido ni con `?intro=0`.
+
+La **Lomi 040** es una nave de acero negro con cristales y dos toberas sin fuego. Su motor `singularity` reemplaza las llamas: plasma en los cristales y un agujero negro en cada tobera que curva la imagen. Con **Shift** el plasma pasa del azul a violeta, magenta y cian.
 
 ## Controles
 
