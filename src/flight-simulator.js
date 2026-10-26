@@ -19,6 +19,9 @@ import {soundControlMarkup,mountSoundControl} from './sound-control.js';
 import {shipConfig} from './ship-catalog.js';
 import {createCircuitSky,createSpeedAtmosphere,speedCameraProfile} from './flight-atmosphere.js';
 import {createFlightPerformance} from './flight-performance.js';
+import {BULLDOG_INTRO_DURATION,INTRO_IGNITION,createIntroCamera,introEyes,introInput,introLift} from './bulldog-intro.js';
+import {createIntroOverlay} from './bulldog-intro-overlay.js';
+import {EYE_CLOSED} from './ship-eyes.js';
 
 export async function createFlightSimulator({entryTransition}={}){
   const base=import.meta.env.BASE_URL,query=new URLSearchParams(location.search),reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -75,7 +78,7 @@ export async function createFlightSimulator({entryTransition}={}){
   const mapCanvas=$('.flight-minimap canvas'),mapContext=mapCanvas.getContext('2d'),mapBase=document.createElement('canvas');mapBase.width=mapBase.height=192;
   const cameraAnchor=new THREE.Vector3(),followAnchor=new THREE.Vector3(),cameraPoint=new THREE.Vector3(),lookPoint=new THREE.Vector3(),desiredCamera=new THREE.Vector3(),desiredLook=new THREE.Vector3(),forward=new THREE.Vector3();
   const theme=getComputedStyle(app),mapPalette=Object.fromEntries(['ink','paper','blue','yellow','muted','dark'].map(name=>[name,theme.getPropertyValue(`--race-${name}`).trim()]));
-  let mapBitmap=null,lastHud=-1,lastPilotFrame=-1,disposed=false;
+  let mapBitmap=null,lastHud=-1,lastPilotFrame=-1,disposed=false,intro=null;
   const hud={speed:$('#flight-speed'),alt:$('#flight-altitude'),energy:$('.flight-energy span'),energyBar:$('.flight-energy'),energyValue:$('#flight-energy-value')};
   function setText(element,text){if(element.textContent!==text)element.textContent=text;}
   const mapHalf=()=>landscape.mapHalf;
@@ -105,6 +108,30 @@ export async function createFlightSimulator({entryTransition}={}){
   function notice(text){setText($('.flight-notice'),text);$('.flight-notice').hidden=false;noticeUntil=performance.now()+2300;}
   function resetFlight(){boostPads?.reset();gpuGraphics?.reset();state=freshState();simulationTime=0;gateIndex=0;accumulator=0;world.reset();oil?.reset(state,true);syncShip();updateCamera(1,true);lastHud=-1;}
   function start(){raceAudio.unlock();resetFlight();$('.flight-notice').hidden=true;setPhase('flying');updateCamera(1,true);}
+  // Bulldog 039 only: a skippable cinematic on the real track before free driving.
+  function prepareIntro(){
+    if(selectedShip.id!=='039'||reduced.matches||query.get('intro')==='0')return;
+    intro={time:0,eyes:false,ignited:false,finishing:false,headlights:lighting.headlightsEnabled,camera:createIntroCamera(camera,{landscape,surfaceHeight:world.surfaceHeight,clipCamera:world.clipCamera}),overlay:createIntroOverlay(app,{onSkip:()=>finishIntro()})};
+    // Parked on the grid, asleep, until the engine catches.
+    vehicle.root.position.y+=introLift(0)*modelScale;vehicle.eyes?.hold(EYE_CLOSED);intro.overlay.setShot(intro.camera.update(0,state,modelScale));
+  }
+  function playIntro(){raceAudio.unlock();setPhase('intro');app.dataset.introShot='ignition';}
+  function updateIntro(dt,viewState){
+    if(!intro.finishing)intro.time+=dt;
+    // The eyes are the headlamps: blink them awake, as if the bulldog opened them.
+    const eyes=introEyes(intro.time);if(eyes!==intro.eyes){intro.eyes=eyes;lighting.setHeadlights(eyes);vehicle.setHeadlights(eyes);vehicle.eyes?.hold(eyes?1:EYE_CLOSED);}
+    if(!intro.ignited&&intro.time>=INTRO_IGNITION){intro.ignited=true;raceAudio.cue('ignition');}
+    vehicle.root.position.y+=introLift(intro.time)*modelScale;
+    const shot=intro.camera.update(intro.time,viewState,modelScale);intro.overlay.setShot(shot);app.dataset.introShot=shot.id;
+    if(intro.time>=BULLDOG_INTRO_DURATION)finishIntro();
+  }
+  async function finishIntro(){
+    if(!intro||intro.finishing)return;intro.finishing=true;
+    await intro.overlay.cover();
+    lighting.setHeadlights(intro.headlights);vehicle.setHeadlights(intro.headlights);vehicle.eyes?.hold(null);
+    const overlay=intro.overlay;intro=null;delete app.dataset.introShot;start();
+    await overlay.reveal();
+  }
   function prepareOilTest(botDrops=false){
     if(phase!=='flying')return;
     resetFlight();
@@ -123,12 +150,12 @@ export async function createFlightSimulator({entryTransition}={}){
   }
   function input(){return {reducedMotion:reduced.matches,turn:THREE.MathUtils.clamp(Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'))+touch.turn,-1,1),throttle:Number(keys.has('KeyW')||touch.accelerate)-Number(keys.has('KeyS')),boost:keys.has('ShiftLeft')||keys.has('ShiftRight')||touch.boost,brake:keys.has('Space')||touch.brake,drift:keys.has('KeyE')||touch.drift};}
   function step(dt){
-    if(phase!=='flying')return;
+    if(phase!=='flying'&&phase!=='intro')return;
     renderPose.capture(state);
     simulationTime+=dt;
     const impactSerial=state.impactSerial;
     oil?.beforeStep(state,dt);
-    const previous=advanceHover(state,input(),dt,landscape,world.surfaceHeight);
+    const previous=advanceHover(state,phase==='intro'?introInput(intro.time,state,landscape):input(),dt,landscape,world.surfaceHeight);
     world.step(state,dt,previous);if(state.impactSerial!==impactSerial)raceAudio.cue('impact',state.impact);if(state.recoverNeeded){recover(false);return;}
     oil?.step(dt,state,previous);
     boostPads?.step(dt,state,previous);
@@ -208,6 +235,7 @@ export async function createFlightSimulator({entryTransition}={}){
   $('#flight-light').onclick=event=>{lighting.setNight(!lighting.night);event.currentTarget.setAttribute('aria-pressed',String(lighting.night));setText($('#flight-light-state'),lighting.night?'Noche':'Día');};
   $('#flight-comic').onclick=event=>{comicEnabled=!comicEnabled;event.currentTarget.setAttribute('aria-pressed',String(comicEnabled));setText($('#flight-comic-state'),comicEnabled?'Activado':'Desactivado');};
   document.addEventListener('keydown',event=>{
+    if(phase==='intro'){if(['Enter','Escape','Space'].includes(event.code)&&!event.repeat){event.preventDefault();finishIntro();}return;}
     if(event.code==='Escape'&&!event.repeat){event.preventDefault();pause();return;}
     if(/INPUT|SELECT|TEXTAREA/.test(event.target.tagName))return;
     if(event.target.closest?.('summary'))return;
@@ -240,17 +268,17 @@ export async function createFlightSimulator({entryTransition}={}){
     oil=await createFlightOil({scene,landscape,surfaceHeight:world.surfaceHeight,app,clearInput,onPrepare:prepareOilTest,onNotice:notice,materialFactory:gpuModule?.oilMaterialFactory});oil.reset(state,true);
     if(mapConfig.id==='mario-raceway')boostPads=await createFlightBoostPads({scene,landscape,surfaceHeight:world.surfaceHeight,onActivate:()=>notice('¡Placa turbo!')});
     {gpuGraphics=await gpuModule.createFlightWebGPU(renderer,scene,camera,vehicle,oil,boostPads);gpuGraphics.setQuality(performanceControl.settings);}
-    setPhase('loading');loader.hidden=!!entryTransition;setText($('#flight-load-status'),'Preparando gráficos…');
+    prepareIntro();setPhase('loading');loader.hidden=!!entryTransition;setText($('#flight-load-status'),'Preparando gráficos…');
     lighting.update(state,worldTime,{reducedMotion:reduced.matches});skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
     await renderer.compileAsync(scene,camera);
     loader.hidden=true;
     if(entryTransition){
       // Draw the track before revealing it; driving starts once the cover is gone.
-      setPhase('loading');updateCamera(1,true);skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
+      setPhase('loading');if(intro)intro.camera.update(0,state,modelScale);else updateCamera(1,true);skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
       await gpuGraphics.render({state,phase,comic:comicEnabled,reduced:reduced.matches});
       await entryTransition.reveal();
     }
-    app.dataset.ready='true';start();if(document.hidden)pause();
+    app.dataset.ready='true';if(intro)playIntro();else{start();if(document.hidden)pause();}
   }catch(error){console.error(error);fail('No se pudo cargar el simulador.');return;}
   const clock=new THREE.Clock();
   let rendering=false;
@@ -259,18 +287,19 @@ export async function createFlightSimulator({entryTransition}={}){
     if(phase==='flying')performanceControl.sample(rawDelta*1000);
     accumulator+=dt;while(accumulator>=1/60){step(1/60);accumulator-=1/60;}
     raceAudio.update(state);
-    const viewState=phase==='flying'?renderPose.sample(state,accumulator*60):state;
-    syncShip(viewState);updateCamera(dt,false,viewState);
+    const viewState=phase==='flying'||phase==='intro'?renderPose.sample(state,accumulator*60):state;
+    syncShip(viewState);if(phase==='intro')updateIntro(dt,viewState);else updateCamera(dt,false,viewState);
     const pilotFrame=Math.floor(simulationTime*24);if(pilotFrame!==lastPilotFrame){vehicle.update(pilotFrame/24,state.speed,state.boosting,reduced.matches,viewState);lastPilotFrame=pilotFrame;}
     if(phase!=='paused')worldTime+=dt;
-    world.update(worldTime,reduced.matches,{state,phase,night:lighting.night,camera,scale:modelScale,dt:phase==='flying'?dt:0});
+    const driving=phase==='flying'||phase==='intro';
+    world.update(worldTime,reduced.matches,{state,phase,night:lighting.night,camera,scale:modelScale,dt:driving?dt:0});
     lighting.update(state,worldTime,{dt,reducedMotion:reduced.matches,paused:phase==='paused'});
     skyWorld.update(camera,worldTime,{night:lighting.night,dt,reducedMotion:reduced.matches});
     speedAtmosphere.update(camera,state,simulationTime,{dt,phase,reducedMotion:reduced.matches});
     shadowElapsed+=dt;
     if(shadowElapsed>=shadowInterval){lighting.sun.shadow.needsUpdate=true;shadowElapsed=0;}
     oil?.update(state,camera,phase,modelScale,reduced.matches);
-    boostPads?.update(phase==='flying'?dt:0,reduced.matches);
+    boostPads?.update(driving?dt:0,reduced.matches);
     if(boostPads)app.dataset.boostPads=JSON.stringify(boostPads.sim.entries.map(p=>({remaining:p.remaining,activations:p.activations,x:p.x,y:p.y,z:p.z})));
     app.dataset.padBoost=String(state.padBoostRemaining??0);
     scene.updateMatrixWorld(true);camera.updateMatrixWorld();updateHud(performance.now()/1000);

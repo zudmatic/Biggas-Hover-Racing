@@ -50,7 +50,7 @@ export function createGameMusic({tracks=SOUNDTRACKS,createAudio=()=>new Audio()}
     },
     setPhase(value){
       phase=value;
-      const next=value==='lobby'?'menu':['flying','countdown','finished'].includes(value)?'race':null;
+      const next=value==='lobby'?'menu':['flying','countdown','intro','finished'].includes(value)?'race':null;
       if(next===track)return;track=next;synchronize();
     },
     dispose(){if(disposed)return;disposed=true;++generation;events.abort();pauseAll();for(const player of players.values()){player.removeAttribute('src');player.load();}players.clear();listeners.clear();},

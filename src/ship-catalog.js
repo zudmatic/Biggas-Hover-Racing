@@ -1,4 +1,5 @@
 import {SHIP_PARTS,classifyShipPart} from './spaceship-parts.js';
+import {lightToonSurfaces} from './toon-surfaces.js';
 
 const olivaParts=SHIP_PARTS.map(part=>({...part,...({
   cockpit:{name:'Cabina abierta',anchor:[0,1.8,0]},
@@ -42,14 +43,34 @@ function classifyNomada(name){
   if(/faro/.test(n))return 'lights';
   return 'hull';
 }
+// LOD0 exports eight rigid groups plus both eyes; the hangar inspects groups.
+const bulldogParts=SHIP_PARTS.map(part=>({...part,split:false,...({
+  cockpit:{name:'Monocasco y cabina',anchor:[0,2.25,-.6]},
+  engines:{name:'Turbina y escapes',anchor:[.72,1.23,-2.9],view:[4.5,3,-7.4]},
+  mast:{name:'Alerón trasero',anchor:[0,2.87,-2.37],view:[6,4.6,-4.4]},
+  hull:{name:'Rieles y servicio',anchor:[-1.45,1.3,-.4]},
+  cooling:{name:'Blindaje lateral y tomas',anchor:[1.42,.9,1.25],offset:[0,.1,0]},
+  landing:{name:'Patines y alerones',anchor:[.88,.2,.9]},
+  guards:{name:'Orejas',anchor:[-1.21,2.95,1.11],offset:[0,.55,0]},
+  lights:{name:'Cara y ojos',anchor:[0,1.72,2.3],view:[2.2,2.6,8]},
+})[part.id]}));
+const bulldogGroups={'01':'cockpit','02':'lights','03':'guards','04':'cooling','05':'landing','06':'engines','07':'mast','09':'hull'};
+// GLTFLoader names each primitive "LOD0_<group>_…_<n>"; the face rig (lenses,
+// lids, tongue) keeps its Blender names.
+function classifyBulldog(name){
+  if(/eye_lens|^Lid|^LidCaps|tongue/i.test(name))return 'lights';
+  return bulldogGroups[name.match(/^LOD0_(\d\d)/)?.[1]]??'hull';
+}
 
 export const SHIPS={
   '033':{id:'033',name:'Nave 033',title:'Nave de Zud',image:'033',file:'zud-033.glb',parts:SHIP_PARTS,classify:classifyShipPart,canopyName:'033_CANOPY_ocultar_para_ver_piloto',removeCanopyInFlight:true,pilotOffset:[0,0,0],exhausts:[[-.68,.62,-2.14,.24],[.68,.62,-2.14,.24]],lampName:/^033[_ ]faro[_ ]hielo/,headlights:[[-.8,1.05,1.7],[.8,1.05,1.7]]},
   '037':{id:'037',name:'Oliva 037',title:'Nave Oliva',image:'037',file:'oliva-037.glb',parts:olivaParts,classify:classifyOliva,windshield:true,hull:{halfWidth:1.86,halfLength:2.79,capsuleRadius:1.55,capsuleSpacing:1.2,capsuleBottom:1.5,capsuleTop:1.6},pilotOffset:[0,.12,-.12],exhausts:[[-1.24,.86,-2.68,.31],[0,1,-2.72,.28],[1.24,.86,-2.68,.31]],lampName:/^Faro_principal$|^Faro principal$/,headlights:[[0,1.29,2.79]]},
   '038':{id:'038',name:'Nómada 038',title:'Nave Nómada',image:'038',file:'nomada-038.glb',parts:nomadaParts,classify:classifyNomada,modelYaw:-Math.PI/2,pilotOffset:[0,0,0],pilotFit:'nomada',clothName:/^Bandera[_ ]lona|^Hilo[_ ]borde[_ ]roto/,hull:{halfWidth:.8,halfLength:2.84,capsuleRadius:.95,capsuleSpacing:1.85,capsuleBottom:.9,capsuleTop:1.4},exhausts:[[0,.74,-2.85,.17]],lampName:/^Cristal[_ ]faro$/,headlights:[[0,1.31,1.39]]},
+  '039':{id:'039',name:'Bulldog 039',title:'Nave Bulldog',image:'039',file:'bulldog-039.glb',parts:bulldogParts,classify:classifyBulldog,hull:{halfWidth:1.7,halfLength:2.82,capsuleRadius:1.4,capsuleSpacing:1.3,capsuleBottom:1.45,capsuleTop:1.9},pilotOffset:[0,.66,-.52],exhausts:[[-.88,.66,-2.8,.15],[0,1.23,-3.14,.44],[.88,.66,-2.8,.15]],headlights:[[-.81,1.72,2.08],[.81,1.72,2.08]],eyes:{impact:3},liveNodes:/^(CTRL_Eye_[LR]|Lid_[LR]|Candidate_thin_curved_tongue|Soft_tapered_tongue_groove_tone)$/,toonSurfaces:true},
 };
 // The supplied GLB faces +X; both render paths use +Z forward.
 export function prepareShipModel(model,config){
+  if(config.toonSurfaces)lightToonSurfaces(model);
   model.rotation.y+=config.modelYaw??0;model.updateMatrixWorld(true);return model;
 }
 export const shipConfig=id=>SHIPS[id]??SHIPS['033'];

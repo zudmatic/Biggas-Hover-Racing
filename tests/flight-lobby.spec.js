@@ -16,7 +16,7 @@ test('landing, locked roster, sequential confirmation and map choices work with 
   for(const slot of await page.locator('[data-screen="1"] .is-locked').all())await expect(slot).toBeDisabled();
   await expect(page.getByRole('button',{name:'Zud, seleccionado'})).toHaveAttribute('aria-pressed','true');
   await page.keyboard.press('Enter');await expect(lobby).toHaveAttribute('data-stage','2');
-  await expect(page.locator('[data-screen="2"] .is-locked')).toHaveCount(6);
+  await expect(page.locator('[data-screen="2"] .is-locked')).toHaveCount(5);
   await expect(page.getByRole('button',{name:'Nave 033, seleccionado'})).toBeVisible();
   await page.keyboard.press('Escape');await expect(lobby).toHaveAttribute('data-stage','1');
   await page.keyboard.press('Enter');await page.keyboard.press('Enter');await expect(lobby).toHaveAttribute('data-stage','3');
