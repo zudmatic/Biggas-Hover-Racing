@@ -68,7 +68,11 @@ async function main(){
   const comicStyle=createComicStyle(),comicMaterials=createComicMaterials(scene,comicStyle),comicPost=createComicPost(renderer,scene,camera);
   const nozzles=ship.config.exhausts,mainNozzle=nozzles.reduce((best,n)=>n[3]>best[3]?n:best,nozzles[0]);
   let route=0,time=0,previous=performance.now(),busy=false,pendingSteps=0,frames=0,fps=0,frameMs=0,lastHud=0;
-  const lastPosition=new THREE.Vector3(),delta=new THREE.Vector3(),offset=new THREE.Vector3(),target=new THREE.Vector3();
+  const lastPosition=new THREE.Vector3(),delta=new THREE.Vector3(),target=new THREE.Vector3();
+  // Follow-camera rig: track yaw arrives in per-segment steps, so the camera follows a smoothed copy of the
+  // ship's rotation, and view changes glide in rig space instead of cutting.
+  const rig=new THREE.Quaternion(),inverseRig=new THREE.Quaternion(),cameraRig=new THREE.Vector3(),targetRig=new THREE.Vector3(),wantedCamera=new THREE.Vector3(),wantedTarget=new THREE.Vector3();
+  let rigReady=false,lastView=null;
 
   const root=createDialRoot({target:document.querySelector('#dials'),mode:'inline',defaultOpen:true,theme:'dark'});
   const viewKit=createDialKit('Cámara',{
@@ -105,27 +109,37 @@ async function main(){
   function place(){
     const road=world.landscape.atDistance(route);
     state.x=road.x;state.z=road.z;state.y=(world.surfaceHeight(road.x,road.z)??road.y)+.65;
-    state.yaw=Math.atan2(road.nx,road.nz);state.pitch=Math.atan(road.grade??0);
+    // Heading from a chord across the polyline: segment directions jump at every sample, the chord turns continuously.
+    const back=world.landscape.atDistance(route-1.5),ahead=world.landscape.atDistance(route+1.5);
+    state.yaw=Math.atan2(ahead.x-back.x,ahead.z-back.z);state.pitch=Math.atan2(ahead.y-back.y,Math.hypot(ahead.x-back.x,ahead.z-back.z));
     // Pinned against a wall: small forward/back shake, the way contact resolution jitters in a race.
     const shake=STATES[stateId()].wall?.04*Math.sin(time*55):0;
     state.x+=Math.sin(state.yaw)*shake;state.z+=Math.cos(state.yaw)*shake;
     ship.root.position.set(state.x,state.y,state.z);ship.root.rotation.set(-state.pitch,state.yaw,0,'YXZ');ship.root.updateMatrixWorld();
   }
   function frameShip(){setView('libre');orbit.target.copy(ship.root.position).add(new THREE.Vector3(0,1,0));camera.position.copy(orbit.target).add(new THREE.Vector3(7,5,-10).applyAxisAngle(THREE.Object3D.DEFAULT_UP,state.yaw));orbit.update();}
-  function applyView(){
-    const view=VIEWS[viewId()];orbit.enabled=!view.camera;
-    if(!view.camera)return;
-    if(view.nozzle)ship.root.localToWorld(target.set(mainNozzle[0],mainNozzle[1],mainNozzle[2]));
-    else target.set(...view.target).applyQuaternion(ship.root.quaternion).add(ship.root.position);
-    offset.set(...view.camera).applyQuaternion(ship.root.quaternion);
-    camera.position.copy(view.nozzle?target:ship.root.position).add(offset);camera.lookAt(target);orbit.target.copy(target);
+  function applyView(realDt){
+    const id=viewId(),view=VIEWS[id];orbit.enabled=!view.camera;
+    if(!view.camera){lastView=id;return;}
+    if(!rigReady){rig.copy(ship.root.quaternion);rigReady=true;}else rig.slerp(ship.root.quaternion,1-Math.exp(-realDt*5));
+    if(id!==lastView){
+      // Start the glide from wherever the camera is now (another view or the free orbit).
+      inverseRig.copy(rig).invert();
+      cameraRig.subVectors(camera.position,ship.root.position).applyQuaternion(inverseRig);targetRig.subVectors(orbit.target,ship.root.position).applyQuaternion(inverseRig);
+      lastView=id;
+    }
+    if(view.nozzle)wantedTarget.set(mainNozzle[0],mainNozzle[1],mainNozzle[2]).multiplyScalar(SCALE);else wantedTarget.set(...view.target);
+    wantedCamera.set(...view.camera);if(view.nozzle)wantedCamera.add(wantedTarget);
+    const glide=1-Math.exp(-realDt*7);cameraRig.lerp(wantedCamera,glide);targetRig.lerp(wantedTarget,glide);
+    camera.position.copy(cameraRig).applyQuaternion(rig).add(ship.root.position);
+    target.copy(targetRig).applyQuaternion(rig).add(ship.root.position);camera.lookAt(target);orbit.target.copy(target);
   }
   function setView(id){if(!VIEWS[id])throw new Error(`Vista desconocida: ${id}`);viewKit.setValue('Vista',VIEWS[id].label);document.body.dataset.view=id;}
   function setState(id){if(!STATES[id])throw new Error(`Estado desconocido: ${id}`);stateKit.setValue('Estado',STATES[id].label);document.body.dataset.state=id;}
   function info(){
     const s=STATES[stateId()],local=ship.root.worldToLocal(camera.position.clone());
     return {view:viewId(),state:stateId(),mode:s.mode,speed:state.speed,time,paused:timeKit.values.Pausa,power:boost.stats.power,palette:boost.stats.palette,
-      cameraLocal:{x:local.x,y:local.y,z:local.z},frame:Number(document.body.dataset.frame??0),backend};
+      cameraLocal:{x:local.x,y:local.y,z:local.z},camera:camera.position.toArray(),ship:{position:ship.root.position.toArray(),yaw:state.yaw},frame:Number(document.body.dataset.frame??0),backend};
   }
   window.playground={views:Object.keys(VIEWS),states:Object.keys(STATES),setView,setState,info,clearFx,
     pause:(on=true)=>timeKit.setValue('Pausa',on),step:(count=1)=>{timeKit.setValue('Pausa',true);pendingSteps+=count;}};
@@ -164,7 +178,7 @@ async function main(){
   renderer.setAnimationLoop(async now=>{
     if(busy)return;busy=true;
     try{
-      const real=Math.min((now-previous)/1000,.05),t=timeKit.values;previous=now;
+      const elapsed=(now-previous)/1000,real=Math.min(elapsed,.05),t=timeKit.values;previous=now;
       let dt=t.Pausa?0:real*t['Velocidad tiempo'];
       if(t.Pausa&&pendingSteps>0){dt=1/60;pendingSteps--;}
       time+=dt;
@@ -172,7 +186,7 @@ async function main(){
       if(v['Mover nave']&&speed>0)route=(route+dt*speed)%world.landscape.length;
       place();
       if(viewId()==='libre'){delta.subVectors(ship.root.position,lastPosition);camera.position.add(delta);orbit.target.add(delta);}
-      lastPosition.copy(ship.root.position);applyView();
+      lastPosition.copy(ship.root.position);applyView(Math.min(elapsed,.25));
       state.speed=speed;state.vx=Math.sin(state.yaw)*speed;state.vz=Math.cos(state.yaw)*speed;
       state.drifting=Boolean(s.drift);state.braking=Boolean(s.braking);state.slip=s.drift?.55:0;state.boosting=v['VFX activos']&&s.mode==='Turbo';
       state.hull=ship.config.hull?{halfWidth:ship.config.hull.halfWidth*SCALE,halfLength:ship.config.hull.halfLength*SCALE}:undefined;
