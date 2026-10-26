@@ -23,4 +23,4 @@ after the vehicle rotates and scales. Raised footrests support his short legs.
 The full source animation bundle is retained (7,217,624 bytes).
 
 Regenerate the roster portraits and fallback images from the model with
-`node scripts/render-ajo-previews.mjs` while the local Vite server is running.
+`node scripts/render-pilot-previews.mjs ajo` while the local Vite server is running.

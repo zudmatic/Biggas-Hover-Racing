@@ -5,13 +5,15 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 import {flightPose, FLIGHT_DURATION} from './spaceship-parts.js';
 import {createShipCloth} from './ship-cloth.js';
-import {createSelectablePilot} from './selectable-pilot.js';
+import {createShipPilot} from './ship-pilot.js';
 import {pilotChoice,pilotConfig,pilotQuery} from './pilot-catalog.js';
 import {createGameRenderer} from './game-renderer.js';
 import {createComicView} from './comic-view.js';
 import {PMREMGenerator} from 'three/webgpu';
 import './spaceship.css';
 import {SHIPS,shipConfig,shipUrl,shipCanopy,prepareShipModel} from './ship-catalog.js';
+import {createLomiPlasma} from './vfx/lomi-plasma.js';
+import {loadEnergyTextures} from './vfx/lomi-energy.js';
 
 export async function createSpaceship() {
   const config=shipConfig(new URLSearchParams(location.search).get('vehicle')),parts=config.parts,choice=pilotChoice(),pilotParams=pilotQuery(choice);
@@ -75,10 +77,11 @@ export async function createSpaceship() {
   const contact=new THREE.Mesh(new THREE.PlaneGeometry(4.8,6),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(shadowCanvas),transparent:true,depthWrite:false}));contact.rotation.x=-Math.PI/2;contact.position.y=-.024;scene.add(contact);
   const ship=new THREE.Group();scene.add(ship);
   const systems=Object.fromEntries(parts.map(p=>{const group=new THREE.Group();group.name=p.id;ship.add(group);return [p.id,group];}));
-  let model,canopy;const meshes=[],exhausts=[];
-  try {model=(await new GLTFLoader().loadAsync(shipUrl(config.id,base))).scene;}
+  let model,animations,canopy;const meshes=[],exhausts=[];
+  try {({scene:model,animations}=await new GLTFLoader().loadAsync(shipUrl(config.id,base)));}
   catch {fail('No se pudo cargar la nave. Comprobá la conexión e intentá de nuevo.');renderer.dispose();return;}
   prepareShipModel(model,config);
+  let pilot;try{pilot=await createShipPilot(model,animations,config,choice);}catch{fail('No se pudo cargar el piloto. Intentá de nuevo.');renderer.dispose();return;}
   const dimensions=new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());$('.ship-stage-specs p').textContent=`${[dimensions.x,dimensions.y,dimensions.z].map(value=>value.toFixed(2).replace('.',',')).join(' × ')} u.`;
   canopy=shipCanopy(model,config);
   const canopyMeshes=new Set();canopy?.traverse(o=>{if(o.isMesh)canopyMeshes.add(o);});
@@ -93,17 +96,23 @@ export async function createSpaceship() {
   }
   if(canopy)systems.cockpit.attach(canopy);
   for(const mesh of meshes)mesh.userData.rest=mesh.position.clone();
+  let plasma=null,plasmaTime=0;
+  if(config.engine==='singularity'){
+    const anchors=[];model.traverse(o=>{if(!o.isMesh&&o.userData.shader==='lomi_ship_thrust')anchors.push(o);});for(const anchor of anchors)systems.engines.attach(anchor);
+    const tagged=shader=>meshes.filter(mesh=>mesh.userData.shader===shader);
+    plasma=createLomiPlasma(ship,{crystals:tagged('lomi_ship_crystal'),exhausts:anchors,nozzles:tagged('lomi_ship_thrust'),scale:config.modelScale??1,textures:await loadEnergyTextures(base)});
+  }
   const cloth=meshes.filter(mesh=>config.clothName?.test(mesh.name)).map(mesh=>createShipCloth(mesh,mesh.matrixWorld.clone()));
-  let clothIdleTime=0;
+  let idleTime=0;
   const canopyRest=canopy?.position.clone();
-  let pilot;try{pilot=await createSelectablePilot({...choice,offset:config.pilotOffsets?.[choice.pilot]??config.pilotOffset,fit:config.pilotFit});}catch{fail('No se pudo cargar el piloto. Intentá de nuevo.');renderer.dispose();return;}systems.cockpit.add(pilot.root);
+  systems.cockpit.add(pilot.root);
   const showPilot=choice.pilot==='bluleet',query=new URLSearchParams(location.search),initialComic=query.has('comic')?query.get('comic')!=='0':!showPilot;
   pilot.root.visible=showPilot;$('#ship-pilot').checked=showPilot;$('#ship-comic').setAttribute('aria-pressed',String(initialComic));
   $('.ship-simulator').href=`${base}?vehicle=${config.id}&${pilotParams}&comic=${initialComic?'1':'0'}`;
   const pilotMeshes=[];pilot.root.traverse(mesh=>{if(mesh.isMesh)pilotMeshes.push(mesh);});
   const comic=createComicView(renderer,scene,camera);let comicEnabled=initialComic;
   // Plumes point backwards (-Z). Their scale and emission follow the flight timeline.
-  for(const [x,y,z,radius] of config.exhausts){
+  for(const [x,y,z,radius] of config.engine==='singularity'?[]:config.exhausts){
     const plume=new THREE.Mesh(new THREE.ConeGeometry(radius,1.2,8,1,true),new THREE.MeshBasicMaterial({color:0xff9944,transparent:true,opacity:.3,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
     plume.rotation.x=-Math.PI/2;plume.position.set(x,y,z-.6);plume.userData.outlet=z;systems.engines.add(plume);exhausts.push(plume);
     const core=new THREE.Mesh(new THREE.ConeGeometry(.12,.8,8,1,true),new THREE.MeshBasicMaterial({color:0xd9f6ff,transparent:true,opacity:.7,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));core.rotation.x=-Math.PI/2;core.position.set(x,y,z-.4);core.userData.outlet=z;systems.engines.add(core);exhausts.push(core);
@@ -193,8 +202,8 @@ export async function createSpaceship() {
     if(playing){elapsed+=dt*speed;if(elapsed>=FLIGHT_DURATION){if(loop)elapsed%=FLIGHT_DURATION;else {elapsed=FLIGHT_DURATION;playing=false;updateTransport();}}}
     const pose=flightPose(reducedMotion.matches ? elapsed<2?0:elapsed<6?4:elapsed<13?9:elapsed<17?15:18 : elapsed);
     if(reducedMotion.matches){pose.roll=0;pose.pitch=0;pose.bob=0;}
-    if(!reducedMotion.matches&&elapsed===0)clothIdleTime+=dt;
-    for(const flag of cloth)flag.update(elapsed>0?elapsed:clothIdleTime,pose.power*28,false,reducedMotion.matches);
+    if(!reducedMotion.matches&&elapsed===0)idleTime+=dt;
+    for(const flag of cloth)flag.update(elapsed>0?elapsed:idleTime,pose.power*28,false,reducedMotion.matches);
     const ease=1-Math.exp(-dt*6);
     explode=THREE.MathUtils.lerp(explode,explodeInput.checked?1:0,reducedMotion.matches||keyboardInput?1:ease);
     open=THREE.MathUtils.lerp(open,canopyInput.checked?1:0,reducedMotion.matches||keyboardInput?1:ease);
@@ -208,7 +217,8 @@ export async function createSpaceship() {
       const plume=exhausts[i],length=pose.power*(1+(reducedMotion.matches?0:.08*Math.sin(elapsed*20+i)));plume.visible=pose.power>.01;plume.scale.y=length;plume.position.z=plume.userData.outlet-(i%2===0?.6:.4)*length;
     }
     for(const mesh of hotVanes){mesh.material.emissive.setHex(selected==='engines'?0xd6632e:0xff6b1c);mesh.material.emissiveIntensity=selected==='engines'?.2+pose.power*2:pose.power*2;}
-    if(pilot.root.visible)pilot.update(elapsed,!reducedMotion.matches&&elapsed>0&&elapsed<FLIGHT_DURATION);
+    if(pilot.root.visible)pilot.update(elapsed>0?elapsed:idleTime,!reducedMotion.matches&&elapsed>0&&elapsed<FLIGHT_DURATION);
+    plasmaTime+=dt;plasma?.idle(plasmaTime,reducedMotion.matches);
     contact.material.opacity=1-pose.altitude*.38;contact.scale.setScalar(1+pose.altitude*.12);
     camera.position.y-=cameraLift;controls.target.y-=cameraLift;
     if(viewTween){viewTween.elapsed+=dt;const t=Math.min(viewTween.elapsed/.28,1),u=t*t*(3-2*t);camera.position.lerpVectors(viewTween.from,viewTween.to,u);controls.target.lerpVectors(viewTween.target,initialTarget,u);if(t===1)viewTween=null;}
@@ -238,5 +248,5 @@ export async function createSpaceship() {
   syncCanopyControls();viewport.dataset.meshCount=String(meshes.length);
   updateTransport();renderer.setAnimationLoop(frame);
   for(const event of ['webglcontextlost','graphicslost'])canvas.addEventListener(event,event=>{event.preventDefault();playing=false;renderer.setAnimationLoop(null);fail('Se interrumpió la vista 3D. Recargá el hangar para continuar.');});
-  window.addEventListener('pagehide',()=>{disposed=true;renderer.setAnimationLoop(null);sizeObserver.disconnect();controls.dispose();renderTask.finally(()=>{comic.dispose();pilot.dispose();environment.dispose();renderer.dispose();});},{once:true});
+  window.addEventListener('pagehide',()=>{disposed=true;renderer.setAnimationLoop(null);sizeObserver.disconnect();controls.dispose();renderTask.finally(()=>{comic.dispose();plasma?.dispose();pilot.dispose();environment.dispose();renderer.dispose();});},{once:true});
 }

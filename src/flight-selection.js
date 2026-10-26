@@ -11,6 +11,7 @@ import {createMenuMotion,createRaceEntryTransition} from './menu-motion.js';
 const lock='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>';
 const steps=['Inicio','Personaje','Vehículo','Mapa'];
 const available={pilot:Object.values(PILOTS),vehicle:Object.values(SHIPS)};
+const plainImages=new Set(available.pilot.filter(pilot=>pilot.paperImages===false).flatMap(pilot=>[pilot.image,pilot.preview]));
 const hatSwatches={
   beanie:{color:'#f9670d',path:'M5 15V12a7 7 0 0 1 14 0v3M4 15h16v5H4zM10 4a2 2 0 1 0 4 0 2 2 0 1 0-4 0'},
   samurai_kasa:{color:'#e6c783',path:'M2 17 12 5l10 12H2zM12 5l-4 12m4-12 4 12M5 20h14'},
@@ -73,8 +74,8 @@ export function chooseFlight(){
       root.querySelectorAll('[data-pilot-choice]').forEach(button=>{const selected=button.dataset.pilotChoice===selectedPilot;button.classList.toggle('is-selected',selected);button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-label',`${PILOTS[button.dataset.pilotChoice].name}${selected?', seleccionado':''}`);button.querySelector('.lobby-slot-player').hidden=!selected;});
       $('[data-screen="1"] .lobby-section-title>span').textContent=`${String(Object.keys(PILOTS).indexOf(selectedPilot)+1).padStart(2,'0')} / 09`;
       $('[data-screen="1"] .lobby-selected-name strong').textContent=config.name.toUpperCase();
-      $('.lobby-hats').hidden=selectedPilot!=='zud';$('.lobby-hat-name').textContent=zudHat(selectedHat).name;root.querySelectorAll('button[data-hat]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.hat===selectedHat)));
-      $('.lobby-palettes').hidden=selectedPilot!=='zudmatic';$('.lobby-palette-name').textContent=selectedPalette;
+      $('.lobby-hats').hidden=!config.hats;$('.lobby-hat-name').textContent=zudHat(selectedHat).name;root.querySelectorAll('button[data-hat]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.hat===selectedHat)));
+      $('.lobby-palettes').hidden=!config.palettes;$('.lobby-palette-name').textContent=selectedPalette;
       root.querySelectorAll('button[data-palette]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.palette===selectedPalette)));
       $('.lobby-team img:first-child').dataset.lobbyImage=config.image;
       if(stage===1){$('.lobby-next').innerHTML=`Confirmar ${config.name} <span aria-hidden="true">→</span>`;$('.lobby-preview-fallback').dataset.lobbyImage=config.preview;$('.lobby-preview-fallback').alt=config.name;}
@@ -119,7 +120,7 @@ export function chooseFlight(){
     function updatePaperImages(){
       root.querySelectorAll('[data-lobby-image]').forEach(image=>{
         const key=image.dataset.lobbyImage,isMap=Object.hasOwn(CIRCUIT_MAPS,key);
-        const filename=key.startsWith('zudmatic')?key:isMap?`${key}${paper?'':'-normal'}`:`${key}${paper?'-paper':''}`;
+        const filename=plainImages.has(key)?key:isMap?`${key}${paper?'':'-normal'}`:`${key}${paper?'-paper':''}`;
         const src=`${base}images/flight/${filename}.png`;if(image.getAttribute('src')!==src)image.src=src;
       });
     }
