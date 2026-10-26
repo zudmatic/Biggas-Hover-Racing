@@ -6,6 +6,7 @@ import {createPadBoostPalette,smoothBoostPower} from './pad-boost-palette.js';
 import {createFlameMaterial} from './flame-material.js';
 import {createFlameTrail} from './flame-trail.js';
 import {createEngineCore} from './engine-core.js';
+import {measureNozzleMouths,combineMouths} from './nozzle-mouth.js';
 
 export async function createBoost(renderer,scene,ship){
   const padPalette=createPadBoostPalette(),fireColor=new THREE.Color(),coreColor=new THREE.Color(),edgeColor=new THREE.Color(),engineColor=new THREE.Color();
@@ -26,7 +27,7 @@ export async function createBoost(renderer,scene,ship){
   try{for(const system of systems){await system.init();system.stop();scene.add(system.object3D);}}
   catch(error){for(const system of systems)system.dispose();trail.dispose();engine.dispose();flame.material.dispose();lineGeometry.dispose();throw error;}
   const kit=createDialKit('Propulsor · WebGPU',{
-    Llama:true,Motor:true,'Densidad llama':[1,.1,1,.01],Longitud:[4.6,.2,9,.1],Ancho:[1.22,.1,3,.02],Turbulencia:[.4,0,6,.1],
+    Llama:true,Motor:true,'Densidad llama':[1,.1,1,.01],Longitud:[4.6,.2,9,.1],Ancho:[1.22,.1,3,.02],Turbulencia:[.4,0,6,.1],'Fade base':[.25,0,.5,.01],'Separación boca':[0,-.3,.5,.01],'Llama mínima':[.7,0,2,.05],
     Trama:{type:'select',options:['Apagado','Damero','Dither'],default:'Dither'},
     'Intensidad trama':[.6,0,1,.05],'Tamaño trama':[2,1,8,1],
     'Estela partículas':[8,.5,8,.1],'Seguir nave':[1,0,1,.05],
@@ -42,6 +43,8 @@ export async function createBoost(renderer,scene,ship){
     lines.setProps({size:[v['Tamaño chispas']*.55,v['Tamaño chispas']]});
     [v.Fragmentos,v.Brasas,v['Chispas lineales']].forEach((on,i)=>{systems[i].object3D.visible=on;if(!on)systems[i].clear();});
   });
+  // Model mouths are static: measure once (the engine insert is skipped and reports its own lip per frame).
+  const modelMouths=measureNozzleMouths(ship.root,nozzles);
   let power=0,time=0,quality=1;const previous=new THREE.Vector3(),worldPosition=new THREE.Vector3(),velocity=new THREE.Vector3();let positioned=false;const accumulators=[0,0,0],origin=new THREE.Vector3(),direction=new THREE.Vector3();
   const stats={emitted:0,power:0,palette:'Rojo',capacity:2400,particleLifetimes:[0,0,0],emittedByLayer:[0,0,0]};
   function clear(){systems.forEach(s=>s.clear());trail.clear();accumulators.fill(0);stats.emitted=0;stats.emittedByLayer.fill(0);positioned=false;}
@@ -62,8 +65,8 @@ export async function createBoost(renderer,scene,ship){
       padPalette.apply(emberTint.value,'#ff861f');padPalette.apply(lineTint.value,'#ffd18a',true);
       padPalette.apply(edgeColor,blue?'#42a4ff':'#ff5812');padPalette.apply(engineColor,'#fff1b0',true);
       ship.root.updateMatrixWorld(true);trail.record(time,ship.root);
-      trail.update(time,{Activa:enabled&&v.Llama,Longitud:v.Longitud,Ancho:v.Ancho,Pulsación:.02},power,7.5,.8);
       engine.update(dt,time,power,{Activo:enabled&&v.Motor,Profundidad:2.25,Intensidad:1.1,Tamaño:1.225,Enfriamiento:.85,Pulsación:.04,'Luz cercana':.5,'Color borde':edgeColor,'Color centro':engineColor});
+      trail.update(time,{Activa:enabled&&v.Llama,Longitud:v.Longitud,Ancho:v.Ancho,Pulsación:.02,Bocas:combineMouths(modelMouths,engine.mouths()),Separación:v['Separación boca'],Mínima:v['Llama mínima']},power,7.5,.8);
       const rates=[v.Fragmentos?v['Cantidad fragmentos']:0,v.Brasas?v['Cantidad brasas']:0,v['Chispas lineales']?v['Cantidad chispas']:0],speeds=[7.5,12,14],spread=[.33,.64,.22];
       const durations=[v['Duración fragmentos'],v['Duración brasas'],v['Duración chispas']];
       for(let j=0;j<systems.length;j++){
