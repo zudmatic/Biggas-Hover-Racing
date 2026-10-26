@@ -1,5 +1,5 @@
 import {createHeatField} from './vfx/heat-field.js';
-import {Color,Vector2,ACESFilmicToneMapping,SRGBColorSpace} from 'three';
+import {Color,Vector2,ACESFilmicToneMapping,SRGBColorSpace,DepthStencilFormat,UnsignedInt248Type} from 'three';
 import {PostProcessing} from 'three/webgpu';
 import {color as tslColor,pass,uniform,float,vec2,vec3,vec4,screenUV,mix,smoothstep,fract,toneMapping,workingToColorSpace} from 'three/tsl';
 import {RETRO_DEFAULTS as p} from './retro-style.js';
@@ -7,7 +7,25 @@ import {RETRO_DEFAULTS as p} from './retro-style.js';
 // Opaque circuit counterpart of retro-print.js: linear HDR -> ACES -> sRGB
 // grading, warm glow, colored depth outlines, registration and static ink grain.
 export function createComicPost(renderer,scene,camera,{glowSamples=12,samples=4}={}){
-  const scenePass=pass(scene,camera,{samples}),source=scenePass.getTextureNode(),depth=scenePass.getTextureNode('depth');
+  const scenePass=pass(scene,camera,{samples,stencilBuffer:true}),source=scenePass.getTextureNode(),depth=scenePass.getTextureNode('depth');
+  // Bluleet's paper edge belongs outside his silhouette, never over his eyes
+  // or jacket. A shared depth/stencil attachment supports that mask on both backends.
+  scenePass.renderTarget.depthTexture.format=DepthStencilFormat;
+  scenePass.renderTarget.depthTexture.type=UnsignedInt248Type;
+  if(renderer.backend.isWebGPUBackend){
+    // Three 0.182's binding cache creates combined depth/stencil sample views
+    // with aspect "all", which WebGPU rejects. Cache a depth-only sample view
+    // after this pass creates/resizes its attachment. The render attachment
+    // still uses both aspects. Remove when Three's binding utility handles it.
+    const renderPass=scenePass.updateBefore;let lastTexture;
+    scenePass.updateBefore=function(frame){
+      renderPass.call(this,frame);
+      const data=renderer.backend.get(this.renderTarget.depthTexture),gpu=data.texture;
+      if(gpu&&gpu!==lastTexture){
+        data[`view-${gpu.width}-${gpu.height}-${gpu.mipLevelCount}-0`]=gpu.createView({aspect:'depth-only',dimension:'2d',mipLevelCount:gpu.mipLevelCount,baseMipLevel:0});lastTexture=gpu;
+      }
+    };
+  }
   const post=new PostProcessing(renderer);post.outputColorTransform=false;
   const resolution=uniform(new Vector2()),pixelRatio=uniform(1),near=uniform(camera.near),far=uniform(camera.far),pixelWorld=uniform(1),exposure=uniform(1.05);
   const outline=uniform(1),grading=uniform(1),paper=uniform(new Color()),size=new Vector2();

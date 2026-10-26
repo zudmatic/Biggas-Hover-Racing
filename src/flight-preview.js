@@ -116,7 +116,9 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
     pilots.get('zudmatic')?.setPalette(selectedPalette);ships.forEach(ship=>ship.pilot.actor.setPalette?.(selectedPalette));setKind(kind);
     const requestedPilot=selectedPilot,pilotKey=`pilot:${requestedPilot}`;
     if(requestedPilot!=='zud'&&!pilots.has(requestedPilot)&&!pending.has(pilotKey)){
-      const actorPromise=requestedPilot==='ajo'
+      const actorPromise=requestedPilot==='bluleet'
+        ?import('./bluleet-model.js').then(({createBluleetModel})=>createBluleetModel())
+        :requestedPilot==='ajo'
         ?import('./ajo-model.js').then(({createAjoModel})=>createAjoModel())
         :import('./zudmatic-model.js').then(({createZudmaticModel})=>createZudmaticModel({palette:selectedPalette}));
       pending.set(pilotKey,actorPromise.then(actor=>{

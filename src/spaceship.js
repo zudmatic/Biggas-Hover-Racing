@@ -20,7 +20,7 @@ export async function createSpaceship() {
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
   document.body.innerHTML=`<main class="ship-app"><div class="ship-paper-surface" aria-hidden="true"></div>
     <header class="ship-header"><a class="ship-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span class="ship-mark" aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong><span class="ship-header-tag">Hangar</span></a><nav aria-label="Navegación del hangar"><a class="ship-back" href="${base}?vehicle=${config.id}&${pilotParams}"><span aria-hidden="true">←</span> Volver al inicio</a></nav></header>
-    <section class="ship-intro"><div class="ship-heading"><span class="ship-eyebrow">HANGAR / EXPLORÁ TU NAVE</span><h1>${config.title}<span class="ship-title-number">${config.id}</span></h1></div><div class="ship-intro-actions"><nav class="ship-picker" aria-label="Naves del hangar">${Object.values(SHIPS).map(item=>`<a href="${base}spaceship.html?vehicle=${item.id}&${pilotParams}" ${item.id===config.id?'aria-current="page"':''}>${item.name}</a>`).join('')}</nav><a class="ship-simulator" href="${base}?vehicle=${config.id}&${pilotParams}">Simulador de vuelo <span aria-hidden="true">▶</span></a></div></section>
+    <section class="ship-intro"><div class="ship-heading"><span class="ship-eyebrow">HANGAR / EXPLORÁ TU NAVE</span><h1>${config.title}<span class="ship-title-number">${config.id}</span></h1></div><div class="ship-intro-actions"><nav class="ship-picker" aria-label="Naves del hangar">${Object.values(SHIPS).map(item=>`<a href="${base}spaceship.html?vehicle=${item.id}&${pilotParams}" ${item.id===config.id?'aria-current="page"':''}>${item.name}</a>`).join('')}</nav>${config.id==='bluleet'?`<a class="ship-studio" href="${base}chubee-studio.html">Estudio de tinta <span aria-hidden="true">✦</span></a>`:''}<a class="ship-simulator" href="${base}?vehicle=${config.id}&${pilotParams}">Simulador de vuelo <span aria-hidden="true">▶</span></a></div></section>
     <div class="ship-workspace">
       <section class="ship-viewport" aria-label="Hangar 3D de ${config.title}" data-vehicle="${config.id}" data-hat="${choice.hat}" data-ready="false">
         <canvas class="ship-canvas" tabindex="0" aria-label="Nave 3D. Arrastrá para girar, rueda para acercar y clic para identificar una pieza."></canvas>
@@ -30,7 +30,7 @@ export async function createSpaceship() {
         <div class="ship-viewbar"><div class="ship-views" role="group" aria-label="Vistas de la nave">${[['perspective','3/4'],['front','Frente'],['side','Perfil'],['back','Atrás'],['top','Arriba']].map(([v,label])=>`<button data-ship-view="${v}" aria-pressed="${v==='perspective'}" disabled>${label}</button>`).join('')}</div><div class="ship-tools"><button id="ship-rotate" aria-label="Giro automático" aria-pressed="false" title="Giro automático" disabled>⟳</button><button id="ship-reset" aria-label="Restablecer vista y nave" title="Restablecer vista y nave" disabled>⌖</button></div></div>
         <div class="ship-loader" role="status"><span>Preparando el hangar…<br><small>Cargando ${config.name}</small></span></div>
       </section>
-      <aside class="ship-panel" aria-label="Componentes de la nave"><div class="ship-panel-top"><h2>Componentes</h2><span>08</span></div>
+      <aside class="ship-panel" aria-label="Componentes de la nave"><div class="ship-panel-top"><h2>Componentes</h2><span>${String(parts.length).padStart(2,'0')}</span></div>
       <div class="ship-part-list">${parts.map(p=>`<button class="ship-part" data-part="${p.id}" aria-pressed="false" disabled><span class="ship-part-number">${p.tag}</span><span><span class="ship-part-name">${p.name}</span></span></button>`).join('')}</div>
       <p class="sr-only" id="ship-description" aria-live="polite"></p>
       <div class="ship-toggles"><label class="ship-switch">${config.windshield?'Abrir parabrisas':'Abrir cabina'}<input id="ship-canopy" type="checkbox" disabled></label><label class="ship-switch">${config.windshield?'Ocultar parabrisas':'Ocultar cabina'}<input id="ship-hide-canopy" type="checkbox" disabled></label><label class="ship-switch">${pilotConfig(choice.pilot).name} al mando<input id="ship-pilot" type="checkbox" disabled></label><label class="ship-switch">Desarmar<input id="ship-explode" type="checkbox" disabled></label><label class="ship-switch">Etiquetas<input id="ship-label-toggle" type="checkbox" checked disabled></label><button id="ship-comic" class="ship-comic" aria-pressed="true" disabled><span aria-hidden="true">◐</span> Cómic</button></div>
@@ -96,9 +96,12 @@ export async function createSpaceship() {
   const cloth=meshes.filter(mesh=>config.clothName?.test(mesh.name)).map(mesh=>createShipCloth(mesh,mesh.matrixWorld.clone()));
   let clothIdleTime=0;
   const canopyRest=canopy?.position.clone();
-  let pilot;try{pilot=await createSelectablePilot({...choice,offset:config.pilotOffset,fit:config.pilotFit});}catch{fail('No se pudo cargar el piloto. Intentá de nuevo.');renderer.dispose();return;}systems.cockpit.add(pilot.root);
+  let pilot;try{pilot=await createSelectablePilot({...choice,offset:config.pilotOffsets?.[choice.pilot]??config.pilotOffset,fit:config.pilotFit});}catch{fail('No se pudo cargar el piloto. Intentá de nuevo.');renderer.dispose();return;}systems.cockpit.add(pilot.root);
+  const showPilot=choice.pilot==='bluleet',query=new URLSearchParams(location.search),initialComic=query.has('comic')?query.get('comic')!=='0':!showPilot;
+  pilot.root.visible=showPilot;$('#ship-pilot').checked=showPilot;$('#ship-comic').setAttribute('aria-pressed',String(initialComic));
+  $('.ship-simulator').href=`${base}?vehicle=${config.id}&${pilotParams}&comic=${initialComic?'1':'0'}`;
   const pilotMeshes=[];pilot.root.traverse(mesh=>{if(mesh.isMesh)pilotMeshes.push(mesh);});
-  const comic=createComicView(renderer,scene,camera);let comicEnabled=true;
+  const comic=createComicView(renderer,scene,camera);let comicEnabled=initialComic;
   // Plumes point backwards (-Z). Their scale and emission follow the flight timeline.
   for(const [x,y,z,radius] of config.exhausts){
     const plume=new THREE.Mesh(new THREE.ConeGeometry(radius,1.2,8,1,true),new THREE.MeshBasicMaterial({color:0xff9944,transparent:true,opacity:.3,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending}));
@@ -137,7 +140,7 @@ export async function createSpaceship() {
     if(playing){if(elapsed>=FLIGHT_DURATION)elapsed=0;$('#ship-canopy').checked=!!canopy&&$('#ship-pilot').checked;$('#ship-explode').checked=false;}
     updateTransport();
   }
-  function reset(){stopFlight();selectPart(null,{focus:false});$('#ship-hide-canopy').checked=false;$('#ship-pilot').checked=false;pilot.root.visible=false;comicEnabled=true;$('#ship-comic').setAttribute('aria-pressed','true');$('.ship-simulator').href=`${base}?vehicle=${config.id}&${pilotParams}`;syncCanopyControls();$('#ship-canopy').checked=false;$('#ship-explode').checked=false;$('#ship-label-toggle').checked=true;goToView(viewPositions.perspective,'perspective');}
+  function reset(){stopFlight();selectPart(null,{focus:false});$('#ship-hide-canopy').checked=false;$('#ship-pilot').checked=showPilot;pilot.root.visible=showPilot;comicEnabled=initialComic;$('#ship-comic').setAttribute('aria-pressed',String(comicEnabled));$('.ship-simulator').href=`${base}?vehicle=${config.id}&${pilotParams}&comic=${comicEnabled?'1':'0'}`;$('#ship-canopy').checked=false;syncCanopyControls();$('#ship-explode').checked=false;$('#ship-label-toggle').checked=true;goToView(viewPositions.perspective,'perspective');}
   document.querySelectorAll('[data-part],[data-hotspot]').forEach(button=>button.addEventListener('click',()=>selectPart(button.dataset.part??button.dataset.hotspot)));
   document.querySelectorAll('[data-ship-view]').forEach(button=>button.addEventListener('click',()=>goToView(viewPositions[button.dataset.shipView],button.dataset.shipView)));
   $('#ship-play').addEventListener('click',togglePlay);$('#ship-reset').addEventListener('click',reset);

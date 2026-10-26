@@ -1,6 +1,6 @@
 # Biggas Hover Racing
 
-Juego de carreras hover en 3D con Zud y Zudmatic, las naves 033, Oliva 037, Nómada 038 y Bulldog 039, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
+Juego de carreras hover en 3D con Zud, Zudmatic, Ajo y Bluleet, las naves 033, Oliva 037, Nómada 038, Bulldog 039 y Bluleet Hover Kart, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
 
 ## Desarrollo
 
@@ -11,13 +11,16 @@ npm run dev
 
 - Inicio y selección de partida: `http://localhost:5173/`
 - Hangar: `http://localhost:5173/spaceship.html`
+- Estudio de Bluleet y su hover kart: `http://localhost:5173/chubee-studio.html`
 - Pruebas integradas de efectos: `http://localhost:5173/webgpu-preview.html`
 - Laboratorio independiente de efectos y cámaras: `http://localhost:43181/` (requiere su propio servidor).
 - Compatibilidad: `simulator.html` redirige al inicio y `propulsor-studio.html` al preview; ambos conservan parámetros y fragmento.
 
 En la landing, **Jugar** abre la selección de personaje, nave, circuito y modo. El enlace **Hangar** permite inspeccionar las naves y sus componentes. Desde el hangar se puede volver al inicio o abrir la selección de partida con la nave elegida.
 
-Las rutas del juego aceptan `?vehicle=033|037|038|039`, `?map=ruins|nexus|mario-raceway` y `?comic=0|1`. El hangar acepta `?vehicle=033|037|038|039`. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
+Las rutas del juego aceptan `?vehicle=033|037|038|039|bluleet`, `?map=ruins|nexus|mario-raceway` y `?comic=0|1`. El hangar acepta las mismas naves. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic|ajo|bluleet` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
+
+**Bluleet** incluye el personaje original con ojos en espiral, acabado de tinta y contorno amarillo/rojo, junto con su hover kart texturizado. Se puede elegir en el menú, inspeccionar en el hangar y conducir en los circuitos. El kart selecciona a Bluleet por defecto cuando no se indica otro piloto; la tinta del personaje permanece activa con `comic=0`. El estudio permite ajustar la pose y el acabado por separado; el juego comparte la pose sentada y el agarre del volante. La integración conserva los GLB originales y calcula la pose sobre el esqueleto al cargar.
 
 **Zud** permite elegir el gorro original o los sombreros Samurai Kasa, Cloud Chef y Crescent Wizard. Los tres GLB y sus ajustes de encaje se recuperaron del historial anterior a `b0233e0`. La selección se conserva al cambiar de nave, entrar en pista y visitar el hangar.
 
@@ -93,7 +96,7 @@ npm run preview
 npm test
 ```
 
-La compilación genera `dist/` con tres páginas activas (inicio/juego, hangar y preview WebGPU) y dos entradas de compatibilidad que solo redirigen. Las pruebas usan Playwright y levantan Vite. Para elegir un puerto libre:
+La compilación genera `dist/` con cuatro páginas activas (inicio/juego, hangar, preview WebGPU y estudio de Bluleet) y dos entradas de compatibilidad que solo redirigen. Las pruebas usan Playwright y levantan Vite. Para elegir un puerto libre:
 
 ```sh
 TEST_PORT=43179 npm test -- --workers=1

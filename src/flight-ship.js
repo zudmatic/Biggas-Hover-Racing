@@ -41,7 +41,8 @@ export async function createFlightShip(id='033',choice={}){
   for(const node of live){root.attach(node);node.traverse(part=>{if(part.isMesh){part.castShadow=true;part.receiveShadow=true;}});}
   source.traverse(mesh=>{if(mesh.isMesh)mesh.geometry.dispose();});
   const eyes=config.eyes?createShipEyes(root,{...config.eyes,clips:gltf.animations}):null;
-  const pilot=await createSelectablePilot({...choice,offset:config.pilotOffset,fit:config.pilotFit});pilot.root.visible=true;root.add(pilot.root);
+  const selectedPilot=choice.pilot??config.defaultPilot;
+  const pilot=await createSelectablePilot({...choice,pilot:selectedPilot,offset:config.pilotOffsets?.[selectedPilot]??config.pilotOffset,fit:config.pilotFit});pilot.root.visible=true;root.add(pilot.root);
   const exhaust=choice.exhaust===false?{jets:[],update(){},dispose(){}}:createLocalExhaust(root,config.exhausts);
   return {root,pilot,config,exhaust,eyes,dispose(){
     exhaust.dispose();eyes?.dispose();

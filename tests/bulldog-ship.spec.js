@@ -54,7 +54,7 @@ test('Bulldog is the last vehicle in the lobby and flies Mario Raceway',async({p
   test.setTimeout(150000);await page.setViewportSize({width:1100,height:800});await page.emulateMedia({reducedMotion:'reduce'});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto('/?pilot=ajo&map=mario-raceway&mode=free');await page.getByRole('button',{name:'Jugar',exact:true}).click();await page.getByRole('button',{name:'Confirmar Ajo',exact:true}).click();
   await page.locator('[data-vehicle-choice="033"]').focus();await page.keyboard.press('End');const lobby=page.locator('.race-lobby'),canvas=page.locator('.lobby-preview-canvas');
-  await expect(lobby).toHaveAttribute('data-vehicle','039');await expect(page.locator('[data-screen="2"] .lobby-section-title>span')).toHaveText('04 / 09');await expect(canvas).toHaveAttribute('data-ready','true',{timeout:60000});
+  await expect(lobby).toHaveAttribute('data-vehicle','039');await expect(page.locator('[data-screen="2"] .lobby-section-title>span')).toHaveText('05 / 09');await expect(canvas).toHaveAttribute('data-ready','true',{timeout:60000});
   const img=page.locator('[data-vehicle-choice="039"] img');await expect(img).toHaveAttribute('src',/039-paper.png$/);await expect.poll(()=>img.evaluate(i=>i.complete&&i.naturalWidth>0)).toBe(true);
   await page.screenshot({path:'.context/bulldog-selection.png'});await page.getByRole('button',{name:'Confirmar nave',exact:true}).click();await page.getByRole('button',{name:'Volar',exact:true}).click();
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});await expect(app).toHaveAttribute('data-vehicle','039');await expect(app).toHaveAttribute('data-phase','flying',{timeout:15000});
