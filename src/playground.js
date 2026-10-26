@@ -1,0 +1,207 @@
+import {CIRCUIT_MAPS,circuitMap} from './circuit-maps.js';
+import {SHIPS,shipConfig} from './ship-catalog.js';
+import {createBoost} from './vfx/boost.js';
+import {createSmokeMaterial} from './vfx/smoke-material.js';
+import {createOilPreview} from './vfx/oil.js';
+import {loadFlightFx} from './flight-fx.js';
+import {createComicStyle,createComicMaterials} from './comic-tsl-material.js';
+import {createComicPost} from './comic-tsl-post.js';
+import * as THREE from 'three';
+import {WebGPURenderer} from 'three/webgpu';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {createDialKit,createDialRoot} from './dev-dials.js';
+import 'dialkit/vanilla/styles.css';
+import {createCircuitWorld} from './circuit-world.js';
+import {createCircuitLighting} from './circuit-lighting.js';
+import {createFlightShip} from './flight-ship.js';
+import {createBaseMaterials} from './base-materials.js';
+import {createHoverState} from './circuit-physics.js';
+import {createFlightBoostPads} from './flight-boost-pads.js';
+import {createBoostPadControls} from './boost-pad-controls.js';
+import './playground.css';
+
+// Debug playground: the preview scene plus reproducible camera views, ship states and time control,
+// all scriptable through window.playground so checks and screenshots don't depend on mouse drags.
+const SCALE=.75;
+// Offsets are world units in the ship's frame (forward +z, flames leave toward -z).
+const VIEWS={
+  libre:{label:'Libre'},
+  carrera:{label:'Carrera',camera:[0,4,-8.5],target:[0,1,0]},
+  trasera:{label:'Trasera',camera:[0,1.3,-5.5],target:[0,.8,-1.8]},
+  tobera:{label:'Tobera',camera:[.9,.55,-2.4],nozzle:true},
+  costado:{label:'Costado',camera:[7,1.4,-1.2],target:[0,.8,-.8]},
+  arriba:{label:'Arriba',camera:[0,11,-.6],target:[0,0,0]},
+  frontal:{label:'Frontal',camera:[0,1.6,7.5],target:[0,.9,0]},
+};
+// Speed is a factor of the "Velocidad" dial; "wall" pins the ship and shakes it against the barrier.
+const STATES={
+  parada:{label:'Parada',mode:'Reposo',speed:0},
+  acelerando:{label:'Acelerando',mode:'Aceleración',speed:1},
+  turbo:{label:'Turbo',mode:'Turbo',speed:1.4},
+  'contra-muro':{label:'Contra muro',mode:'Reposo',speed:0,wall:true},
+  frenando:{label:'Frenando',mode:'Aceleración',speed:.5,braking:true},
+  derrape:{label:'Derrape',mode:'Aceleración',speed:1,drift:true},
+  soltar:{label:'Soltar',mode:'Soltar',speed:0},
+};
+const byLabel=(table,label)=>Object.keys(table).find(id=>table[id].label===label);
+
+const query=new URLSearchParams(location.search),status=document.querySelector('#status'),hud=document.querySelector('#hud');
+async function main(){
+  const canvas=document.querySelector('canvas');
+  const renderer=new WebGPURenderer({canvas,antialias:true,forceWebGL:query.get('backend')==='webgl2'});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
+  await renderer.init();
+  const backend=renderer.backend.isWebGPUBackend?'WebGPU':'WebGL2 · fallback';
+  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
+  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+  document.body.dataset.backend=backend;
+  const mapId=query.get('map')??'ruins',vehicleId=query.get('vehicle')??'037';
+  const drive=new URL('/',location.href);drive.search=new URLSearchParams({selection:'map',renderer:query.get('backend')==='webgl2'?'webgl2':'webgpu',map:mapId,vehicle:vehicleId,camera:'klipp'});document.querySelector('#drive').href=drive.href;
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0xb6c6bd);scene.fog=new THREE.Fog(0xb6c6bd,220,1100);
+  const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.15,7000);
+  const orbit=new OrbitControls(camera,canvas);orbit.enableDamping=true;orbit.maxDistance=1000;orbit.minDistance=1;
+  const results=await Promise.allSettled([createCircuitWorld({map:mapId,onProgress:p=>{status.textContent=`Cargando mapa · ${Math.round(p*100)}%`;}}),createFlightShip(vehicleId,{exhaust:false})]);
+  const failure=results.find(r=>r.status==='rejected');if(failure){for(const r of results)if(r.status==='fulfilled')r.value.dispose();renderer.dispose();throw failure.reason;}
+  const [world,ship]=results.map(r=>r.value);scene.add(world.root,ship.root);ship.root.scale.setScalar(SCALE);
+  const lighting=createCircuitLighting(scene,{headlightMounts:ship.config.headlights});lighting.setTrack(world.landscape);world.textures.applyRoot(lighting.root);
+  const baseline=createBaseMaterials(scene),state={...createHoverState(world.landscape),modelScale:SCALE};
+  const comicStyle=createComicStyle(),comicMaterials=createComicMaterials(scene,comicStyle),comicPost=createComicPost(renderer,scene,camera);
+  const nozzles=ship.config.exhausts,mainNozzle=nozzles.reduce((best,n)=>n[3]>best[3]?n:best,nozzles[0]);
+  let route=0,time=0,previous=performance.now(),busy=false,pendingSteps=0,frames=0,fps=0,frameMs=0,lastHud=0;
+  const lastPosition=new THREE.Vector3(),delta=new THREE.Vector3(),offset=new THREE.Vector3(),target=new THREE.Vector3();
+
+  const root=createDialRoot({target:document.querySelector('#dials'),mode:'inline',defaultOpen:true,theme:'dark'});
+  const viewKit=createDialKit('Cámara',{
+    Vista:{type:'select',options:Object.values(VIEWS).map(v=>v.label),default:VIEWS[query.get('view')]?.label??'Libre'},
+    FOV:[62,30,100,1],Encuadrar:{type:'action',label:'Encuadrar nave'},
+  },{id:'playground-camera',persist:false,onAction:()=>frameShip()});
+  const stateKit=createDialKit('Estado nave',{
+    Estado:{type:'select',options:Object.values(STATES).map(s=>s.label),default:STATES[query.get('state')]?.label??'Acelerando'},
+    Velocidad:[30,0,80,1],'Mover nave':true,'Activar placas':false,'VFX activos':query.get('vfx')!=='off',
+    Aceite:{type:'action',label:'Soltar aceite'},Limpiar:{type:'action',label:'Limpiar efectos'},
+  },{id:'playground-state',persist:false,onAction:action=>{if(action==='Aceite')oil.drop();else if(action==='Limpiar')clearFx();}});
+  const timeKit=createDialKit('Tiempo',{
+    Pausa:false,'Velocidad tiempo':[1,.05,2,.05],Avanzar:{type:'action',label:'Avanzar un cuadro'},
+  },{id:'playground-time',persist:false,onAction:()=>{pendingSteps++;}});
+  const sceneKit=createDialKit('Escena',{
+    Mapa:{type:'select',options:Object.values(CIRCUIT_MAPS).map(m=>m.name),default:circuitMap(mapId).name},
+    Nave:{type:'select',options:Object.keys(SHIPS),default:shipConfig(vehicleId).id},
+    'Cómic':query.get('look')!=='base',Trama:[1.03,0,2,.01],Puntos:true,Rayado:true,Contornos:true,'Color cómic':true,
+    Noche:false,Faros:false,Sombras:true,'Posición en pista':[0,0,100,1],
+  },{id:'playground-scene',persist:false,defaultCollapsed:true});
+  const boost=await createBoost(renderer,scene,ship);
+  const smoke=await loadFlightFx(scene,{surfaceHeight:world.surfaceHeight,materialFactory:createSmokeMaterial});
+  const oil=createOilPreview(scene,world);
+  const pads=await createFlightBoostPads({scene,landscape:world.landscape,surfaceHeight:world.surfaceHeight,distances:[12]});
+  const focusPad=()=>{const p=pads.sim.entries[0];setView('libre');orbit.target.set(p.x,p.y,p.z);camera.position.copy(orbit.target).add(new THREE.Vector3(7,7,-9).applyAxisAngle(THREE.Object3D.DEFAULT_UP,Math.atan2(p.nx,p.nz)));orbit.update();};
+  const padControls=createBoostPadControls(pads,state,focusPad);
+  const smokeKit=createDialKit('Humo',{
+    Tamaño:[1.3,.5,2.5,.05],Duración:[1.5,.5,3,.05],'Color humo':{type:'color',default:'#bababa'},Densidad:[1,.15,1,.05],Trama:[1.5,1,4,.1],'Cuatro ruedas':false,
+    Estilo:{type:'select',options:['Híbrido','Procedural','Mixto'],default:'Híbrido'},
+  },{id:'playground-smoke',persist:false,defaultCollapsed:true});
+
+  const viewId=()=>byLabel(VIEWS,viewKit.values.Vista),stateId=()=>byLabel(STATES,stateKit.values.Estado);
+  function clearFx(){boost.clear();smoke.reset();oil.clear();}
+  function place(){
+    const road=world.landscape.atDistance(route);
+    state.x=road.x;state.z=road.z;state.y=(world.surfaceHeight(road.x,road.z)??road.y)+.65;
+    state.yaw=Math.atan2(road.nx,road.nz);state.pitch=Math.atan(road.grade??0);
+    // Pinned against a wall: small forward/back shake, the way contact resolution jitters in a race.
+    const shake=STATES[stateId()].wall?.04*Math.sin(time*55):0;
+    state.x+=Math.sin(state.yaw)*shake;state.z+=Math.cos(state.yaw)*shake;
+    ship.root.position.set(state.x,state.y,state.z);ship.root.rotation.set(-state.pitch,state.yaw,0,'YXZ');ship.root.updateMatrixWorld();
+  }
+  function frameShip(){setView('libre');orbit.target.copy(ship.root.position).add(new THREE.Vector3(0,1,0));camera.position.copy(orbit.target).add(new THREE.Vector3(7,5,-10).applyAxisAngle(THREE.Object3D.DEFAULT_UP,state.yaw));orbit.update();}
+  function applyView(){
+    const view=VIEWS[viewId()];orbit.enabled=!view.camera;
+    if(!view.camera)return;
+    if(view.nozzle)ship.root.localToWorld(target.set(mainNozzle[0],mainNozzle[1],mainNozzle[2]));
+    else target.set(...view.target).applyQuaternion(ship.root.quaternion).add(ship.root.position);
+    offset.set(...view.camera).applyQuaternion(ship.root.quaternion);
+    camera.position.copy(view.nozzle?target:ship.root.position).add(offset);camera.lookAt(target);orbit.target.copy(target);
+  }
+  function setView(id){if(!VIEWS[id])throw new Error(`Vista desconocida: ${id}`);viewKit.setValue('Vista',VIEWS[id].label);document.body.dataset.view=id;}
+  function setState(id){if(!STATES[id])throw new Error(`Estado desconocido: ${id}`);stateKit.setValue('Estado',STATES[id].label);document.body.dataset.state=id;}
+  function info(){
+    const s=STATES[stateId()],local=ship.root.worldToLocal(camera.position.clone());
+    return {view:viewId(),state:stateId(),mode:s.mode,speed:state.speed,time,paused:timeKit.values.Pausa,power:boost.stats.power,palette:boost.stats.palette,
+      cameraLocal:{x:local.x,y:local.y,z:local.z},frame:Number(document.body.dataset.frame??0),backend};
+  }
+  window.playground={views:Object.keys(VIEWS),states:Object.keys(STATES),setView,setState,info,clearFx,
+    pause:(on=true)=>timeKit.setValue('Pausa',on),step:(count=1)=>{timeKit.setValue('Pausa',true);pendingSteps+=count;}};
+
+  const unsubscribers=[
+    viewKit.subscribe(v=>{camera.fov=v.FOV;camera.updateProjectionMatrix();document.body.dataset.view=viewId();}),
+    stateKit.subscribe(v=>{document.body.dataset.state=stateId();if(!v['VFX activos'])clearFx();}),
+    smokeKit.subscribe(v=>{smoke.configure({size:v.Tamaño,lifetime:v.Duración,color:v['Color humo'],density:v.Densidad,grain:v.Trama,fourSupports:v['Cuatro ruedas']});smoke.setStyle({'Híbrido':'hybrid',Procedural:'procedural',Mixto:'mixed'}[v.Estilo]);}),
+  ];
+  let lastRoute=0;
+  unsubscribers.push(sceneKit.subscribe(v=>{
+    const map=Object.values(CIRCUIT_MAPS).find(m=>m.name===v.Mapa).id;
+    if(map!==mapId||v.Nave!==vehicleId){const url=new URL(location.href);url.searchParams.set('map',map);url.searchParams.set('vehicle',v.Nave);location.assign(url);return;}
+    comicMaterials.setEnabled(v['Cómic']);comicStyle.strength.value=v.Trama;comicStyle.hatch.value=Number(v.Rayado);comicStyle.dots.value=Number(v.Puntos);
+    comicPost.outline.value=Number(v.Contornos);comicPost.grading.value=Number(v['Color cómic']);
+    lighting.setNight(v.Noche);lighting.setHeadlights(v.Faros);ship.setHeadlights(v.Faros);renderer.shadowMap.enabled=v.Sombras;
+    if(lastRoute!==v['Posición en pista']){clearFx();lastRoute=v['Posición en pista'];route=world.landscape.length*lastRoute/100;place();lastPosition.copy(ship.root.position);if(viewId()==='libre')frameShip();}
+  }));
+  const views=Object.keys(VIEWS);
+  const onKey=event=>{
+    if(event.target.closest?.('input,select,textarea,[contenteditable]'))return;
+    const index=Number(event.key)-1;
+    if(index>=0&&index<views.length)setView(views[index]);
+    else if(event.key==='p'||event.key==='P')timeKit.setValue('Pausa',!timeKit.values.Pausa);
+    else if(event.key==='.')window.playground.step(1);
+  };
+  window.addEventListener('keydown',onKey);
+  const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);};window.addEventListener('resize',resize);
+
+  place();lastPosition.copy(ship.root.position);frameShip();
+  if(query.get('view'))setView(query.get('view'));
+  lighting.update(state,0,{dt:1,reducedMotion:true});scene.updateMatrixWorld(true);
+  await renderer.compileAsync(scene,camera);
+  document.body.dataset.ready='true';
+  status.textContent=`${backend} · ${ship.config.name} · ${circuitMap(mapId).name}`;
+  renderer.setAnimationLoop(async now=>{
+    if(busy)return;busy=true;
+    try{
+      const real=Math.min((now-previous)/1000,.05),t=timeKit.values;previous=now;
+      let dt=t.Pausa?0:real*t['Velocidad tiempo'];
+      if(t.Pausa&&pendingSteps>0){dt=1/60;pendingSteps--;}
+      time+=dt;
+      const s=STATES[stateId()],v=stateKit.values,speed=s.speed*v.Velocidad,previousPadPosition={x:state.x,y:state.y,z:state.z};
+      if(v['Mover nave']&&speed>0)route=(route+dt*speed)%world.landscape.length;
+      place();
+      if(viewId()==='libre'){delta.subVectors(ship.root.position,lastPosition);camera.position.add(delta);orbit.target.add(delta);}
+      lastPosition.copy(ship.root.position);applyView();
+      state.speed=speed;state.vx=Math.sin(state.yaw)*speed;state.vz=Math.cos(state.yaw)*speed;
+      state.drifting=Boolean(s.drift);state.braking=Boolean(s.braking);state.slip=s.drift?.55:0;state.boosting=v['VFX activos']&&s.mode==='Turbo';
+      state.hull=ship.config.hull?{halfWidth:ship.config.hull.halfWidth*SCALE,halfLength:ship.config.hull.halfLength*SCALE}:undefined;
+      state.padBoostRemaining=Math.max(0,(state.padBoostRemaining??0)-dt);
+      // Pads on the route would override the chosen state with their own turbo; opt in when testing them.
+      if(dt>0&&v['Activar placas']){pads.step(dt,state,previousPadPosition);padControls.update();}
+      pads.update(dt,false);
+      const padTurbo=state.padBoostRemaining>0;state.boosting=state.boosting||padTurbo;
+      await boost.update(dt,padTurbo?'Turbo':s.mode,v['VFX activos'],padTurbo);smoke.update(dt,{state,camera,scale:SCALE,reduced:!v['VFX activos']});oil.update(dt,state);
+      ship.pilot.update(time,true);if(orbit.enabled)orbit.update();lighting.update(state,time,{dt});boost.updateHeat(comicPost.heat);
+      comicPost.heat.updatePadFields(pads.heatFields??[]);
+      comicStyle.pixelRatio.value=renderer.getPixelRatio();renderer.getDrawingBufferSize(comicStyle.resolution.value);comicMaterials.sync();
+      comicPost.comic.value=Number(sceneKit.values['Cómic']);
+      const started=performance.now();await comicPost.render();frameMs+=performance.now()-started;frames++;
+      document.body.dataset.frame=String(Number(document.body.dataset.frame??0)+1);
+      if(now-lastHud>250){
+        fps=frames*1000/(now-lastHud||1);const ms=frameMs/Math.max(1,frames);frames=0;frameMs=0;lastHud=now;
+        const render=renderer.info.render,i=info();
+        hud.textContent=[`FPS ${fps.toFixed(0)} · cpu ${ms.toFixed(1)} ms`,`${backend} · draw calls ${render.drawCalls??render.calls??'-'} · tris ${Math.round((render.triangles??0)/1000)}k`,
+          `Vista ${VIEWS[i.view].label} · Estado ${STATES[i.state].label}`,`Modo ${i.mode} · potencia ${i.power.toFixed(2)} · ${i.palette}`,
+          `Velocidad ${speed.toFixed(0)} · tiempo ${time.toFixed(2)} s ×${t['Velocidad tiempo'].toFixed(2)}${t.Pausa?' · PAUSA':''}`].join('\n');
+      }
+    }catch(error){renderer.setAnimationLoop(null);status.textContent=`Error: ${error.message}`;console.error(error);}finally{busy=false;}
+  });
+  window.addEventListener('pagehide',()=>{
+    renderer.setAnimationLoop(null);window.removeEventListener('resize',resize);window.removeEventListener('keydown',onKey);unsubscribers.forEach(u=>u());
+    for(const kit of [viewKit,stateKit,timeKit,sceneKit,smokeKit])kit.destroy();
+    padControls.dispose();pads.dispose();boost.dispose();smoke.dispose();oil.dispose();root.destroy();orbit.dispose();
+    comicMaterials.dispose();comicPost.dispose();baseline.dispose();lighting.dispose();ship.dispose();world.dispose();renderer.dispose();delete window.playground;
+  },{once:true});
+}
+main().catch(error=>{status.textContent=`No se pudo iniciar: ${error.message}`;document.body.dataset.error=error.message;console.error(error);});
