@@ -102,7 +102,9 @@ export async function createFlightOil({scene,landscape,surfaceHeight,app,clearIn
       }
     },
     update(player,camera,nextPhase,modelScale,reduced){
-      phase=nextPhase;scale=modelScale;panel.hidden=!enabled||!['flying','paused'].includes(phase);root.visible=enabled;
+      phase=nextPhase;scale=modelScale;panel.hidden=!enabled||!['flying','paused'].includes(phase);
+      // The Bulldog cameo frames only the hero ship; the test bot rejoins at the grid.
+      const cameo=phase==='intro';root.visible=enabled&&!cameo;
       button.disabled=phase!=='flying'||!sim.inventory||sim.pouring;$('.oil-prepare').disabled=phase!=='flying';$('.oil-bot-drop').disabled=phase!=='flying';
       slot.textContent=sim.pouring?(pourOwner==='bot'?'Bot vertiendo…':'Vertiendo…'):sim.inventory?'1 barril':'Vacío';
       hint.textContent=player.oilContact?'En aceite · velocidad reducida':sim.pouring?(pourOwner==='bot'?'Seguí al bot y atravesá la estela':'La estela queda detrás de tu nave'):sim.inventory?'Listo para usar':'Recogé un barril en la pista';
@@ -111,7 +113,7 @@ export async function createFlightOil({scene,landscape,surfaceHeight,app,clearIn
       panel.dataset.slow=String(player.oilContact);
       app.dataset.oilContact=String(player.oilContact);app.dataset.oilSource=pourOwner;app.dataset.oilEnabled=String(enabled);app.dataset.oilInventory=String(sim.inventory);app.dataset.oilPouring=String(sim.pouring);app.dataset.oilPatches=String(sim.patches.length);app.dataset.oilTime=sim.time.toFixed(2);app.dataset.oilFactor=(player.oilFactor??1).toFixed(3);
       app.dataset.botOilHits=String(hits);app.dataset.botSpeed=bot.speed.toFixed(2);app.dataset.botOil=String(bot.oilContact);app.dataset.botDistance=botDistance.toFixed(2);
-      if(!enabled){label.hidden=true;return;}
+      if(!enabled||cameo){label.hidden=true;return;}
       barrels.forEach((mesh,i)=>{mesh.visible=sim.pickups[i].readyAt<=sim.time;mesh.position.y=sim.pickups[i].y+1+(reduced?0:Math.sin(sim.time*2+i)*.12);mesh.rotation.y=reduced?0:sim.time*.55;});
       botShip.root.visible=marker.visible=botEnabled;botShip.root.scale.setScalar(scale);botShip.root.position.set(bot.x,bot.y,bot.z);botShip.root.rotation.set(-bot.pitch,bot.yaw,0,'YXZ');
       marker.position.set(bot.x,bot.y+4*scale,bot.z);marker.material.color.setHex(bot.oilContact?0xff643e:0xffb154);

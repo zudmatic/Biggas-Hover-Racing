@@ -85,7 +85,8 @@ export async function createSpaceship() {
   model.traverse(o=>{if(o.isMesh)meshes.push(o);});
   for(const mesh of meshes){
     mesh.userData.system=config.classify(mesh.name,canopyMeshes.has(mesh));
-    mesh.material=mesh.material.clone();mesh.userData.originalEmission=mesh.material.emissive.clone();mesh.userData.originalIntensity=mesh.material.emissiveIntensity;
+    // Unlit graphic surfaces (the Bulldog's eyes) have no emission to highlight.
+    mesh.material=mesh.material.clone();mesh.userData.originalEmission=mesh.material.emissive?.clone();mesh.userData.originalIntensity=mesh.material.emissiveIntensity;
     mesh.castShadow=true;mesh.receiveShadow=true;
     if(!canopyMeshes.has(mesh))systems[mesh.userData.system].attach(mesh);
     mesh.userData.side=new THREE.Box3().setFromObject(mesh).getCenter(new THREE.Vector3()).x<0?-1:1;
@@ -121,7 +122,7 @@ export async function createSpaceship() {
     viewport.dataset.selected=id??'';
     document.querySelectorAll('[data-part],[data-hotspot]').forEach(button=>button.setAttribute('aria-pressed',String((button.dataset.part??button.dataset.hotspot)===id)));
     $('#ship-description').textContent=part?.name??'';
-    for(const mesh of meshes){const active=mesh.userData.system===id;mesh.material.emissive.copy(active?new THREE.Color(0xd6632e):mesh.userData.originalEmission);mesh.material.emissiveIntensity=active?.2:mesh.userData.originalIntensity;}
+    for(const mesh of meshes){if(!mesh.material.emissive)continue;const active=mesh.userData.system===id;mesh.material.emissive.copy(active?new THREE.Color(0xd6632e):mesh.userData.originalEmission);mesh.material.emissiveIntensity=active?.2:mesh.userData.originalIntensity;}
     if(part&&focus)goToView(part.view);
     if(id==='cockpit'){$('#ship-canopy').checked=!!canopy;stopFlight();}
   }

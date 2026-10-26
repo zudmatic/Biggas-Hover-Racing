@@ -35,7 +35,7 @@ export async function createFlightWebGPU(renderer,scene,camera,vehicle,oil,boost
     async render({dt=0,state,phase,comic=true,reduced=false}={}){
       // The initial binding is explicit; it doesn't depend on a UI event.
       if(lastComic!==comic){materials.setEnabled(comic);lastComic=comic;}materials.sync();style.pixelRatio.value=renderer.getPixelRatio();renderer.getDrawingBufferSize(style.resolution.value);
-      const running=phase==='flying'||phase==='countdown';
+      const running=phase==='flying'||phase==='countdown'||phase==='intro';
       const mode=state.boosting?'Turbo':state.speed>1?'Aceleración':'Reposo';
       await boost.update(running?dt:0,mode,!reduced,state.boosting&&state.padBoostRemaining>0);
       scene.updateMatrixWorld(true);
