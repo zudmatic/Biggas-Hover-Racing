@@ -6,11 +6,26 @@ Juego de carreras hover en 3D con Zud, Zudmatic, Ajo, Bluleet y Lomi, las naves 
 
 Desert Valley está disponible en `http://localhost:5173/?selection=map&map=desert-valley`.
 La escena actual mide 875 × 875 m; la vuelta principal mide 2.293,53 m y la
-vuelta por el atajo 2.177,01 m. Carga `desert-valley-static-game.glb` y adapta
+vuelta por el atajo 2.177,01 m. Carga `desert-valley-map.glb` y adapta
 `driving-guides.json` al contrato de conducción. Conserva los assets anteriores,
 el asfalto/arena horneado, los colores de vértice y las 747 instancias del export
 actual, repartidas en celdas de 200 m y lotes de hasta 128. Las seis rampas son
 superficies conducibles; la inclinación de la nave sigue su pendiente.
+
+El mapa completo está en `public/models/desert-valley/desert-valley-map.glb`:
+terreno, circuito, montañas bajas con normal compartida, vegetación, torre y proa.
+Sus materiales, texturas, instancias y datos de LOD están incluidos. El único GLB
+separado que carga el circuito es `freight-train-40-game.glb`, para el tren articulado.
+El mapa activo usa el archivo comprimido entregado por el usuario: 3.078.744 bytes,
+con Draco y `KHR_mesh_quantization`; las texturas mantienen sus resoluciones de juego.
+El original sin comprimir está en `output/user-compressed-map-20261027/desert-valley-map-before-user-compression.glb`.
+Al volver a comprimir se deben
+conservar nombres de nodos, `extras` de escena y `EXT_mesh_gpu_instancing`.
+La escena predeterminada `Desert Valley Map` muestra una sola representación por
+colocación. La segunda escena, `DESERT_RUNTIME_DATA`, contiene únicamente datos
+de colisión y prototipos LOD para el juego: no debe activarse junto a la escena
+visible. Al comprimir, conservar ambas escenas; el loader las administra.
+Los antiguos GLB por componentes quedan como respaldos y ya no se cargan.
 
 La largada está sobre la calzada frente a la estación de servicio, mirando hacia
 la bifurcación del camino con obstáculos. La ruta comienza allí; los checkpoints

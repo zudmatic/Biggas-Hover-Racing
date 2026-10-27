@@ -16,6 +16,7 @@ import {createHoverWaterEffects} from './water/hover-effects.js';
 import {createDesertTrain} from './desert-train.js';
 import {createDesertTrainAudio} from './desert-train-audio.js';
 import {createDesertLod} from './desert-lod.js';
+import {extractDesertRuntimeData} from './desert-asset.js';
 
 // Keep the authored scene hierarchy and EXT_mesh_gpu_instancing. The legacy
 // circuit batcher bakes only a mesh's base geometry, losing instance transforms.
@@ -24,19 +25,22 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
   const draco=new DRACOLoader().setDecoderPath(`${base}draco/`);
   const loader=new GLTFLoader().setDRACOLoader(draco).setMeshoptDecoder(MeshoptDecoder);
   const json=async name=>{const response=await fetch(path+name);if(!response.ok)throw new Error(`Desert Valley: ${response.status} ${name}`);return response.json();};
-  let asset,bowAsset,trainAsset,detailAsset,detailManifest,artAsset,artManifest,guides,legacyGameplay,railway;
+  let asset,trainAsset,guides,legacyGameplay,railway;
   try{
-    [asset,trainAsset,guides,legacyGameplay,railway,detailAsset,detailManifest,artAsset,artManifest,bowAsset]=await Promise.all([
-      loader.loadAsync(`${path}desert-valley-static-game.glb`,e=>{if(e.total)onProgress(e.loaded/e.total*.75);}),
+    [asset,trainAsset,guides,legacyGameplay,railway]=await Promise.all([
+      loader.loadAsync(`${path}desert-valley-map.glb`,e=>{if(e.total)onProgress(e.loaded/e.total*.75);}),
       loader.loadAsync(`${path}freight-train-40-game.glb`),json('driving-guides.json'),json('gameplay.json'),json('railway.json'),
-      loader.loadAsync(`${path}desert-detail-game.glb`),json('desert-detail-manifest.json'),
-      loader.loadAsync(`${path}desert-art-game.glb`),json('desert-art-manifest.json'),
-      loader.loadAsync(`${path}desert-cargo-bow.glb`),
     ]);
   }finally{draco.dispose();}
   const root=asset.scene;root.name='Desert Valley 039';
-  // Independent bow closes the far river boundary, outside the racing return.
-  root.add(bowAsset.scene);root.updateMatrixWorld(true);
+  const {details:detailAsset,collisions:collisionInputs,placed:placedDetails,manifest:detailManifest}=extractDesertRuntimeData(asset);
+  if(!detailAsset||!detailManifest?.families)throw new Error('Desert Valley: faltan los detalles del mapa unificado.');
+  // Ordinary viewers use the complete default scene. The game swaps its near
+  // detail instances for adaptive LOD batches, while collision-only originals
+  // and reusable prototypes are stored outside that visible scene.
+  placedDetails?.removeFromParent();detailAsset.removeFromParent();
+  if(collisionInputs)root.add(collisionInputs);
+  root.updateMatrixWorld(true);
   partitionDesertInstances(root);
   let station=null;root.traverse(node=>{if(node.userData.source_object===DESERT_START.sourceObject)station=node;});
   const stationPosition=station?new THREE.Box3().setFromObject(station).getCenter(new THREE.Vector3()).toArray():DESERT_START.fallbackPosition;
@@ -66,6 +70,7 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
     mesh.receiveShadow=true;
   };
   root.traverse(collectResources);trainAsset.scene.traverse(collectResources);
+  placedDetails?.traverse(mesh=>{collectResources(mesh);if(mesh.isInstancedMesh)mesh.dispose();});
   // Art direction: warm ochre sand, with the authored atlas kept intact.
   // This is scoped to Desert Valley and does not touch the water preset.
   for(const material of materials)if(material.name==='MAT_Desert_SandTile'||material.name==='MAT_Export25_PaintedGround_Baked')material.color.set(0xf3d5b8);
@@ -89,10 +94,9 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
   });
   // Capture the original collision proxies first; visual detail never changes
   // driveable surfaces, train clearance or the authored collision geometry.
-  detailAsset.scene.add(artAsset.scene);
-  detailManifest={...detailManifest,families:[...detailManifest.families,...artManifest.families],instanceCount:detailManifest.instanceCount+artManifest.instanceCount,vegetationCount:detailManifest.vegetationCount+artManifest.vegetationCount};
-  detailAsset.scene.traverse(collectResources);
-  const lod=createDesertLod(root,detailAsset.scene,detailManifest,{mode:import.meta.env.DEV&&new URLSearchParams(location.search).get('lod')==='full'?'full':'adaptive'});
+  detailAsset.traverse(collectResources);
+  const lod=createDesertLod(root,detailAsset,detailManifest,{mode:import.meta.env.DEV&&new URLSearchParams(location.search).get('lod')==='full'?'full':'adaptive'});
+  collisionInputs?.removeFromParent();
   lod.update(landscape.spawn,0,true);
   instanceCount=0;root.traverse(mesh=>{if(mesh.isInstancedMesh&&!mesh.userData.visualDetail)instanceCount+=mesh.count;});
   instanceCount+=detailManifest.instanceCount;
