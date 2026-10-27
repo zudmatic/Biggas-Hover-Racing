@@ -1,0 +1,49 @@
+{
+  "date": "2026-10-26",
+  "sourceCommit": "08d28b380de0283cdcc4b9c73c97a879b395336b",
+  "three": "0.184.0",
+  "copiedUnchanged": [
+    {
+      "source": "components/waterfront/water.ts",
+      "file": "src/water.ts",
+      "bytes": 11717,
+      "sha256": "abd293b8e73f1d4f753b0f2677415a123bbd24df3e40956e97b31c8150f06d84"
+    },
+    {
+      "source": "components/waterfront/waves.ts",
+      "file": "src/waves.ts",
+      "bytes": 483,
+      "sha256": "b22f2117f18306c71e3719509dd17d85fe208a74c862227fcec036246e110f99"
+    },
+    {
+      "source": "public/assets/waterfront/water-pattern.png",
+      "file": "assets/water-pattern.png",
+      "bytes": 337051,
+      "sha256": "0581708c909174509511719511e3586a9fbe06526e856b6df997bbd1de7dfec0"
+    },
+    {
+      "source": "public/assets/waterfront/water-bed.png",
+      "file": "assets/water-bed.png",
+      "bytes": 507625,
+      "sha256": "d37714b82ce6c1eb4d06fb2670fc7917abb6272f039da2c7add264e18baf95a3"
+    },
+    {
+      "source": "public/assets/waterfront/final2/water-contact-dynamic.png",
+      "file": "reference/water-contact-dynamic.png",
+      "bytes": 39212,
+      "sha256": "1d3b30c37b99b6db1de69128b65cf5c6ac5f800d6866b1b446bcd7ae7d5d6db7"
+    },
+    {
+      "source": "public/assets/waterfront/final2/water-contact-dynamic.json",
+      "file": "reference/water-contact-dynamic.json",
+      "bytes": 577,
+      "sha256": "f961aeebd04a58998f7b07fa919029c1e3a88557867c33d40cd42452fedab54a"
+    },
+    {
+      "source": "scripts/generate-water-contact.py",
+      "file": "tools/generate-water-contact.py",
+      "bytes": 7427,
+      "sha256": "37d28165deabc407c183b562bbf1ca974ac77e9f69e27b99188c9124aa31d718"
+    }
+  ]
+}

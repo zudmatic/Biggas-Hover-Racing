@@ -15,6 +15,7 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
   const engine=new THREE.PointLight(0x64e9ff,12,9,2);root.add(engine);
   const fixtures=[],matrix=new THREE.Matrix4();let night=false,blend=0,headlightsEnabled=false;
   function setTrack(track){
+    if(track.map==='desert-valley')return;
     const count=Math.floor(track.length/28),poleGeometry=new THREE.CylinderGeometry(.08,.12,4.5,6),capGeometry=new THREE.BoxGeometry(.7,.16,.7);
     const poles=new THREE.InstancedMesh(poleGeometry,new THREE.MeshStandardMaterial({color:0x385258,roughness:.8}),count);
     const caps=new THREE.InstancedMesh(capGeometry,new THREE.MeshBasicMaterial({color:0xffd79e}),count);

@@ -7,7 +7,8 @@
 :is(.race-lobby,.flight-app) .sound-panel{background:var(--race-paper);color:var(--race-ink);border:var(--race-border);border-radius:6px;box-shadow:var(--race-shadow)}
 .sound-panel[hidden]{display:none!important}
 .sound-volume-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:700}
-.sound-volume-value{font:12px monospace;color:var(--sound-accent);font-variant-numeric:tabular-nums}
+.sound-volume-value,.sound-effects-value{font:12px monospace;color:var(--sound-accent);font-variant-numeric:tabular-nums}
+.sound-volume-limits+.sound-volume-heading{margin-top:14px}
 .sound-control .sound-volume{display:block;appearance:none;width:100%;height:32px;margin:8px 0 0;padding:0;border:0;cursor:pointer;touch-action:none;background:transparent;accent-color:var(--sound-accent)}
 .sound-volume::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(to right,var(--sound-accent) var(--sound-volume),var(--sound-track) var(--sound-volume))}
 .sound-volume::-moz-range-track{height:5px;border-radius:3px;background:var(--sound-track)}

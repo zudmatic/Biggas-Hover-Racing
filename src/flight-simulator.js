@@ -15,6 +15,7 @@ import {createFlightOil} from './flight-oil.js';
 import {createFlightFxControls} from './flight-fx-controls.js';
 import './flight-simulator.css';
 import {raceAudio} from './race-audio.js';
+import {gameMusic} from './game-music.js';
 import {soundControlMarkup,mountSoundControl} from './sound-control.js';
 import {shipConfig} from './ship-catalog.js';
 import {createCircuitSky,createSpeedAtmosphere,speedCameraProfile} from './flight-atmosphere.js';
@@ -26,6 +27,7 @@ import {EYE_CLOSED} from './ship-eyes.js';
 export async function createFlightSimulator({entryTransition}={}){
   const base=import.meta.env.BASE_URL,query=new URLSearchParams(location.search),reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const mapConfig=circuitMap(query.get('map')),selectedShip=shipConfig(query.get('vehicle')),choice=pilotChoice(query),selectedPilot=pilotConfig(choice.pilot),pilotParams=pilotQuery(choice);
+  gameMusic.setRaceTrack(mapConfig.id==='desert-valley'?'desert':'race');
   document.title=`Biggas Hover Racing · ${mapConfig.name} ${mapConfig.number}`;
   const canonical=new URL(location.href);canonical.searchParams.set('map',mapConfig.id);canonical.searchParams.set('vehicle',selectedShip.id);canonical.searchParams.delete('seed');canonical.searchParams.delete('mode');history.replaceState(null,'',canonical);
   document.body.innerHTML=`<main class="flight-app" data-ready="false" data-phase="loading">
@@ -196,6 +198,7 @@ export async function createFlightSimulator({entryTransition}={}){
     const ctx=mapBase.getContext('2d');
     ctx.fillStyle=mapPalette.dark;ctx.fillRect(0,0,192,192);ctx.strokeStyle=mapPalette.paper;ctx.lineWidth=7;ctx.setLineDash([]);ctx.beginPath();
       landscape.samples.forEach((sample,i)=>{const x=(sample.position[0]/mapHalf()+1)*96,y=(sample.position[2]/mapHalf()+1)*96;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.closePath();ctx.stroke();ctx.lineWidth=1;ctx.strokeStyle=mapPalette.dark;ctx.stroke();mapBitmap=mapBase;
+    if(landscape.shortcut){ctx.strokeStyle=mapPalette.yellow;ctx.lineWidth=3;ctx.setLineDash([3,2]);ctx.beginPath();landscape.shortcut.forEach((p,i)=>{const x=(p[0]/mapHalf()+1)*96,y=(p[2]/mapHalf()+1)*96;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();ctx.setLineDash([]);}
   }
 
   function drawMap(){
@@ -219,6 +222,8 @@ export async function createFlightSimulator({entryTransition}={}){
   async function loadWorld(){
     const next=await createCircuitWorld({map:mapConfig.id,mobile,fxMaterialFactory:gpuModule?.createSmokeMaterial,anisotropy:Math.min(4,renderer.getMaxAnisotropy()),onProgress:value=>{$('.flight-loader progress').value=value;entryTransition?.progress(value);}});
     world=next;landscape=next.landscape;scene.add(world.root);lighting.setTrack(landscape);world.textures.applyRoot(lighting.root);
+    await world.initWater?.(lighting.sun);
+    app.dataset.water=world.water?'animated':'none';app.dataset.vegetationInstances=String(world.instanceCount??0);
     fxControls=createFlightFxControls(world.fx,message=>{notice(message);if(phase==='flying')canvas.focus({preventScroll:true});});
     setText($('#flight-seed'),`${Math.round(landscape.length)} M · HOVER`);buildMap();resetFlight();updateCamera(1,true);
   }
@@ -293,6 +298,7 @@ export async function createFlightSimulator({entryTransition}={}){
     if(phase!=='paused')worldTime+=dt;
     const driving=phase==='flying'||phase==='intro';
     world.update(worldTime,reduced.matches,{state,phase,night:lighting.night,camera,scale:modelScale,dt:driving?dt:0});
+    if(world.water)app.dataset.waterPhase=world.water.phase.value.toFixed(3);
     lighting.update(state,worldTime,{dt,reducedMotion:reduced.matches,paused:phase==='paused'});
     skyWorld.update(camera,worldTime,{night:lighting.night,dt,reducedMotion:reduced.matches});
     speedAtmosphere.update(camera,state,simulationTime,{dt,phase,reducedMotion:reduced.matches});

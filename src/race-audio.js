@@ -1,15 +1,17 @@
 import {gameMusic} from './game-music.js';
 // Procedural hovercraft sound: no downloads, and no audio context before a gesture.
 const preferenceKey='biggas-hover-racing-sound';
+const volumeKey='biggas-hover-racing-effects-volume';
 const clamp=(value,min=0,max=1)=>Math.min(max,Math.max(min,value));
 export const soundIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4Z"/><path class="sound-waves" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/><path class="sound-muted" d="m16 9 6 6m0-6-6 6"/></svg>';
 
 export function createRaceAudio({music=null}={}){
-  let context=null,master,engineBus,compressor,noise,hum,turbine,harmonic,air,boost,drift;
-  let phase='loading',enabled=true,disposed=false,lastImpact=-Infinity,lastCue='',lastCountdown=0;
+  let context=null,master,engineBus,spatialBus,compressor,noise,hum,turbine,harmonic,air,boost,drift;
+  let phase='loading',enabled=true,volume=1,disposed=false,lastImpact=-Infinity,lastCue='',lastCountdown=0;
   const loops=[],voices=new Set();
   const supported=typeof window!=='undefined'&&!!(window.AudioContext||window.webkitAudioContext);
   try{enabled=localStorage.getItem(preferenceKey)!=='off';}catch{}
+  try{const saved=localStorage.getItem(volumeKey);if(saved!==null&&saved.trim()!==''&&Number.isFinite(Number(saved)))volume=clamp(Number(saved));}catch{}
   music?.setEnabled(enabled);
   const smooth=(param,value,time=.08)=>param.setTargetAtTime(value,context.currentTime,time);
   function gain(value,destination){const node=context.createGain();node.gain.value=value;node.connect(destination);return node;}
@@ -25,7 +27,7 @@ export function createRaceAudio({music=null}={}){
     const AudioContext=window.AudioContext||window.webkitAudioContext;
     context=new AudioContext({latencyHint:'interactive'});
     compressor=context.createDynamicsCompressor();compressor.threshold.value=-16;compressor.knee.value=18;compressor.ratio.value=4;compressor.attack.value=.005;compressor.release.value=.15;
-    compressor.connect(context.destination);master=gain(0,compressor);engineBus=gain(0,master);
+    compressor.connect(context.destination);master=gain(0,compressor);engineBus=gain(0,master);spatialBus=gain(0,master);
     noise=context.createBuffer(1,context.sampleRate*2,context.sampleRate);
     const samples=noise.getChannelData(0);for(let i=0;i<samples.length;i++)samples[i]=Math.random()*2-1;
     hum=oscillator('triangle',48,.16,engineBus);
@@ -37,8 +39,9 @@ export function createRaceAudio({music=null}={}){
   }
   function applyLevels(){
     if(!context||disposed)return;
-    smooth(master.gain,enabled?.55:0,.035);
+    smooth(master.gain,enabled?.55*volume:0,.035);
     smooth(engineBus.gain,document.hidden?0:phase==='flying'||phase==='intro'?.85:phase==='countdown'?.35:0,.045);
+    smooth(spatialBus.gain,!document.hidden&&phase==='flying'?1:0,.035);
   }
   function stopVoices(){
     for(const voice of voices){try{voice.source.stop();}catch{}voice.source.disconnect();voice.level.disconnect();}
@@ -54,6 +57,10 @@ export function createRaceAudio({music=null}={}){
   }
   return {
     get enabled(){return enabled;},
+    get volume(){return volume;},
+    // Spatial effects share this gesture-unlocked context and the master mute.
+    get spatialOutput(){return context&&!disposed?{context,destination:spatialBus,active:enabled&&volume>0&&phase==='flying'&&!document.hidden&&context.state==='running'}:null;},
+    setVolume(value){if(!Number.isFinite(value))return;volume=clamp(value);try{localStorage.setItem(volumeKey,String(volume));}catch{}applyLevels();},
     get supported(){return supported&&!disposed;},
     get status(){return {enabled,supported,phase,context:context?.state??'uninitialized',voices:voices.size,lastCue};},
     // Call synchronously from click / keydown, before loading the circuit.
@@ -109,7 +116,7 @@ export function createRaceAudio({music=null}={}){
     dispose(){
       if(disposed)return;disposed=true;music?.dispose();stopVoices();
       loops.forEach(source=>{try{source.stop();}catch{}source.disconnect();});
-      if(context){master?.disconnect();compressor?.disconnect();context.close().catch(()=>{});}
+      if(context){spatialBus?.disconnect();master?.disconnect();compressor?.disconnect();context.close().catch(()=>{});}
     },
   };
 }

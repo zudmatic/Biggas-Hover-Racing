@@ -30,11 +30,11 @@ export function createSurfaceIndex(meshes){
   };
 }
 
-export function createCityCollision(root){
+export function createCityCollision(root,{isFloor=mesh=>/COL_TRACK|COL_STREET_CURB|COL_CITY_SIDEWALK|COL_ENV_TERRAIN_(CITY|DISTANT)/.test(mesh.name),isSolid=()=>true,exploration=false}={}){
   const floor=[],solids=new THREE.Group();root.updateMatrixWorld(true);
   root.traverse(mesh=>{if(!mesh.isMesh)return;
-    if(/COL_TRACK|COL_STREET_CURB|COL_CITY_SIDEWALK|COL_ENV_TERRAIN_(CITY|DISTANT)/.test(mesh.name))floor.push(mesh);
-    else{const proxy=new THREE.Mesh(mesh.geometry,mesh.material);proxy.matrix.copy(mesh.matrixWorld);proxy.matrixAutoUpdate=false;solids.add(proxy);}
+    if(isFloor(mesh))floor.push(mesh);
+    else if(isSolid(mesh)){const proxy=new THREE.Mesh(mesh.geometry,mesh.material);proxy.matrix.copy(mesh.matrixWorld);proxy.matrixAutoUpdate=false;solids.add(proxy);}
   });
   const surfaceHeight=createSurfaceIndex(floor),octree=new Octree().fromGraphNode(solids),hull=new Capsule(),normal=new THREE.Vector3();
   function step(state,dt,landscape,previous){
@@ -58,10 +58,10 @@ export function createCityCollision(root){
       }
     }
     const road=landscape.roadAt(state.x,state.z),offRoad=road.distanceToRoad>road.width/2+1;
-    if(offRoad){const drag=Math.exp(-dt*.65);state.vx*=drag;state.vz*=drag;}
+    if(offRoad&&!exploration){const drag=Math.exp(-dt*.65);state.vx*=drag;state.vz*=drag;}
     state.offTrackTime=offRoad?(state.offTrackTime??0)+dt:0;
     const floorY=surfaceHeight(state.x,state.z);
-    if(floorY!==null){
+    if(floorY!==null&&!state.airborne){
       // A lateral collision can move the ship onto a different surface height.
       // Preserve suspension momentum; only correct unsafe clearance.
       state.hover=THREE.MathUtils.clamp(state.y-floorY,MIN_HOVER_HEIGHT,MAX_HOVER_HEIGHT);
@@ -69,7 +69,7 @@ export function createCityCollision(root){
       if(state.y>floorY+MAX_HOVER_HEIGHT)state.hoverVelocity=Math.min(0,state.hoverVelocity);
       state.y=floorY+state.hover;
     }
-    state.recoverNeeded=floorY===null||road.distanceToRoad>70||state.offTrackTime>10;
+    state.recoverNeeded=floorY===null||(!exploration&&(road.distanceToRoad>70||state.offTrackTime>10));
     state.speed=Math.hypot(state.vx,state.vz);
   }
   const cameraRay=new THREE.Ray(),cameraDelta=new THREE.Vector3();
