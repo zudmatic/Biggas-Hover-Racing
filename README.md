@@ -4,6 +4,85 @@ Juego de carreras hover en 3D con Zud y Zudmatic, las naves 033, Oliva 037 y Nó
 
 ## Desarrollo
 
+Desert Valley está disponible en `http://localhost:5173/?selection=map&map=desert-valley`.
+La escena actual mide 875 × 875 m; la vuelta principal mide 2.293,53 m y la
+vuelta por el atajo 2.177,01 m. Carga `desert-valley-static-game.glb` y adapta
+`driving-guides.json` al contrato de conducción. Conserva los assets anteriores,
+el asfalto/arena horneado, los colores de vértice y las 747 instancias del export
+actual, repartidas en celdas de 200 m y lotes de hasta 128. Las seis rampas son
+superficies conducibles; la inclinación de la nave sigue su pendiente.
+
+La largada está sobre la calzada frente a la estación de servicio, mirando hacia
+la bifurcación del camino con obstáculos. La ruta comienza allí; los checkpoints
+siguen ese orden y están en tramos comunes para permitir tanto el atajo como el
+desvío de asfalto. Cruzar la largada por primera vez no completa una vuelta.
+
+Los saltos usan ajustes exclusivos de Desert Valley: gravedad de 19 m/s² al
+subir y 30 m/s² al caer, impulso vertical limitado a 14 m/s y un rebote de
+aterrizaje amortiguado durante 0,42 s. El resto de circuitos conserva su manejo.
+La altura necesaria para superar cada vagón queda pendiente de la prueba manual.
+
+El GLB conserva su quad de dos triángulos. En runtime se genera una malla para
+olas largas de hasta 0,38 m, descartando celdas secas y reduciendo el movimiento
+junto a la costa. La física y el shader comparten el campo de olas; caminos,
+puente y rampas conservan prioridad como superficie de conducción. El preset
+reduce el patrón repetitivo y los brillos sobre el río grande. La espuma usa un
+mapa de distancias 512² generado una vez desde las intersecciones de esta costa.
+
+Al sobrevolar el agua aparecen manchas de espuma irregular, gotas con caída y
+pequeños abanicos de salpicadura lateral. Reutilizan el dither del propulsor y
+las siluetas procedurales del derrape, con tonos claros sin emisión luminosa.
+Los anillos de la primera versión se reemplazaron por estos efectos. Dependen
+de velocidad y altura, dejan de emitir a 3,2 m por defecto y usan una máscara
+conservadora para excluir tierra/caminos. Son tres pools reutilizables: hasta
+688 triángulos de efectos en escritorio y 352 en móvil. Se congelan en pausa, se limpian al
+recuperar/reiniciar y se omiten con movimiento reducido. La malla del agua tiene
+un techo de 32.768 triángulos en escritorio y 12.800 en móvil antes de descartar
+celdas secas; el conteo efectivo se expone en `data-water-triangles` y los efectos
+en `data-water-effect-triangles` del elemento `.flight-app`.
+
+En el panel DialKit existente, **Agua · espuma y salpicones** permite ajustar
+intensidad/densidad, ancho/persistencia de espuma, tamaño/altura/alcance lateral
+de las gotas, distancia al agua y respuesta a velocidad. Las velocidades están
+en m/s, las alturas en metros y la persistencia en segundos. `Trama` controla
+el dither (0 lo elimina). `Tamaño lento`/`Tamaño rápido` van de 0,1 a 0,6 por
+defecto; `Altura salpicón` conserva la altura lenta de 1,1 m y `Altura máxima`
+sube a 2,6 m. Interpolan suavemente desde `Velocidad mínima` (3 m/s por defecto)
+hasta el límite real de turbo, 72 m/s (259,2 km/h), sin depender del botón turbo.
+La respuesta de densidad conserva sus controles y no multiplica el tamaño.
+Los ajustes se guardan en este navegador durante
+desarrollo; producción usa los valores del código. La base está en
+`src/water/hover-effects.js` y el material en `src/water/hover-material.js`.
+La versión anterior a esta iteración está en `output/water-fx-before-20261027/`.
+
+Ajustes centrales: `DESERT_START` en `src/desert-route.js`, `DESERT_JUMPS` en
+`src/desert-handling.js`, `DESERT_WATER_PRESET` en `src/water/preset.ts`,
+`WATER_WAVES` en `src/water/waves.ts`, `RIVER_SURFACE` en
+`src/water/desert-surface.js` y `HOVER_WATER_FX` en `src/water/hover-effects.js`.
+Las versiones previas de esta pasada están en
+`output/desert-polish-before-20261027/`. Estos ajustes son locales y no se
+publicaron en la PR de la integración inicial.
+
+La locomotora y los 40 vagones de `freight-train-40-game.glb` recorren `railway.json`
+por separado, con 40 enganches móviles y colisiones que consideran la altura.
+La primera formación sale a los 8 s; las siguientes alternan dirección cada
+45–60 s desde la salida anterior, a 216 km/h y esperando que salga toda la cola.
+Los parámetros están en `TRAIN_SETTINGS` (`src/desert-train.js`). Las rampas
+permiten despegar; la posibilidad de superar el tren queda para ajuste jugando.
+
+Los dos MP3 adjuntos están en `public/audio/train/`: traqueteo de 20 s en loop y
+bocina de 5 s, ambos estéreo a 48 kHz. Hay un emisor en la parte más cercana del
+tren y otro en la locomotora, con paneo 3D y silencio más allá de 150/210 m.
+Usan el contexto de audio desbloqueado por gesto, el mute general y el volumen
+de efectos. Pausa/reinicio/salida detienen sus fuentes. Midnight Noir continúa
+como música del mapa. Procedencia: `public/audio/train/README.md`.
+
+Conteos de los GLB por sus accessors: escena 116.384 triángulos con instancias;
+vehículos del tren 44.940 más 480 de enganches dinámicos. No se ejecutaron
+tests, build, lint, typecheck ni el juego para esta integración, por pedido.
+En desarrollo, `&testSpawn=river` o `&testSpawn=bridge` permiten probar el río o el salto
+directamente. `&renderer=webgl2` prueba el fallback y `&comic=0` muestra los colores base.
+
 ```sh
 npm ci
 npm run dev
@@ -71,7 +150,7 @@ Durante la carrera, el panel DialKit de abajo a la izquierda permite ajustar **E
 | M | Sonido |
 | Escape | Pausar / volver |
 
-En el menú de pausa, **Opciones → Sonido** abre un slider de volumen de música (0–100%) y la opción de silenciar todo. El volumen se guarda entre visitas y se mantiene al entrar a la carrera. La tecla M sigue activando o silenciando todo el sonido.
+En el menú de pausa, **Opciones → Sonido** abre controles independientes de música y efectos (0–100%) y la opción de silenciar todo. Los volúmenes se guardan entre visitas y se mantienen al entrar a la carrera. La tecla M sigue activando o silenciando todo el sonido.
 
 En pausa, **Opciones → Gráficos** permite elegir **Automático**, **Mayor calidad** o **Más fluidez**. El modo predeterminado es **Mayor calidad**, que conserva la resolución, el suavizado y el brillo originales. Automático ajusta la resolución del mundo 3D cuando hay caídas sostenidas de FPS; los textos y controles mantienen su nitidez. La preferencia se guarda entre visitas. Los shaders se preparan durante la carga y las sombras se actualizan a 30 Hz en los modos de menor costo.
 

@@ -41,6 +41,7 @@ async function main(){
   const failure=results.find(r=>r.status==='rejected');if(failure){for(const r of results)if(r.status==='fulfilled')r.value.dispose();renderer.dispose();throw failure.reason;}
   const [world,ship]=results.map(r=>r.value);scene.add(world.root,ship.root);ship.root.scale.setScalar(.75);
   const lighting=createCircuitLighting(scene,{headlightMounts:ship.config.headlights});lighting.setTrack(world.landscape);world.textures.applyRoot(lighting.root);
+  if(!legacy)await world.initWater?.(lighting.sun);
   const baseline=createBaseMaterials(scene),state={...createHoverState(world.landscape),modelScale:.75};
   const comicStyle=createComicStyle();
   const comicMaterials=legacy?null:createComicMaterials(scene,comicStyle);

@@ -12,6 +12,7 @@ import {createFlightOil} from './flight-oil.js';
 import {createFlightFxControls} from './flight-fx-controls.js';
 import './flight-simulator.css';
 import {raceAudio} from './race-audio.js';
+import {gameMusic} from './game-music.js';
 import {soundControlMarkup,mountSoundControl} from './sound-control.js';
 import {shipConfig} from './ship-catalog.js';
 import {createCircuitSky,createSpeedAtmosphere,speedCameraProfile} from './flight-atmosphere.js';
@@ -20,6 +21,9 @@ import {createFlightPerformance} from './flight-performance.js';
 export async function createFlightSimulator({entryTransition}={}){
   const base=import.meta.env.BASE_URL,query=new URLSearchParams(location.search),reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const mapConfig=circuitMap(query.get('map')),selectedShip=shipConfig(query.get('vehicle')),choice=pilotChoice(query),selectedPilot=pilotConfig(choice.pilot),pilotParams=pilotQuery(choice);
+  const naturalDesert=mapConfig.id==='desert-valley',initialComic=query.has('comic')?query.get('comic')!=='0':!naturalDesert;
+  const artReview=import.meta.env.DEV&&naturalDesert&&query.has('artView');
+  gameMusic.setRaceTrack(mapConfig.id==='desert-valley'?'desert':'race');
   document.title=`Biggas Hover Racing · ${mapConfig.name} ${mapConfig.number}`;
   const canonical=new URL(location.href);canonical.searchParams.set('map',mapConfig.id);canonical.searchParams.set('vehicle',selectedShip.id);canonical.searchParams.delete('seed');canonical.searchParams.delete('mode');history.replaceState(null,'',canonical);
   document.body.innerHTML=`<main class="flight-app" data-ready="false" data-phase="loading">
@@ -30,7 +34,7 @@ export async function createFlightSimulator({entryTransition}={}){
         ${soundControlMarkup('flight-sound').replace('</button>','<span>Sonido</span></button>')}
         <button id="flight-camera" disabled aria-label="Cambiar cámara">Cámara <span id="flight-camera-state">Cercana</span></button>
         <button id="flight-light" aria-label="Iluminación nocturna" aria-pressed="false">Iluminación <span id="flight-light-state">Día</span></button>
-        <button id="flight-comic" aria-pressed="${query.get('comic')!=='0'}" aria-label="Cómic">Estilo cómic <span id="flight-comic-state">${query.get('comic')!=='0'?'Activado':'Desactivado'}</span></button>
+        <button id="flight-comic" aria-pressed="${initialComic}" aria-label="Cómic">Estilo cómic <span id="flight-comic-state">${initialComic?'Activado':'Desactivado'}</span></button>
         <div class="flight-quality"><label for="flight-quality">Gráficos</label><select id="flight-quality"><option value="auto">Automático</option><option value="high">Mayor calidad</option><option value="performance">Más fluidez</option></select><span id="flight-quality-state">Se adapta a tu equipo</span></div>
         <a class="flight-hangar-link" href="${base}spaceship.html?vehicle=${selectedShip.id}&${pilotParams}">Ir al hangar <span aria-hidden="true">→</span></a>
       </div></details></div><nav class="flight-exit-links" aria-label="Salir del circuito"><a id="flight-map-selection" href="${base}?selection=map&map=${mapConfig.id}&vehicle=${selectedShip.id}&${pilotParams}">Selección de mapa <span aria-hidden="true">→</span></a><a id="flight-main-menu" href="${base}">Volver al menú principal <span aria-hidden="true">⌂</span></a></nav></section>
@@ -52,12 +56,14 @@ export async function createFlightSimulator({entryTransition}={}){
   const mobile=matchMedia('(max-width:760px), (pointer:coarse)').matches;
   renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.25:1.5));renderer.setSize(innerWidth,innerHeight);
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
+  if(naturalDesert)renderer.toneMappingExposure=.98;
+  renderer.info.autoReset=false;
   const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xb6c6bd,220,1100);scene.background=new THREE.Color(0xb6c6bd);
   scene.matrixWorldAutoUpdate=false;
   const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.15,7000);
   const lighting=createCircuitLighting(scene,{mobile,headlightMounts:selectedShip.headlights});
   const skyWorld=createCircuitSky(scene,{mobile,map:mapConfig.id}),speedAtmosphere=createSpeedAtmosphere(scene,{mobile});
-  let comicEnabled=query.get('comic')!=='0';
+  let comicEnabled=initialComic;
   let shadowElapsed=Infinity,shadowInterval=1/30;
   const performanceControl=createFlightPerformance({width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio,mobile,onChange:applyQuality});
   function applyQuality(settings){
@@ -111,7 +117,7 @@ export async function createFlightSimulator({entryTransition}={}){
   }
   function pause(){if(phase==='flying')setPhase('paused');else if(phase==='paused'){raceAudio.unlock();setPhase('flying');}}
   function recover(manual=false){
-    world.fx.reset();gpuGraphics?.reset();
+    world.fx.reset();world.resetWaterFx?.();gpuGraphics?.reset();
     oil?.cancelPour();raceAudio.cue('recover');const checkpoint=recoverHover(landscape,gateIndex,world.surfaceHeight);
     Object.assign(state,createHoverState(landscape),checkpoint,{speed:0,pitch:0,roll:0,throttle:0,boosting:false,cooldown:1.2});
     notice(manual?'Nave recuperada':'Fuera de pista · nave recuperada');
@@ -119,6 +125,7 @@ export async function createFlightSimulator({entryTransition}={}){
   }
   function input(){return {reducedMotion:reduced.matches,turn:THREE.MathUtils.clamp(Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'))+touch.turn,-1,1),throttle:Number(keys.has('KeyW')||touch.accelerate)-Number(keys.has('KeyS')),boost:keys.has('ShiftLeft')||keys.has('ShiftRight')||touch.boost,brake:keys.has('Space')||touch.brake,drift:keys.has('KeyE')||touch.drift};}
   function step(dt){
+    if(artReview){if(perfReview?.trainRunning)world.train.step(dt);return;}
     if(phase!=='flying')return;
     renderPose.capture(state);
     simulationTime+=dt;
@@ -136,6 +143,7 @@ export async function createFlightSimulator({entryTransition}={}){
   }
   function syncShip(viewState=state){const state=viewState;if(!vehicle)return;vehicle.root.position.set(state.x,state.y,state.z);vehicle.root.rotation.set(-state.pitch,state.yaw,reduced.matches?0:state.roll,'YXZ');}
   function updateCamera(dt,snap=false,viewState=state){
+    if(import.meta.env.DEV&&cameraMode===3)return;
     const state=viewState;
     if(snap)renderPose.reset(state);
     forward.set(Math.sin(state.yaw),0,Math.cos(state.yaw));
@@ -164,6 +172,7 @@ export async function createFlightSimulator({entryTransition}={}){
     const ctx=mapBase.getContext('2d');
     ctx.fillStyle=mapPalette.dark;ctx.fillRect(0,0,192,192);ctx.strokeStyle=mapPalette.paper;ctx.lineWidth=7;ctx.setLineDash([]);ctx.beginPath();
       landscape.samples.forEach((sample,i)=>{const x=(sample.position[0]/mapHalf()+1)*96,y=(sample.position[2]/mapHalf()+1)*96;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.closePath();ctx.stroke();ctx.lineWidth=1;ctx.strokeStyle=mapPalette.dark;ctx.stroke();mapBitmap=mapBase;
+    if(landscape.shortcut){ctx.strokeStyle=mapPalette.yellow;ctx.lineWidth=3;ctx.setLineDash([3,2]);ctx.beginPath();landscape.shortcut.forEach((p,i)=>{const x=(p[0]/mapHalf()+1)*96,y=(p[2]/mapHalf()+1)*96;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();ctx.setLineDash([]);}
   }
 
   function drawMap(){
@@ -179,6 +188,8 @@ export async function createFlightSimulator({entryTransition}={}){
     $('.flight-drift').hidden=!state.drifting||phase!=='flying';app.dataset.drifting=String(state.drifting);app.dataset.lighting=lighting.night?'night':'day';app.dataset.headlights=String(lighting.headlightsEnabled);app.dataset.textureFamilies=String(world.textures.count);
     app.dataset.fov=camera.fov.toFixed(2);app.dataset.speedEffect=speedAtmosphere.intensity.toFixed(3);app.dataset.cloudCount=String(skyWorld.cloudCount);
     app.dataset.fps=String(performanceControl.fps);
+    if(world.lod){const l=world.lod.stats;app.dataset.lodLevels=l.levels.join(',');app.dataset.lodCulled=String(l.culled);app.dataset.lodTriangles=String(l.triangles);app.dataset.lodMode=l.mode;app.dataset.vegetationInstances=String(l.vegetation);}
+    app.dataset.look=naturalDesert&&!comicEnabled?'sunlit':'comic';
     app.dataset.fxAir=String(world.fx.stats.air);app.dataset.fxMarks=String(world.fx.stats.marks);app.dataset.fxTime=world.fx.stats.time.toFixed(3);app.dataset.fxStyle=world.fx.style;
     setText($('#flight-quality-state'),performanceControl.fps?`${performanceControl.fps} FPS`:'Se adapta a tu equipo');
     app.dataset.offTrack=String((state.offTrackTime??0)>0);app.dataset.yaw=state.yaw.toFixed(3);app.dataset.pitch=state.pitch.toFixed(3);app.dataset.speed=state.speed.toFixed(2);app.dataset.x=state.x.toFixed(2);app.dataset.y=state.y.toFixed(2);app.dataset.z=state.z.toFixed(2);app.dataset.gate=String(gateIndex);app.dataset.energy=state.energy.toFixed(3);app.dataset.time=simulationTime.toFixed(2);app.dataset.camera=String(cameraMode);app.dataset.comic=String(comicEnabled);app.dataset.hover=(state.y-(world.surfaceHeight(state.x,state.z)??landscape.height(state.x,state.z))).toFixed(3);app.dataset.wallHit=String(state.wallHit);app.dataset.slip=state.slip.toFixed(3);app.dataset.impact=state.impact.toFixed(2);app.dataset.effectsTime=worldTime.toFixed(2);app.dataset.detailCount=String(world.detailCount);
@@ -187,6 +198,9 @@ export async function createFlightSimulator({entryTransition}={}){
   async function loadWorld(){
     const next=await createCircuitWorld({map:mapConfig.id,mobile,fxMaterialFactory:gpuModule?.createSmokeMaterial,anisotropy:Math.min(4,renderer.getMaxAnisotropy()),onProgress:value=>{$('.flight-loader progress').value=value;entryTransition?.progress(value);}});
     world=next;landscape=next.landscape;scene.add(world.root);lighting.setTrack(landscape);world.textures.applyRoot(lighting.root);
+    await world.initWater?.(lighting.sun);
+    app.dataset.water=world.water?'animated':'none';app.dataset.vegetationInstances=String(world.instanceCount??0);
+    if(world.waterStats){app.dataset.waterTriangles=String(world.waterStats.surfaceTriangles);app.dataset.waterEffectTriangles=String(world.waterStats.effectTriangles);}
     fxControls=createFlightFxControls(world.fx,message=>{notice(message);if(phase==='flying')canvas.focus({preventScroll:true});});
     setText($('#flight-seed'),`${Math.round(landscape.length)} M · HOVER`);buildMap();resetFlight();updateCamera(1,true);
   }
@@ -231,12 +245,12 @@ export async function createFlightSimulator({entryTransition}={}){
   window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);performanceControl.resize(innerWidth,innerHeight,devicePixelRatio);});
   reduced.addEventListener('change',()=>{if(state)updateCamera(1,true);});
   try{
-    const results=await Promise.allSettled([createFlightShip(selectedShip.id,{...choice,exhaust:false}),loadWorld()]);const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;vehicle=results[0].value;vehicle.root.scale.setScalar(modelScale);vehicle.setHeadlights(lighting.headlightsEnabled);scene.add(vehicle.root);syncShip();updateCamera(1,true);
+    const worldLoadStarted=performance.now();const results=await Promise.allSettled([createFlightShip(selectedShip.id,{...choice,exhaust:false}),loadWorld()]);const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;app.dataset.worldReadyMs=String(performance.now()-worldLoadStarted);vehicle=results[0].value;vehicle.root.scale.setScalar(modelScale);vehicle.setHeadlights(lighting.headlightsEnabled);scene.add(vehicle.root);syncShip();updateCamera(1,true);
     oil=await createFlightOil({scene,landscape,surfaceHeight:world.surfaceHeight,app,clearInput,onPrepare:prepareOilTest,onNotice:notice,materialFactory:gpuModule?.oilMaterialFactory});oil.reset(state,true);
-    {gpuGraphics=await gpuModule.createFlightWebGPU(renderer,scene,camera,vehicle,oil);gpuGraphics.setQuality(performanceControl.settings);}
+    {gpuGraphics=await gpuModule.createFlightWebGPU(renderer,scene,camera,vehicle,oil,{naturalDesert});gpuGraphics.setQuality(performanceControl.settings);}
     setPhase('loading');loader.hidden=!!entryTransition;setText($('#flight-load-status'),'Preparando gráficos…');
     lighting.update(state,worldTime,{reducedMotion:reduced.matches});skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
-    await renderer.compileAsync(scene,camera);
+    const compileStarted=performance.now();await renderer.compileAsync(scene,camera);app.dataset.compileMs=String(performance.now()-compileStarted);
     loader.hidden=true;
     if(entryTransition){
       // Draw the track before revealing it; driving starts once the cover is gone.
@@ -245,12 +259,29 @@ export async function createFlightSimulator({entryTransition}={}){
       await entryTransition.reveal();
     }
     app.dataset.ready='true';start();if(document.hidden)pause();
+    if(artReview){cameraMode=3;const {mountDesertArtReview}=await import('./desert-art-review.js');mountDesertArtReview({key:query.get('artView'),world,state,camera,vehicle,app});}
   }catch(error){console.error(error);fail('No se pudo cargar el simulador.');return;}
   const clock=new THREE.Clock();
+  const frameTimes=new Float64Array(1200);let frameCursor=0,frameSamples=0,perfReview=null;
+  if(import.meta.env.DEV&&naturalDesert){
+    window.__desertBenchmark={
+      snapshot(){const values=Array.from(frameTimes.subarray(0,frameSamples)).sort((a,b)=>a-b),mean=values.reduce((a,b)=>a+b,0)/Math.max(1,values.length);return {backend:app.dataset.backend,look:app.dataset.look,quality:performanceControl.settings,viewport:[innerWidth,innerHeight],pixelRatio:renderer.getPixelRatio(),frames:values.length,fps:1000/mean,frameMs:mean,p95Ms:values[Math.floor((values.length-1)*.95)]??0,render:{...renderer.info.render},memory:{...renderer.info.memory},lod:{...world.lod.stats,levels:[...world.lod.stats.levels]},position:[state.x,state.y,state.z]};},
+      resetSamples(){frameTimes.fill(0);frameCursor=frameSamples=0;},
+      setLodMode(mode){world.lod.setMode(mode);world.lod.update(state,0,true);},
+      teleport(x,z,yaw=0){Object.assign(state,{x,z,y:(world.surfaceHeight(x,z)??0)+.65,yaw,speed:0,throttle:0,vx:0,vz:0,hoverVelocity:0,airborne:false});clearInput();syncShip();updateCamera(1,true);world.lod.update(state,0,true);},
+      overview(){cameraMode=3;camera.position.set(575,570,650);camera.lookAt(0,15,0);camera.updateMatrixWorld();},
+    };
+  }
+  if(import.meta.env.DEV&&naturalDesert&&query.has('perfReview')){
+    applyQuality({...performanceControl.settings,mode:'measurement',pixelRatio:1,scale:1,samples:true,lite:false,shadowInterval:1/30});
+    const {mountDesertPerformanceReview}=await import('./desert-performance-review.js');
+    perfReview=mountDesertPerformanceReview({app,renderer,benchmark:window.__desertBenchmark,graphics:gpuGraphics,world});
+  }
   let rendering=false;
   async function frame(){
-    if(disposed||rendering)return;rendering=true;try{const rawDelta=clock.getDelta(),dt=Math.min(rawDelta,.1);if(document.hidden||phase==='loading')return;
-    if(phase==='flying')performanceControl.sample(rawDelta*1000);
+    if(disposed||rendering)return;rendering=true;const frameStarted=performance.now();try{const rawDelta=clock.getDelta(),dt=Math.min(rawDelta,.1);if(document.hidden||phase==='loading')return;
+    renderer.info.reset();
+    if(phase==='flying'&&!perfReview)performanceControl.sample(rawDelta*1000);
     accumulator+=dt;while(accumulator>=1/60){step(1/60);accumulator-=1/60;}
     raceAudio.update(state);
     const viewState=phase==='flying'?renderPose.sample(state,accumulator*60):state;
@@ -258,6 +289,7 @@ export async function createFlightSimulator({entryTransition}={}){
     const pilotFrame=Math.floor(simulationTime*24);if(pilotFrame!==lastPilotFrame){vehicle.update(pilotFrame/24,state.speed,state.boosting,reduced.matches,viewState);lastPilotFrame=pilotFrame;}
     if(phase!=='paused')worldTime+=dt;
     world.update(worldTime,reduced.matches,{state,phase,night:lighting.night,camera,scale:modelScale,dt:phase==='flying'?dt:0});
+    if(world.water)app.dataset.waterPhase=world.water.phase.value.toFixed(3);
     lighting.update(state,worldTime,{dt,reducedMotion:reduced.matches,paused:phase==='paused'});
     skyWorld.update(camera,worldTime,{night:lighting.night,dt,reducedMotion:reduced.matches});
     speedAtmosphere.update(camera,state,simulationTime,{dt,phase,reducedMotion:reduced.matches});
@@ -267,11 +299,13 @@ export async function createFlightSimulator({entryTransition}={}){
     scene.updateMatrixWorld(true);camera.updateMatrixWorld();updateHud(performance.now()/1000);
     if(noticeUntil&&performance.now()>noticeUntil){$('.flight-notice').hidden=true;noticeUntil=0;}
     if(gpuGraphics){await gpuGraphics.render({dt,state,phase,comic:comicEnabled,reduced:reduced.matches});app.dataset.boostPalette=gpuGraphics.boost.stats.palette;app.dataset.boostParticles=JSON.stringify({lifetimes:gpuGraphics.boost.stats.particleLifetimes,emitted:gpuGraphics.boost.stats.emittedByLayer});app.dataset.postSamples=String(gpuGraphics.stats.samples);app.dataset.glowSamples=String(gpuGraphics.stats.glowSamples);}
+    if(import.meta.env.DEV&&naturalDesert){frameTimes[frameCursor]=rawDelta*1000;frameCursor=(frameCursor+1)%frameTimes.length;frameSamples=Math.min(frameSamples+1,frameTimes.length);}
     app.dataset.frame=String(Number(app.dataset.frame??0)+1);
+    perfReview?.sample(rawDelta*1000,performance.now()-frameStarted);
     }catch(error){console.error(error);renderer.setAnimationLoop(null);clearInput();fail('Se interrumpió la vista 3D.');}finally{rendering=false;}
   }
   let renderTask=Promise.resolve();
   renderer.setAnimationLoop(()=>{if(!rendering&&!disposed)renderTask=frame();});
   for(const event of ['webglcontextlost','graphicslost'])canvas.addEventListener(event,event=>{event.preventDefault();renderer.setAnimationLoop(null);raceAudio.setPhase('paused');clearInput();fail('Se interrumpió la vista 3D.');});
-  window.addEventListener('pagehide',()=>{disposed=true;renderer.setAnimationLoop(null);renderTask.finally(()=>{gpuGraphics?.dispose();klippCamera.dispose();fxControls?.dispose();oil?.dispose();scaleControl.dispose();soundControl.dispose();raceAudio.dispose();renderer.setAnimationLoop(null);world.dispose();lighting.dispose();skyWorld.dispose();speedAtmosphere.dispose();vehicle.dispose();renderer.dispose();});},{once:true});
+  window.addEventListener('pagehide',()=>{disposed=true;renderer.setAnimationLoop(null);renderTask.finally(()=>{perfReview?.dispose();gpuGraphics?.dispose();klippCamera.dispose();fxControls?.dispose();oil?.dispose();scaleControl.dispose();soundControl.dispose();raceAudio.dispose();renderer.setAnimationLoop(null);world.dispose();lighting.dispose();skyWorld.dispose();speedAtmosphere.dispose();vehicle.dispose();renderer.dispose();});},{once:true});
 }

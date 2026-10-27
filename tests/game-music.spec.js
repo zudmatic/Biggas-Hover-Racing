@@ -11,6 +11,7 @@ function tone(){
 async function fixture(page){
   await page.route('**/__music-test/*.wav',route=>route.fulfill({contentType:'audio/wav',body:tone()}));
   await page.goto('/simulator.html');
+  await expect(page.getByRole('button',{name:'Jugar',exact:true})).toBeVisible();
   await page.evaluate(async()=>{
     const {createGameMusic}=await import('/src/game-music.js');window.players=[];
     window.music=createGameMusic({tracks:{menu:{src:'/__music-test/menu.wav'},race:{src:'/__music-test/race.wav'}},createAudio:()=>{const audio=new Audio();window.players.push(audio);return audio;}});
