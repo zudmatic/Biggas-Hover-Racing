@@ -27,7 +27,7 @@ export async function createBoost(renderer,scene,ship){
   try{for(const system of systems){await system.init();system.stop();scene.add(system.object3D);}}
   catch(error){for(const system of systems)system.dispose();trail.dispose();engine.dispose();flame.material.dispose();lineGeometry.dispose();throw error;}
   const kit=createDialKit('Propulsor · WebGPU',{
-    Llama:true,Motor:true,'Densidad llama':[1,.1,1,.01],Longitud:[4.6,.2,9,.1],Ancho:[1.22,.1,3,.02],Turbulencia:[.4,0,6,.1],'Fade base':[.25,0,.5,.01],'Separación boca':[0,-.3,.5,.01],'Llama mínima':[.7,0,2,.05],'Velocidad escape':[24,4,60,1],'Arrastre aire':[.3,.05,1,.01],'Herencia nave':[1,0,1,.05],
+    Llama:true,Motor:true,'Densidad llama':[1,.1,1,.01],Longitud:[4.6,.2,9,.1],Ancho:[1.22,.1,3,.02],Turbulencia:[.4,0,6,.1],'Fade base':[.25,0,.5,.01],'Separación boca':[0,-.3,.5,.01],'Llama mínima':[.7,0,2,.05],'Retraso curva':[.12,0,.4,.01],'Curva máxima':[14,0,35,1],
     Trama:{type:'select',options:['Apagado','Damero','Dither'],default:'Dither'},
     'Intensidad trama':[.6,0,1,.05],'Tamaño trama':[2,1,8,1],
     'Estela partículas':[8,.5,8,.1],'Seguir nave':[1,0,1,.05],
@@ -66,7 +66,7 @@ export async function createBoost(renderer,scene,ship){
       padPalette.apply(edgeColor,blue?'#42a4ff':'#ff5812');padPalette.apply(engineColor,'#fff1b0',true);
       ship.root.updateMatrixWorld(true);trail.record(time,ship.root);
       engine.update(dt,time,power,{Activo:enabled&&v.Motor,Profundidad:2.25,Intensidad:1.1,Tamaño:1.225,Enfriamiento:.85,Pulsación:.04,'Luz cercana':.5,'Color borde':edgeColor,'Color centro':engineColor});
-      trail.update(time,{Activa:enabled&&v.Llama,Longitud:v.Longitud,Ancho:v.Ancho,Pulsación:.02,Bocas:combineMouths(modelMouths,engine.mouths()),Separación:v['Separación boca'],Mínima:v['Llama mínima'],Escape:v['Velocidad escape'],Arrastre:v['Arrastre aire'],Herencia:v['Herencia nave']},power,7.5,.8);
+      trail.update(time,{Activa:enabled&&v.Llama,Longitud:v.Longitud,Ancho:v.Ancho,Pulsación:.02,Bocas:combineMouths(modelMouths,engine.mouths()),Separación:v['Separación boca'],Mínima:v['Llama mínima'],Retraso:v['Retraso curva'],'CurvaMáx':v['Curva máxima']},power,7.5,.8);
       const rates=[v.Fragmentos?v['Cantidad fragmentos']:0,v.Brasas?v['Cantidad brasas']:0,v['Chispas lineales']?v['Cantidad chispas']:0],speeds=[7.5,12,14],spread=[.33,.64,.22];
       const durations=[v['Duración fragmentos'],v['Duración brasas'],v['Duración chispas']];
       for(let j=0;j<systems.length;j++){

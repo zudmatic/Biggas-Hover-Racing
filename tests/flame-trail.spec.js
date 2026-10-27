@@ -152,3 +152,18 @@ test('glancing wall hit: pushed out sideways, the flame keeps its length and sha
     }
   }
 });
+
+test('turning: the flame stays on the nozzle axis and only its tip lags, within the max bend',()=>{
+  for(const direction of [1,-1]){
+    // Yaw rate 2.5 rad/s on a 12 m circle at 30 m/s, plus a hard drift (travel ≠ heading).
+    const {strips:[rows],ship}=flightRows([[0,0,-2,.24]],(t,s)=>{const yaw=2.5*t*direction;s.rotation.y=yaw;s.position.set(12*direction*(1-Math.cos(yaw)),0,12*Math.sin(yaw*direction)*direction);},{settings:{Retraso:.12,'CurvaMáx':14}});
+    ship.updateMatrixWorld(true);
+    const axis=new THREE.Vector3(0,0,-1).applyQuaternion(ship.quaternion),n=rows.length;
+    const head=rows[Math.round(n*.25)].clone().sub(rows[0]).normalize(),tip=rows[n-1].clone().sub(rows[n-3]).normalize();
+    expect(angle(head,axis)).toBeLessThan(3);
+    expect(angle(tip,axis)).toBeLessThan(14.5);expect(angle(tip,axis)).toBeGreaterThan(3);
+    // The tail trails toward where the axis pointed a moment ago (opposite the turn).
+    const lateral=new THREE.Vector3(1,0,0).applyQuaternion(ship.quaternion);
+    expect(Math.sign(tip.dot(lateral))).toBe(direction);
+  }
+});
