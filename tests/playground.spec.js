@@ -54,3 +54,23 @@ test('playground: follow cameras stay smooth and views glide instead of cutting'
   expect(path.at(-1)).toBeGreaterThan(final*.98);
   expect(errors).toEqual([]);
 });
+
+test('playground: turning state circles at speed / radius, with optional drift',async({page})=>{
+  test.setTimeout(180000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/playground?vehicle=039&backend=webgl2&state=girando');
+  await expect(page.locator('body')).toHaveAttribute('data-ready','true',{timeout:120000});
+  await page.evaluate(()=>{playground.setTurn({radius:14,direction:'izquierda',drift:0});playground.pause(true);});
+  await page.waitForTimeout(500);
+  const before=await page.evaluate(()=>playground.info().ship.yaw);
+  await page.evaluate(()=>playground.step(30));
+  await expect.poll(()=>page.evaluate(()=>playground.info().time),{timeout:20000}).toBeGreaterThan(0);
+  await page.waitForFunction(()=>playground.info().pendingSteps===0,null,{timeout:60000});
+  const after=await page.evaluate(()=>playground.info().ship.yaw),wrap=a=>Math.atan2(Math.sin(a),Math.cos(a));
+  expect(wrap(after-before)).toBeCloseTo(30/14*.5,1);
+  // Drift turns the nose into the turn by the given angle, on top of the travel heading.
+  await page.evaluate(()=>playground.setTurn({drift:20}));await page.evaluate(()=>playground.step(1));
+  await page.waitForFunction(()=>playground.info().pendingSteps===0,null,{timeout:60000});
+  const info=await page.evaluate(()=>playground.info());
+  expect(wrap(info.ship.yaw-info.ship.travel)).toBeCloseTo(20*Math.PI/180,2);
+  expect(errors).toEqual([]);
+});

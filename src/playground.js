@@ -33,7 +33,8 @@ const VIEWS={
   arriba:{label:'Arriba',camera:[0,11,-.6],target:[0,0,0]},
   frontal:{label:'Frontal',camera:[0,1.6,7.5],target:[0,.9,0]},
 };
-// Speed is a factor of the "Velocidad" dial; "wall" pins the ship and shakes it against the barrier.
+// Speed is a factor of the "Velocidad" dial; "wall" pins the ship and shakes it against the barrier;
+// "turn" leaves the track and circles at Radio giro, nose turned into the curve by Deriva degrees.
 const STATES={
   parada:{label:'Parada',mode:'Reposo',speed:0},
   acelerando:{label:'Acelerando',mode:'Aceleración',speed:1},
@@ -41,6 +42,7 @@ const STATES={
   'contra-muro':{label:'Contra muro',mode:'Reposo',speed:0,wall:true},
   frenando:{label:'Frenando',mode:'Aceleración',speed:.5,braking:true},
   derrape:{label:'Derrape',mode:'Aceleración',speed:1,drift:true},
+  girando:{label:'Girando',mode:'Aceleración',speed:1,turn:true},
   soltar:{label:'Soltar',mode:'Soltar',speed:0},
 };
 const byLabel=(table,label)=>Object.keys(table).find(id=>table[id].label===label);
@@ -81,7 +83,7 @@ async function main(){
   },{id:'playground-camera',persist:false,onAction:()=>frameShip()});
   const stateKit=createDialKit('Estado nave',{
     Estado:{type:'select',options:Object.values(STATES).map(s=>s.label),default:STATES[query.get('state')]?.label??'Acelerando'},
-    Velocidad:[30,0,80,1],'Mover nave':true,'Activar placas':false,'VFX activos':query.get('vfx')!=='off',
+    Velocidad:[30,0,80,1],'Radio giro':[14,4,60,1],Sentido:{type:'select',options:['Izquierda','Derecha'],default:'Izquierda'},Deriva:[0,-30,40,1],'Mover nave':true,'Activar placas':false,'VFX activos':query.get('vfx')!=='off',
     Aceite:{type:'action',label:'Soltar aceite'},Limpiar:{type:'action',label:'Limpiar efectos'},
   },{id:'playground-state',persist:false,onAction:action=>{if(action==='Aceite')oil.drop();else if(action==='Limpiar')clearFx();}});
   const timeKit=createDialKit('Tiempo',{
@@ -106,7 +108,25 @@ async function main(){
 
   const viewId=()=>byLabel(VIEWS,viewKit.values.Vista),stateId=()=>byLabel(STATES,stateKit.values.Estado);
   function clearFx(){boost.clear();smoke.reset();oil.clear();}
+  // Turning rig: travel heading advances at speed / radius around a centre anchored where the turn began.
+  const circle={heading:0,cx:0,cz:0,y:0,key:''};
+  function anchorCircle(){
+    const v=stateKit.values,direction=v.Sentido==='Izquierda'?1:-1,radius=v['Radio giro'];
+    circle.heading=circle.key?circle.heading:state.yaw;circle.key=`${radius}|${direction}`;
+    circle.cx=state.x+direction*radius*Math.cos(circle.heading);circle.cz=state.z-direction*radius*Math.sin(circle.heading);circle.y=state.y;
+  }
   function place(){
+    const v=stateKit.values;
+    if(STATES[stateId()].turn){
+      const direction=v.Sentido==='Izquierda'?1:-1,radius=v['Radio giro'];
+      if(circle.key!==`${radius}|${direction}`)anchorCircle();
+      state.x=circle.cx-direction*radius*Math.cos(circle.heading);state.z=circle.cz+direction*radius*Math.sin(circle.heading);
+      state.y=(world.surfaceHeight(state.x,state.z)??circle.y-.65)+.65;
+      state.yaw=circle.heading+direction*THREE.MathUtils.degToRad(v.Deriva);state.pitch=0;
+      ship.root.position.set(state.x,state.y,state.z);ship.root.rotation.set(0,state.yaw,0,'YXZ');ship.root.updateMatrixWorld();
+      return;
+    }
+    circle.key='';
     const road=world.landscape.atDistance(route);
     state.x=road.x;state.z=road.z;state.y=(world.surfaceHeight(road.x,road.z)??road.y)+.65;
     // Heading from a chord across the polyline: segment directions jump at every sample, the chord turns continuously.
@@ -139,9 +159,14 @@ async function main(){
   function info(){
     const s=STATES[stateId()],local=ship.root.worldToLocal(camera.position.clone());
     return {view:viewId(),state:stateId(),mode:s.mode,speed:state.speed,time,paused:timeKit.values.Pausa,power:boost.stats.power,palette:boost.stats.palette,
-      cameraLocal:{x:local.x,y:local.y,z:local.z},camera:camera.position.toArray(),ship:{position:ship.root.position.toArray(),yaw:state.yaw},frame:Number(document.body.dataset.frame??0),backend};
+      cameraLocal:{x:local.x,y:local.y,z:local.z},camera:camera.position.toArray(),ship:{position:ship.root.position.toArray(),yaw:state.yaw,travel:STATES[stateId()].turn?circle.heading:state.yaw},pendingSteps,frame:Number(document.body.dataset.frame??0),backend};
   }
-  window.playground={views:Object.keys(VIEWS),states:Object.keys(STATES),setView,setState,info,clearFx,
+  function setTurn({radius,direction,drift}={}){
+    if(radius!==undefined)stateKit.setValue('Radio giro',radius);
+    if(direction!==undefined)stateKit.setValue('Sentido',direction==='derecha'?'Derecha':'Izquierda');
+    if(drift!==undefined)stateKit.setValue('Deriva',drift);
+  }
+  window.playground={views:Object.keys(VIEWS),states:Object.keys(STATES),setView,setState,setTurn,info,clearFx,
     pause:(on=true)=>timeKit.setValue('Pausa',on),step:(count=1)=>{timeKit.setValue('Pausa',true);pendingSteps+=count;}};
 
   const unsubscribers=[
@@ -183,7 +208,8 @@ async function main(){
       if(t.Pausa&&pendingSteps>0){dt=1/60;pendingSteps--;}
       time+=dt;
       const s=STATES[stateId()],v=stateKit.values,speed=s.speed*v.Velocidad,previousPadPosition={x:state.x,y:state.y,z:state.z};
-      if(v['Mover nave']&&speed>0)route=(route+dt*speed)%world.landscape.length;
+      if(s.turn){if(circle.key)circle.heading+=(v.Sentido==='Izquierda'?1:-1)*dt*speed/v['Radio giro'];}
+      else if(v['Mover nave']&&speed>0)route=(route+dt*speed)%world.landscape.length;
       place();
       if(viewId()==='libre'){delta.subVectors(ship.root.position,lastPosition);camera.position.add(delta);orbit.target.add(delta);}
       lastPosition.copy(ship.root.position);applyView(Math.min(elapsed,.25));

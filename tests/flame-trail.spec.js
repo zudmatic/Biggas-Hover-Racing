@@ -68,3 +68,56 @@ test('pilot flame fades out as power drops to zero',()=>{
   for(let i=1;i<lengths.length;i++)expect(Math.abs(lengths[i]-lengths[i-1])).toBeLessThan(.05*lengths[0]);
   expect(lengths.at(-1)).toBeLessThan(.1*lengths[0]);
 });
+
+// Records 2 s of motion at 60 Hz from pose(t, ship), then returns each strip's row centres (root → tip) in world space.
+function flightRows(nozzles,pose,{power=1,settings={}}={}){
+  const scene=new THREE.Scene(),ship=new THREE.Group(),material=new THREE.MeshBasicMaterial();ship.scale.setScalar(.75);
+  const trail=createFlameTrail(scene,material,nozzles);
+  for(let i=0;i<=120;i++){pose(i/60,ship);trail.record(i/60,ship);}
+  trail.update(2,{Activa:true,Longitud:4.6,Ancho:1.22,Pulsación:0,...settings},power,7.5,0);
+  const strips=scene.children.map(mesh=>{
+    const {position,uv}=mesh.geometry.attributes,rows=[];
+    for(let i=0;i<position.count;i+=2)rows.push({t:uv.getY(i),mid:new THREE.Vector3().fromBufferAttribute(position,i).add(new THREE.Vector3().fromBufferAttribute(position,i+1)).multiplyScalar(.5)});
+    return rows.sort((a,b)=>a.t-b.t).map(r=>r.mid);
+  });
+  trail.dispose();material.dispose();return {strips,ship};
+}
+const arc=rows=>rows.slice(1).reduce((sum,p,i)=>sum+p.distanceTo(rows[i]),0);
+const angle=(a,b)=>THREE.MathUtils.radToDeg(a.angleTo(b));
+
+test('drifting: the flame leaves along the nozzle axis instead of the travel direction',()=>{
+  // Heading +z (exhaust -z) while sliding 35° sideways at 40 m/s.
+  const velocity=new THREE.Vector3(Math.sin(.61),0,Math.cos(.61)).multiplyScalar(40);
+  const {strips:[rows]}=flightRows([[0,0,-2,.24]],(t,ship)=>{ship.position.copy(velocity).multiplyScalar(t);});
+  const root=rows[0],early=rows[Math.round(rows.length*.3)];
+  expect(angle(early.clone().sub(root),new THREE.Vector3(0,0,-1))).toBeLessThan(10);
+});
+
+test('straight flight keeps the flame on the axis at any speed',()=>{
+  for(const speed of [0,30,90]){
+    const {strips:[rows]}=flightRows([[0,0,-2,.24]],(t,ship)=>{ship.position.z=speed*t;});
+    const root=rows[0];for(const p of rows)expect(Math.hypot(p.x-root.x,p.y-root.y)).toBeLessThan(.01);
+  }
+});
+
+test('flame length is measured along its curve, moving or not',()=>{
+  const turning=(t,ship)=>{const yaw=2.5*t;ship.rotation.y=yaw;ship.position.set(12*(1-Math.cos(yaw)),0,12*Math.sin(yaw));};
+  for(const pose of [()=>{},(t,ship)=>{ship.position.z=40*t;},turning]){
+    const {strips:[rows]}=flightRows([[0,0,-2,.24]],pose);
+    expect(arc(rows)).toBeCloseTo(4.6*.75,1);
+  }
+});
+
+test('Bulldog side flames keep their spacing through a turn and never cross',()=>{
+  const nozzles=[[-.88,.66,-2.8,.15],[0,1.23,-3.14,.44],[.88,.66,-2.8,.15]];
+  for(const direction of [1,-1]){
+    // Circle of radius 12 at 30 m/s (yaw rate 2.5 rad/s), turning left (+1) or right (-1).
+    const {strips,ship}=flightRows(nozzles,(t,s)=>{const yaw=2.5*t*direction;s.rotation.y=yaw;s.position.set(12*direction*(1-Math.cos(yaw)),0,12*Math.sin(yaw*direction)*direction);});
+    ship.updateMatrixWorld(true);
+    const local=p=>ship.worldToLocal(p.clone());
+    for(let j=0;j<strips[0].length;j+=6){
+      const left=local(strips[0][j]),right=local(strips[2][j]);
+      expect(right.x-left.x).toBeGreaterThan(.8*1.76);
+    }
+  }
+});
