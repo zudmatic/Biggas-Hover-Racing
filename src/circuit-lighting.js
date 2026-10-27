@@ -2,7 +2,7 @@ import * as THREE from 'three';
 
 // Global sky/ground fill plus a shadowed sun; a bounded pool lights the road
 // near the player. Actual Lambert-compatible lights also work in comic mode.
-export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,1.05,1.7],[.8,1.05,1.7]]}={}){
+export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,1.05,1.7],[.8,1.05,1.7]],underglow=true}={}){
   const root=new THREE.Group();root.name='Iluminación del circuito';scene.add(root);
   const sky=new THREE.HemisphereLight(0xc4dcf2,0x927b59,1.7);
   const sun=new THREE.DirectionalLight(0xffd8a0,3.4);
@@ -12,7 +12,7 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
   root.add(sky,sun,sun.target,fill);
   const lamps=Array.from({length:mobile?3:5},()=>{const light=new THREE.PointLight(0xffca7d,0,24,2);root.add(light);return light;});
   const headlights=headlightMounts.map(([x,y,z])=>{const light=new THREE.SpotLight(0xd8f4ff,0,55,.48,.65,1.2);light.userData.offset=x;light.userData.height=y;light.userData.forward=z;root.add(light,light.target);return light;});
-  const engine=new THREE.PointLight(0x64e9ff,12,9,2);root.add(engine);
+  const engine=new THREE.PointLight(0x64e9ff,12,9,2);engine.visible=underglow;root.add(engine);
   const fixtures=[],matrix=new THREE.Matrix4();let night=false,blend=0,headlightsEnabled=false;
   function setTrack(track){
     const count=Math.floor(track.length/28),poleGeometry=new THREE.CylinderGeometry(.08,.12,4.5,6),capGeometry=new THREE.BoxGeometry(.7,.16,.7);

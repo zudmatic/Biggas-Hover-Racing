@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import {createDetailInstances} from './detail-instances.js';
 
 const randomFactory=()=>{let seed=34034;return ()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};};
-export function createCircuitDetails(root,landscape,{mobile=false,city=false,islands=!city}={}){
+export function createCircuitDetails(root,landscape,{mobile=false,city=false,islands=!city,underglow=true}={}){
   const random=randomFactory(),details=new THREE.Group();details.name='Circuito · ambiente vivo';root.add(details);
   const clay=new THREE.MeshStandardMaterial({color:0xba572e,roughness:.9}),ivory=new THREE.MeshStandardMaterial({color:0xe3dcc0,roughness:.85}),metal=new THREE.MeshStandardMaterial({color:0x314b47,roughness:.7}),green=new THREE.MeshStandardMaterial({color:0x6c874b,roughness:1}),ink=new THREE.MeshBasicMaterial({color:0x8ad8cc});
   clay.name='Paint · cones';ivory.name='Paint · ivory';metal.name='Metal';green.name='Foliage';ink.name='Light lens';
@@ -74,7 +74,7 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false,isl
   const poolSize=mobile?90:180,positions=new Float32Array(poolSize*3).fill(-999),colors=new Float32Array(poolSize*3),particles=Array.from({length:poolSize},()=>({life:0,x:0,y:0,z:0,vx:0,vy:0,vz:0}));let cursor=0;
   const geometry=new THREE.BufferGeometry();geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));geometry.setAttribute('color',new THREE.BufferAttribute(colors,3));
   const sparks=new THREE.Points(geometry,new THREE.PointsMaterial({size:.11,vertexColors:true,transparent:true,opacity:.85,depthWrite:false}));sparks.name='Estela y chispas';sparks.frustumCulled=false;details.add(sparks);
-  const hover=make(new THREE.RingGeometry(.6,1.2,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x64ddc7,transparent:true,opacity:.18,depthWrite:false,side:THREE.DoubleSide}));hover.castShadow=false;
+  const hover=make(new THREE.RingGeometry(.6,1.2,32).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x64ddc7,transparent:true,opacity:.18,depthWrite:false,side:THREE.DoubleSide}));hover.castShadow=false;hover.visible=underglow;
   function emit(x,y,z,vx,vz,spark=false,drift=false){
     const index=cursor++%poolSize,p=particles[index];Object.assign(p,{x,y,z,vx:vx+(random()-.5)*(spark?5:.8),vy:random()*(spark?5:.45),vz:vz+(random()-.5)*(spark?5:.8),life:spark?.25+random()*.45:.35+random()*.4,spark});
     const c=spark?[1,.65,.15]:drift?[1,.62,.2]:[.42,.8,.73];colors.set(c,index*3);
