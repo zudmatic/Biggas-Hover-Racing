@@ -8,8 +8,8 @@ try{
   const page=await browser.newPage();await page.goto(process.argv[3]??'http://127.0.0.1:5173/');
   const images=await page.evaluate(async({pilot,portrait})=>{
     const THREE=await import('/node_modules/three/build/three.module.js');
-    const {pilotConfig}=await import('/src/pilot-catalog.js');
-    const {createCharacterComic}=await import('/src/character-comic.js');
+    const {pilotConfig}=await import('/src/content/characters/catalog.ts');
+    const {createCharacterComic}=await import('/src/render/materials/character-comic.ts');
     const renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,preserveDrawingBuffer:true});renderer.setSize(640,640);renderer.setPixelRatio(1);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
     const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xffffff,0x747474,3));
     const key=new THREE.DirectionalLight(0xffe2b7,4);key.position.set(-4,7,6);scene.add(key);

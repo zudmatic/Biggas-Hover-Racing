@@ -1,1 +1,1 @@
-export {createEngineCore} from '../../src/vfx/engine-core.js';
+export {createEngineCore} from '../../src/fx/exhaust/engine-core';

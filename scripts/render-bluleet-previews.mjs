@@ -6,9 +6,9 @@ try{
   const page=await browser.newPage();await page.goto(process.argv[2]??'http://127.0.0.1:5173/');
   const images=await page.evaluate(async()=>{
     const THREE=await import('/node_modules/three/build/three.module.js');
-    const {createBluleetModel}=await import('/src/bluleet-model.js');
-    const {createGameRenderer}=await import('/src/game-renderer.js');
-    const {createComicView}=await import('/src/comic-view.js');
+    const {createBluleetModel}=await import('/src/content/characters/bluleet/bluleet-model.ts');
+    const {createGameRenderer}=await import('/src/render/game-renderer.ts');
+    const {createComicView}=await import('/src/render/comic-view.ts');
     const renderer=await createGameRenderer(document.createElement('canvas'),{alpha:true,preserveDrawingBuffer:true});renderer.setSize(640,640);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
     const scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xffffff,0x747474,3));
     const key=new THREE.DirectionalLight(0xffe2b7,4);key.position.set(-4,7,6);scene.add(key);

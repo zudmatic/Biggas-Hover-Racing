@@ -1,1 +1,1 @@
-export {createFlameTrail} from '../../src/vfx/flame-trail.js';
+export {createFlameTrail} from '../../src/fx/exhaust/flame-trail';

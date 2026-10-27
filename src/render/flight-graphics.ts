@@ -1,0 +1,63 @@
+import {createFlameMaterial} from '../fx/exhaust/flame-material';
+import {createFlameTrail} from '../fx/exhaust/flame-trail';
+import {createGameRenderer} from './game-renderer';
+import {attribute} from 'three/tsl';
+import {createBaseMaterials} from './materials/base-materials';
+import {createComicStyle,createComicMaterials} from './materials/comic-materials';
+import {createComicPost} from './post/comic-post';
+import {createDesertPost} from './post/desert-post';
+import {createDesertLook} from '../content/tracks/desert-valley/desert-look';
+import {createBoost} from '../fx/exhaust/boost';
+import {createSingularityEngine} from '../fx/singularity/singularity-engine';
+import {createLensUniforms} from '../fx/singularity/singularity-lens';
+import {createSmokeMaterial} from '../fx/drift/smoke-material';
+import {createOilMaterial} from '../fx/oil/oil-material';
+
+export {createSmokeMaterial};
+export const oilMaterialFactory=()=>createOilMaterial(attribute('color','vec4').a);
+export async function createRenderer(canvas,forceWebGL){
+  return createGameRenderer(canvas,{forceWebGL});
+}
+// Exhaust engines share one contract: stats, clear, setQuality, update, updatePost, dispose.
+const ENGINES={flame:createBoost,singularity:createSingularityEngine};
+export const createEngine=(renderer,scene,ship,options)=>ENGINES[ship.config.engine??'flame'](renderer,scene,ship,options);
+
+// Rendering adapter only: the simulator owns physics, race timing and cameras.
+export async function createFlightWebGPU(renderer,scene,camera,vehicle,oil,{naturalDesert=false,boostPads=null}={}){
+  const baseline=createBaseMaterials(scene),style=createComicStyle();let materials=null;
+  const look=naturalDesert?createDesertLook(scene,renderer):null;let postEnabled=true;
+  const passes=new Map(),lens=vehicle.config.engine==='singularity'?createLensUniforms():null;let quality={samples:4,glowSamples:12,lite:false},lastComic=null;
+  const stats={glowSamples:12,samples:4};
+  function currentPost(comic){
+    const natural=naturalDesert&&!comic,taps=quality.lite?4:12,key=`${natural?'natural':'comic'}/${taps}/${quality.samples}`;
+    if(!passes.has(key))passes.set(key,natural?createDesertPost(renderer,scene,camera,{samples:quality.samples,warmth:look.warmth,lens}):createComicPost(renderer,scene,camera,{glowSamples:taps,samples:quality.samples,lens}));
+    stats.glowSamples=natural?0:taps;
+    return passes.get(key);
+  }
+  const boost=await createEngine(renderer,scene,vehicle,{camera,lens});
+  const botFlame=createFlameMaterial(),botTrail=createFlameTrail(scene,botFlame.material,oil.botShip.config.exhausts);
+  const botSettings={Activa:true,Longitud:2.7,Ancho:.7,Pulsación:.02,Turbulencia:1.3,Trama:'Dither'};
+  return {
+    boost,stats,look,get postEnabled(){return postEnabled;},
+    setPostEnabled(value){if(import.meta.env.DEV)postEnabled=!!value;},
+    setQuality(settings){quality={samples:settings.samples?4:0,lite:!!settings.lite};boost.setQuality(quality.lite);stats.glowSamples=quality.lite?4:12;stats.samples=quality.samples;},
+    reset(){boost.clear();botTrail.clear();},
+    async render({dt=0,state,phase,comic=true,reduced=false}={}){
+      // The initial binding is explicit; it doesn't depend on a UI event.
+      if(comic)look?.update({enabled:false});
+      if(comic&&!materials)materials=createComicMaterials(scene,style);
+      if(lastComic!==comic){materials?.setEnabled(comic);lastComic=comic;}materials?.sync();style.pixelRatio.value=renderer.getPixelRatio();renderer.getDrawingBufferSize(style.resolution.value);
+      if(!comic)look?.update();
+      const running=phase==='flying'||phase==='countdown'||phase==='intro';
+      const mode=state.boosting?'Turbo':state.speed>1?'Aceleración':'Reposo';
+      await boost.update(running?dt:0,mode,!reduced,state.boosting&&state.padBoostRemaining>0,state);
+      scene.updateMatrixWorld(true);
+      botFlame.update(oil.sim.time,botSettings,false);botTrail.record(oil.sim.time,oil.botShip.root);
+      botTrail.update(oil.sim.time,{...botSettings,Activa:oil.botShip.root.visible&&oil.botShip.root.parent.visible&&!reduced},.45,7.5,.8);
+      const post=currentPost(comic);camera.updateMatrixWorld();boost.updatePost(post);if(post.comic)post.comic.value=Number(comic);
+      post.heat.updatePadFields(reduced?[]:boostPads?.heatFields??[]);
+      if(postEnabled)await post.render();else await renderer.renderAsync(scene,camera);
+    },
+    dispose(){botTrail.dispose();botFlame.material.dispose();boost.dispose();materials?.dispose();look?.dispose();for(const post of passes.values())post.dispose();passes.clear();baseline.dispose();},
+  };
+}

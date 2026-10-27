@@ -1,5 +1,5 @@
-import {SHIPS} from '../../src/ship-catalog.js';
-import {createDialKit,createDialRoot} from '../../src/dev-dials.js';
+import {SHIPS} from '../../src/content/vehicles/catalog';
+import {createDialKit,createDialRoot} from '../../src/tools/dials/dev-dials';
 import 'dialkit/vanilla/styles.css';
 
 export function createControls(actions){

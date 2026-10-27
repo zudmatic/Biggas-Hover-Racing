@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import * as THREE from 'three';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
-import {createSurfaceIndex} from '../src/circuit-collision.js';
+import {createSurfaceIndex} from '../src/sim/track-collision.ts';
 const out='public/models/mario-raceway';fs.mkdirSync(out,{recursive:true});
 globalThis.window={URL:globalThis.URL};
 THREE.TextureLoader.prototype.load=function(url){const texture=new THREE.Texture();texture.userData.url=url;return texture;};
