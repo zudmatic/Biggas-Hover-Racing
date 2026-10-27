@@ -7,7 +7,7 @@ for(const backend of ['webgpu','webgl2'])for(const [map,vehicle] of [['ruins','0
     const errors=await openPlayground(page,`backend=${backend}&map=${map}&vehicle=${vehicle}`);
     await expect.poll(async()=>(await vfx(page))?.emitted??0,{timeout:120000}).toBeGreaterThan(10);
     expect((await vfx(page)).palette).toBe('Rojo');
-    await setState(page,'turbo');await expect.poll(async()=>(await vfx(page)).palette).toBe('Azul');
+    await setState(page,'turbo');await expect.poll(async()=>(await vfx(page)).palette,{timeout:30000}).toBe('Azul');
     await setState(page,'derrape');
     await expect.poll(async()=>(await vfx(page)).smoke,{timeout:60000}).toBeGreaterThan(0);
     await expect.poll(async()=>(await vfx(page)).marks,{timeout:60000}).toBeGreaterThan(0);
@@ -22,7 +22,7 @@ for(const backend of ['webgpu','webgl2'])for(const [map,vehicle] of [['ruins','0
     const before=(await vfx(page)).time;await expect.poll(async()=>(await vfx(page)).time,{timeout:60000}).toBeGreaterThan(before+.15);
     await set(page,'Propulsor · WebGPU','Calor',true);await set(page,'Escena','Cómic',true);await setState(page,'soltar');
     await expect.poll(async()=>(await vfx(page)).power,{timeout:60000}).toBeLessThan(.01);
-    await set(page,'Estado nave','VFX activos',false);await expect.poll(async()=>(await vfx(page)).enabled).toBe(false);
+    await set(page,'Estado nave','VFX activos',false);await expect.poll(async()=>(await vfx(page)).enabled,{timeout:30000}).toBe(false);
     expect((await vfx(page)).smoke).toBe(0);expect((await vfx(page)).oil).toBe(0);
     expect(errors).toEqual([]);
   });

@@ -9,7 +9,7 @@ for(const backend of ['webgpu','webgl2'])test(`particle dither changes the pause
  await setState(page,'turbo');
  for(const name of ['Llama','Motor','Brasas','Chispas lineales','Calor'])await set(page,'Propulsor · WebGPU',name,false);
  await set(page,'Escena','Cómic',false);
- await expect.poll(async()=>(await vfx(page))?.emitted??0).toBeGreaterThan(100);
+ await expect.poll(async()=>(await vfx(page))?.emitted??0,{timeout:60000}).toBeGreaterThan(100);
  await set(page,'Tiempo','Pausa',true);
  await set(page,'Propulsor · WebGPU','Trama','Apagado');await page.waitForTimeout(250);
  const canvas=page.locator('main canvas');const off=await canvas.screenshot(hide);

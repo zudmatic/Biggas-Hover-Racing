@@ -5,6 +5,8 @@ for(const backend of ['webgpu','webgl2'])for(const [map,vehicle] of [['ruins','0
   test(`base render ${backend} ${map} ${vehicle}`,async({page})=>{
     test.setTimeout(180000);await page.setViewportSize({width:1200,height:800});
     const errors=await openPlayground(page,`vfx=off&look=base&backend=${backend}&map=${map}&vehicle=${vehicle}`);
+    // Headless Chromium often has no WebGPU adapter; the page then falls back by design.
+    test.skip(backend==='webgpu'&&!(await page.evaluate(async()=>!!(await navigator.gpu?.requestAdapter()))),'No WebGPU adapter in this browser');
     await frames(page,1);
     await expect(page.locator('body')).toHaveAttribute('data-backend',backend==='webgpu'?'WebGPU':'WebGL2 · fallback');
     const stats=JSON.parse(await page.locator('body').getAttribute('data-material-stats'));expect(stats.textured).toBeGreaterThan(0);expect(stats.meshes).toBeGreaterThan(30);
