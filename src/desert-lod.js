@@ -53,6 +53,7 @@ export function createDesertLod(root,asset,manifest,{cellSize=96,maxInstances=12
         // Bounds cover all candidate instances, including those currently at a
         // different LOD. Never cache an empty bound after count becomes zero.
         mesh.computeBoundingBox();mesh.computeBoundingSphere();mesh.count=0;mesh.visible=false;
+        if(family.role!=='mesa'){mesh.boundingBox.expandByScalar(.2);mesh.boundingSphere.radius+=.2;}
         mesh.castShadow=family.role==='mesa'||level===0;mesh.receiveShadow=true;group.add(mesh);return mesh;
       });
       batches.push({family,matrices,states,bounds,meshes});

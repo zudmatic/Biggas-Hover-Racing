@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 
-// A one-time shoreline distance field, generated from the actual bank/terrain
+// A one-time shoreline distance field, generated from the actual banks/terrain
+// and rock collision proxies before visual LOD meshes replace them.
 // triangles. R = shore distance; G stays white because there is no boat mask.
 export function createDesertWaterContact(root,surface){
   const resolution=512,maxDistance=4,epsilon=1e-5;
@@ -37,7 +38,9 @@ export function createDesertWaterContact(root,surface){
   }
 
   if(valid)root.traverse(mesh=>{
-    if(!mesh.isMesh||mesh.isInstancedMesh||mesh===surface||!/S07_(TERRAIN|BANK)/.test(mesh.name))return;
+    if(!mesh.isMesh||mesh.isInstancedMesh||mesh===surface||!/S07_(TERRAIN|BANK|CLIFF|TALUS)|DirtPillar/.test(mesh.name))return;
+    const meshBounds=new THREE.Box3().setFromObject(mesh);
+    if(meshBounds.min.y>waterLevel+epsilon||meshBounds.max.y<waterLevel-epsilon||!meshBounds.intersectsBox(bounds))return;
     const geometry=mesh.geometry,position=geometry?.attributes.position,index=geometry?.index;
     if(!position)return;
     const count=index?.count??position.count;

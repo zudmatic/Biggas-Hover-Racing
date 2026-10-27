@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {DESERT_SUN,DESERT_LIGHT} from './desert-look.js';
 
 // Global sky/ground fill plus a shadowed sun; a bounded pool lights the road
 // near the player. Actual Lambert-compatible lights also work in comic mode.
@@ -16,8 +17,8 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
   const fixtures=[],matrix=new THREE.Matrix4();let night=false,blend=0,headlightsEnabled=false,desert=false;
   function setTrack(track){
     if(track.map==='desert-valley'){
-      desert=true;dayFog.set(0xc7d9dc);daySky.set(0xb5d9ed);dayGround.set(0xa47d50);daySun.set(0xffead0);
-      scene.fog.near=300;scene.fog.far=1400;
+      desert=true;dayFog.set(0xd3dedd);daySky.set(0xc0dbee);dayGround.set(0xb4a48b);daySun.set(0xffdfb4);
+      scene.fog.near=650;scene.fog.far=2400;sun.shadow.radius=2;
       sun.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
       Object.assign(sun.shadow.camera,{left:-55,right:55,top:55,bottom:-55});sun.shadow.camera.updateProjectionMatrix();
       return;
@@ -38,11 +39,11 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
   function update(state,time,{dt=0,reducedMotion=false,paused=false}={}){
     // User changes remain available while paused; decorative light movement stops.
     blend=reducedMotion?Number(night):THREE.MathUtils.damp(blend,Number(night),5,dt);
-    sky.color.copy(daySky).lerp(nightSky,blend);sky.groundColor.copy(dayGround).lerp(nightGround,blend);sky.intensity=desert?1.35-blend*.8:1.7-blend*.8;
-    sun.color.copy(daySun).lerp(nightSun,blend);sun.intensity=desert?4.1-blend*3.4:3.4-blend*2.7;fill.intensity=desert?0:.45-blend*.23;
+    sky.color.copy(daySky).lerp(nightSky,blend);sky.groundColor.copy(dayGround).lerp(nightGround,blend);sky.intensity=desert?DESERT_LIGHT.sky-blend*(DESERT_LIGHT.sky-.55):1.7-blend*.8;
+    sun.color.copy(daySun).lerp(nightSun,blend);sun.intensity=desert?DESERT_LIGHT.sun-blend*(DESERT_LIGHT.sun-.7):3.4-blend*2.7;fill.intensity=desert?0:.45-blend*.23;
     scene.background.copy(dayFog).lerp(nightFog,blend);scene.fog.color.copy(scene.background);
     const arc=reducedMotion||desert?0:Math.sin(time*.018)*18;
-    sun.position.set(state.x-110+arc,state.y+180,state.z+70);sun.target.position.set(state.x,state.y,state.z);
+    sun.position.set(state.x+(desert?DESERT_SUN[0]:-110+arc),state.y+(desert?DESERT_SUN[1]:180),state.z+(desert?DESERT_SUN[2]:70));sun.target.position.set(state.x,state.y,state.z);
     anchor.set(state.x,state.y,state.z);
     const nearest=fixtures.map((position,index)=>({position,index,distance:position.distanceToSquared(anchor)})).sort((a,b)=>a.distance-b.distance).slice(0,lamps.length);
     lamps.forEach((light,i)=>{const fixture=nearest[i];if(!fixture){light.intensity=0;return;}light.position.copy(fixture.position);light.intensity=(70+blend*230)*THREE.MathUtils.clamp((40-Math.sqrt(fixture.distance))/12,0,1);});

@@ -16,6 +16,8 @@ import {createHoverWaterEffects} from './water/hover-effects.js';
 import {createDesertTrain} from './desert-train.js';
 import {createDesertTrainAudio} from './desert-train-audio.js';
 import {createDesertLod} from './desert-lod.js';
+import {prepareDesertVegetation} from './desert-vegetation.js';
+import {DESERT_SUN} from './desert-look.js';
 
 // Keep the authored scene hierarchy and EXT_mesh_gpu_instancing. The legacy
 // circuit batcher bakes only a mesh's base geometry, losing instance transforms.
@@ -82,6 +84,8 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
   });
   // Capture the original collision proxies first; visual detail never changes
   // driveable surfaces, train clearance or the authored collision geometry.
+  const contact=createDesertWaterContact(root,surface);ownedTextures.add(contact.texture);
+  const vegetation=prepareDesertVegetation(detailAsset.scene);
   detailAsset.scene.traverse(collectResources);
   const lod=createDesertLod(root,detailAsset.scene,detailManifest,{mode:import.meta.env.DEV&&new URLSearchParams(location.search).get('lod')==='full'?'full':'adaptive'});
   lod.update(landscape.spawn,0,true);
@@ -92,7 +96,7 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
   const train=createDesertTrain({root:trainAsset.scene,railway});root.add(train.root);
   const trainAudio=createDesertTrainAudio(train);
   const fx=await loadFlightFx(root,{surfaceHeight:collision.surfaceHeight,mobile,materialFactory:fxMaterialFactory});
-  const toSun=new THREE.Vector3(-110,180,70).normalize();
+  const toSun=new THREE.Vector3(...DESERT_SUN).normalize();
   onProgress(1);
   return {
     root,landscape,fx,train,lod,instanceCount,detailCount:instanceCount,
@@ -105,7 +109,6 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
       sun=light;previousShadow=sun.shadow.shadowNode;
       const textureLoader=new THREE.TextureLoader();
       const [pattern,bed]=await Promise.all(['water-pattern.png','water-bed.png'].map(name=>textureLoader.loadAsync(`${base}textures/water/${name}`)));
-      const contact=createDesertWaterContact(root,surface);
       for(const texture of [pattern,bed,contact.texture])ownedTextures.add(texture);
       water=createWater(pattern,sun,toSun,contact.texture,contact.info,surface,bed,{geometry:river.geometry,maxWaveHeight:RIVER_SURFACE.maximumWaveHeight,desert:true});
       speed=applyDesertWaterPreset(water);
@@ -119,6 +122,7 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
     reset(){fx.reset();train.reset();trainAudio.reset();waterFx?.reset();if(water)water.phase.value=0;},
     update(time,reduced,context){
       lod.update(context.state,context.dt??0);
+      vegetation.update(context.dt??0,{paused:context.phase==='paused',reduced,sun});
       fx.update(context.dt??0,{...context,reduced});
       if(context.camera)trainAudio.update(context.camera,context.phase);
       if(water){

@@ -48,11 +48,32 @@ which meshes are drawn. It does not yet stream separate files over the network.
 
 ## Look and compression
 
-The desert defaults to lit materials, a directional sun, hemisphere sky fill,
-ACES tone mapping, modest saturation/contrast and turquoise river colors.
-Its natural post pass omits paper, outlines and comic glow. The optional paper
-toggle remains available. Other circuits retain their defaults. Heat effects,
-Lomi's lens and Bluleet's stencil silhouette work in both looks.
+The creative direction is bright adventure: golden afternoon, a lateral sun,
+readable shadows, clear air, orange rock, cream sand, turquoise water and olive
+foliage. **Keep the look saturated and luminous.** The user explicitly rejected
+the muted first AgX trial; cinematic lighting must preserve the vivid palette.
+Water priorities are current, foam and rock contact. Flat lighting and vegetation
+are the first things to improve. Invisible-face removal and extra prop/terrain
+detail are a later Blender stage.
+
+The natural look uses lit materials, a directional sun at about 27° elevation,
+neutral sky/ground bounce, AgX, exposure 1.15 and saturation 1.28. Shared sun
+direction keeps the sky disk, water highlights and leaf transmission aligned.
+Sparse tiled clouds use one 128-triangle cylinder and one 1024×256 RGBA texture;
+no cloud shadow or volume pass. Foliage reuses the atlas and exported COLOR_1
+wind weights for subtle vertex motion, with backlight only on green leaves.
+Pause/reduced motion freeze wind and cloud drift; LOD bounds include sway.
+
+Bloom reuses `portfolio-27/components/train/dual-filter-bloom.ts`: a soft HDR
+threshold of 2, four down stages and two tent up stages, ending at quarter size.
+Strength is 0.09. Half-float targets have no depth/MSAA; glow combines in the
+existing color-grade pass before tone mapping. A restrained sun flare reuses
+scene depth and brightness to disappear behind scenery or dense clouds.
+The river's two pattern samples share downstream motion. Its one-time contact
+mask includes original rock/water intersections before LOD replacement.
+
+The optional paper toggle remains available. Other circuits retain their
+defaults. Heat effects, Lomi's lens and Bluleet's stencil silhouette are retained.
 
 The sandstone material is shared across the rocks. Its 2048 px tangent normal
 combines approximate height from diffuse luminance with procedural microrelief;
@@ -106,7 +127,7 @@ The benchmark opens native Chromium at 1280 × 800, DPR 1 and high quality with
 driving separately. JSON reports and screenshots go to `output/desert-benchmark`.
 Use a native GPU: headless software rendering is not a representative FPS test.
 
-### Local measurement, 2026-10-27
+### Earlier LOD measurement, 2026-10-27 (before afternoon/bloom pass)
 
 Native Chromium 153, Apple Metal 3, 1280 × 800, DPR 1, high quality / 4× MSAA.
 The final quick run used 1 s warmup + 1.5 s stationary samples, followed by
@@ -125,3 +146,11 @@ The final quick run used 1 s warmup + 1.5 s stationary samples, followed by
 These short desktop measurements do not establish performance on mobile or
 other GPUs. `BENCH_QUICK=1` selects the shorter benchmark; the default samples
 four poses for 4 s each.
+
+### Afternoon pass spot check, 2026-10-27
+
+Native WebGPU at 1280×800, DPR 1, high/4× MSAA: the river view held 120 FPS
+over 3 seconds; a separate drive from the river (2 s warmup + 5 s W held) averaged
+117.8 FPS, p95 9.3 ms, with zero browser errors. These are short checks of this
+revision, not a controlled bloom-on/off GPU benchmark or a mobile result.
+Raw driving snapshot: `afternoon-webgpu-2026-10-27.json`.

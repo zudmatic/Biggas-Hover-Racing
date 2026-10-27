@@ -25,11 +25,11 @@ export const createEngine=(renderer,scene,ship,options)=>ENGINES[ship.config.eng
 export async function createFlightWebGPU(renderer,scene,camera,vehicle,oil,boostPads,{naturalDesert=false}={}){
   const baseline=createBaseMaterials(scene),style=createComicStyle();let materials=null;
   const passes=new Map(),lens=vehicle.config.engine==='singularity'?createLensUniforms():null;let quality={samples:4,glowSamples:12,lite:false},lastComic=null;
-  const stats={glowSamples:12,samples:4};
+  const stats={glowSamples:12,bloomPasses:0,samples:4};
   function currentPost(comic){
     const natural=naturalDesert&&!comic,taps=quality.lite?4:12,key=`${natural?'natural':'comic'}/${taps}/${quality.samples}`;
     if(!passes.has(key))passes.set(key,natural?createDesertPost(renderer,scene,camera,{samples:quality.samples,lens}):createComicPost(renderer,scene,camera,{glowSamples:taps,samples:quality.samples,lens}));
-    stats.glowSamples=natural?0:taps;
+    stats.glowSamples=natural?1:taps;stats.bloomPasses=natural?6:0;
     return passes.get(key);
   }
   const boost=await createEngine(renderer,scene,vehicle,{camera,lens});

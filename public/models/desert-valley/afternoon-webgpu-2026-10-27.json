@@ -1,0 +1,65 @@
+{
+  "method": "Headful Chromium native GPU, 1280x800 DPR 1 high/4xMSAA; 2s warmup + 5s W-held drive from river, adaptive LOD",
+  "snapshot": {
+    "backend": "WebGPU",
+    "look": "sunlit",
+    "quality": {
+      "mode": "high",
+      "scale": 1,
+      "pixelRatio": 1,
+      "samples": 4,
+      "glowSamples": 12,
+      "lite": false,
+      "shadowInterval": 0
+    },
+    "viewport": [
+      1280,
+      800
+    ],
+    "pixelRatio": 1,
+    "frames": 590,
+    "fps": 117.75741971650703,
+    "frameMs": 8.492033898224264,
+    "p95Ms": 9.299999952316284,
+    "render": {
+      "calls": 65746,
+      "frameCalls": 9,
+      "drawCalls": 156,
+      "triangles": 184698,
+      "points": 180,
+      "lines": 0,
+      "timestamp": 0
+    },
+    "renderAverage": {
+      "triangles": 205455.2966101695,
+      "drawCalls": 162.97118644067797
+    },
+    "memory": {
+      "geometries": 286,
+      "textures": 45
+    },
+    "lod": {
+      "mode": "adaptive",
+      "instances": 333,
+      "vegetation": 277,
+      "levels": [
+        4,
+        17,
+        65
+      ],
+      "culled": 247,
+      "triangles": 127882,
+      "fullTriangles": 693240,
+      "batches": 414,
+      "switches": 245,
+      "updates": 33,
+      "updateMs": 0
+    },
+    "position": [
+      401.0601689854678,
+      3.8605090081269884,
+      -175.25287849950132
+    ]
+  },
+  "errors": []
+}

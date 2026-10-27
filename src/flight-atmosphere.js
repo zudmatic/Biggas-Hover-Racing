@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import {createDesertClouds} from './desert-clouds.js';
+import {DESERT_SUN} from './desert-look.js';
 
 const clamp=THREE.MathUtils.clamp;
 const randomSource=seed=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
@@ -21,16 +23,19 @@ export function createCircuitSky(scene,{mobile=false,map='ruins'}={}){
     return {x:Math.cos(angle)*radius,z:Math.sin(angle)*radius,y:layer===0?175+random()*65:280+random()*170,width,angle:random()*Math.PI,speed:.65+random()*.6,puffs:lobes.map(([x,y,z])=>({x,y,z,sx:.32+random()*.13,sy:.2+random()*.1,sz:.29+random()*.13}))};
   });
   if(map==='desert-valley')clouds.visible=false;
-  const transform=new THREE.Object3D(),sunDirection=(map==='desert-valley'?new THREE.Vector3(-110,180,70):new THREE.Vector3(-.55,.42,.72)).normalize();let previousTick=-1,previousBlend=-1,blend=0;
+  const desertClouds=map==='desert-valley'?createDesertClouds():null;if(desertClouds)root.add(desertClouds.mesh);
+  const transform=new THREE.Object3D(),sunDirection=(map==='desert-valley'?new THREE.Vector3(...DESERT_SUN):new THREE.Vector3(-.55,.42,.72)).normalize();let previousTick=-1,previousBlend=-1,blend=0;
   const sun=new THREE.Mesh(new THREE.SphereGeometry(38,20,12),new THREE.MeshBasicMaterial({color:0xffe4a2,fog:false,depthWrite:false}));sun.name='Sol y luna';sun.renderOrder=-900;root.add(sun);
   const starsGeometry=new THREE.BufferGeometry(),starPositions=[];
   for(let i=0;i<(mobile?90:180);i++){const angle=random()*Math.PI*2,y=.13+random()*.85,r=Math.sqrt(1-y*y);starPositions.push(Math.cos(angle)*r*3900,y*3900,Math.sin(angle)*r*3900);}
   starsGeometry.setAttribute('position',new THREE.Float32BufferAttribute(starPositions,3));
   const stars=new THREE.Points(starsGeometry,new THREE.PointsMaterial({color:0xd6e9ff,size:7,transparent:true,opacity:0,depthWrite:false,fog:false}));stars.name='Estrellas';stars.renderOrder=-950;root.add(stars);
   const dayTop=new THREE.Color(map==='nexus'?0x568eb9:0x509bd0),nightTop=new THREE.Color(0x071329),dayHorizon=new THREE.Color(0xc5dce0),nightHorizon=new THREE.Color(0x263c58),horizon=new THREE.Color(),zenith=new THREE.Color(),tint=new THREE.Color(0x829ac4),sunDay=new THREE.Color(0xffe4a2),moon=new THREE.Color(0xdcecff);
+  if(desertClouds){dayTop.set(0x2484c8);dayHorizon.set(0x92c6e4);sunDay.set(0xffe5be).multiplyScalar(6);sun.material.toneMapped=false;}
   function update(camera,time,{night=false,dt=0,reducedMotion=false}={}){
     blend=reducedMotion?Number(night):THREE.MathUtils.damp(blend,Number(night),5,dt);
     dome.position.copy(camera.position);stars.position.copy(camera.position);sun.position.copy(camera.position).addScaledVector(sunDirection,3500);
+    desertClouds?.update(camera,time,blend,reducedMotion);
     if(Math.abs(blend-previousBlend)>.0001){
       previousBlend=blend;horizon.copy(dayHorizon).lerp(nightHorizon,blend);zenith.copy(dayTop).lerp(nightTop,blend);
       for(let i=0;i<positions.count;i++){const height=clamp(positions.getY(i)/4400,0,1);color.copy(horizon).lerp(zenith,Math.pow(height,.55));color.toArray(colors,i*3);}
@@ -47,7 +52,7 @@ export function createCircuitSky(scene,{mobile=false,map='ruins'}={}){
       }));clouds.instanceMatrix.needsUpdate=true;
     }
   }
-  return {root,clouds,dome,stars,sun,cloudCount:groups,update,dispose(){domeGeometry.dispose();dome.material.dispose();cloudGeometry.dispose();cloudMaterial.dispose();clouds.dispose();sun.geometry.dispose();sun.material.dispose();starsGeometry.dispose();stars.material.dispose();root.removeFromParent();}};
+  return {root,clouds:desertClouds?.mesh??clouds,dome,stars,sun,cloudCount:desertClouds?1:groups,update,dispose(){desertClouds?.dispose();domeGeometry.dispose();dome.material.dispose();cloudGeometry.dispose();cloudMaterial.dispose();clouds.dispose();sun.geometry.dispose();sun.material.dispose();starsGeometry.dispose();stars.material.dispose();root.removeFromParent();}};
 }
 
 export function speedCameraProfile(state,{reducedMotion=false,cameraMode=0,lens={}}={}){

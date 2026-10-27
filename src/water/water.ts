@@ -115,16 +115,18 @@ export function createWater(
   ).shadowNode = visibility
 
   const worldUV = positionWorld.xz.mul(0.14).mul(scale).toVar()
+  const current = options.desert ? vec2(0.006, 0.035).mul(phase) : vec2(0)
+  const flowUV = worldUV.sub(current)
   const drift = phase.mul(0.018)
   // Broad oblique distortion does not restart at the texture's tile edges.
   // The two layers no longer march along the same repeating rows.
   const warp = vec2(
-    worldUV.dot(vec2(1.71, 2.37)).add(phase.mul(0.09)).sin(),
-    worldUV.dot(vec2(-2.13, 1.19)).sub(phase.mul(0.07)).sin()
+    flowUV.dot(vec2(1.71, 2.37)).add(phase.mul(0.09)).sin(),
+    flowUV.dot(vec2(-2.13, 1.19)).sub(phase.mul(0.07)).sin()
   ).mul(0.19)
   const rotatedUV = vec2(
-    worldUV.x.mul(0.8).sub(worldUV.y.mul(0.6)),
-    worldUV.x.mul(0.6).add(worldUV.y.mul(0.8))
+    flowUV.x.mul(0.8).sub(flowUV.y.mul(0.6)),
+    flowUV.x.mul(0.6).add(flowUV.y.mul(0.8))
   )
   const b = texture(
     pattern,
@@ -156,7 +158,7 @@ export function createWater(
       underwaterRay.xz.mul(waterDepth.div(underwaterRay.y.negate().max(0.4)))
     )
     .toVar()
-  const submergedUV = submergedXZ.mul(0.14).mul(scale)
+  const submergedUV = submergedXZ.mul(0.14).mul(scale).sub(current)
   const a = texture(
     pattern,
     submergedUV

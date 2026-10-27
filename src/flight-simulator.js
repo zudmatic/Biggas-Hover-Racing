@@ -61,7 +61,7 @@ export async function createFlightSimulator({entryTransition}={}){
   const mobile=matchMedia('(max-width:760px), (pointer:coarse)').matches;
   renderer.setPixelRatio(Math.min(devicePixelRatio,mobile?1.25:1.5));renderer.setSize(innerWidth,innerHeight);
   renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
-  if(naturalDesert)renderer.toneMappingExposure=.98;
+  if(naturalDesert)renderer.toneMappingExposure=1.15;
   renderer.info.autoReset=false;
   const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xb6c6bd,220,1100);scene.background=new THREE.Color(0xb6c6bd);
   scene.matrixWorldAutoUpdate=false;
@@ -331,7 +331,7 @@ export async function createFlightSimulator({entryTransition}={}){
     app.dataset.padBoost=String(state.padBoostRemaining??0);
     scene.updateMatrixWorld(true);camera.updateMatrixWorld();updateHud(performance.now()/1000);
     if(noticeUntil&&performance.now()>noticeUntil){$('.flight-notice').hidden=true;noticeUntil=0;}
-    if(gpuGraphics){await gpuGraphics.render({dt,state,phase,comic:comicEnabled,reduced:reduced.matches});app.dataset.boostPalette=gpuGraphics.boost.stats.palette;app.dataset.boostParticles=JSON.stringify({lifetimes:gpuGraphics.boost.stats.particleLifetimes,emitted:gpuGraphics.boost.stats.emittedByLayer});app.dataset.postSamples=String(gpuGraphics.stats.samples);app.dataset.glowSamples=String(gpuGraphics.stats.glowSamples);}
+    if(gpuGraphics){await gpuGraphics.render({dt,state,phase,comic:comicEnabled,reduced:reduced.matches});app.dataset.boostPalette=gpuGraphics.boost.stats.palette;app.dataset.boostParticles=JSON.stringify({lifetimes:gpuGraphics.boost.stats.particleLifetimes,emitted:gpuGraphics.boost.stats.emittedByLayer});app.dataset.postSamples=String(gpuGraphics.stats.samples);app.dataset.glowSamples=String(gpuGraphics.stats.glowSamples);app.dataset.bloomPasses=String(gpuGraphics.stats.bloomPasses);}
     if(import.meta.env.DEV&&naturalDesert){renderSamples.frames++;renderSamples.triangles+=renderer.info.render.triangles;renderSamples.drawCalls+=renderer.info.render.drawCalls;frameTimes[frameCursor]=rawDelta*1000;frameCursor=(frameCursor+1)%frameTimes.length;frameSamples=Math.min(frameSamples+1,frameTimes.length);}
     app.dataset.frame=String(Number(app.dataset.frame??0)+1);
     }catch(error){console.error(error);renderer.setAnimationLoop(null);clearInput();fail('Se interrumpió la vista 3D.');}finally{rendering=false;}
