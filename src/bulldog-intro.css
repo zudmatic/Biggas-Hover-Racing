@@ -1,0 +1,25 @@
+/* Bulldog 039 cameo: letterbox and title card over the driving view. */
+.bulldog-intro{position:absolute;inset:0;z-index:7;pointer-events:none;overflow:hidden;font-family:var(--race-font);color:var(--race-paper)}
+.bulldog-intro-bar{position:absolute;left:0;right:0;height:11dvh;min-height:56px;background:var(--race-ink);animation:bulldog-bar-in .45s var(--race-ease) both}
+.bulldog-intro-bar[data-edge=top]{top:0;transform-origin:top}
+.bulldog-intro-bar[data-edge=bottom]{bottom:0;transform-origin:bottom}
+.bulldog-intro-caption{position:absolute;top:max(18px,env(safe-area-inset-top));left:max(24px,env(safe-area-inset-left));margin:0;display:flex;gap:14px;align-items:baseline;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.bulldog-intro-caption span{color:var(--race-yellow)}
+.bulldog-intro-title{position:absolute;left:max(5vw,env(safe-area-inset-left));bottom:calc(max(11dvh,56px) + 28px);display:grid;grid-template-columns:auto auto;align-items:center;gap:6px 16px;padding:14px 26px 16px 18px;border:var(--race-border);border-radius:var(--race-radius);background:var(--race-blue);box-shadow:var(--race-shadow);opacity:0;transform:translateX(-24px)}
+.bulldog-intro-title span{grid-row:span 2;display:grid;place-items:center;min-width:64px;min-height:64px;padding:0 8px;border:var(--race-border);border-radius:8px;background:var(--race-yellow);color:var(--race-ink);font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
+.bulldog-intro-title strong{font-size:clamp(44px,8vw,104px);line-height:.9;font-weight:900;letter-spacing:-.04em;text-transform:uppercase;text-wrap:balance}
+.bulldog-intro-title small{font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+.bulldog-intro[data-shot=flyby] .bulldog-intro-title{opacity:1;transform:none;transition:opacity .2s ease-out,transform .5s var(--race-ease)}
+.bulldog-intro-skip{position:absolute;right:max(24px,env(safe-area-inset-right));bottom:calc((max(11dvh,56px) - 44px)/2);display:flex;align-items:center;gap:10px;min-height:44px;padding:0 16px;border:2px solid var(--race-paper);border-radius:8px;background:transparent;color:var(--race-paper);font:800 13px var(--race-font);letter-spacing:.06em;text-transform:uppercase;pointer-events:auto;cursor:pointer;transition:background-color .15s ease-out,color .15s ease-out}
+.bulldog-intro-skip kbd{padding:2px 6px;border:1px solid currentColor;border-radius:4px;font:inherit;font-size:10px}
+.bulldog-intro-skip:hover{background:var(--race-paper);color:var(--race-ink)}
+.bulldog-intro-skip:focus-visible{outline:3px solid var(--race-yellow);outline-offset:3px}
+.bulldog-intro-wipe{position:absolute;inset:0;border-inline:6px solid var(--race-ink);background:var(--race-yellow) var(--race-grain);transform:translateX(-102%)}
+.bulldog-intro[data-wipe=in] .bulldog-intro-wipe{transform:none;transition:transform .36s cubic-bezier(.77,0,.175,1)}
+.bulldog-intro[data-wipe=out] .bulldog-intro-wipe{transform:translateX(102%);transition:transform .36s cubic-bezier(.77,0,.175,1)}
+.bulldog-intro[data-wipe=out] :is(.bulldog-intro-bar,.bulldog-intro-caption,.bulldog-intro-title,.bulldog-intro-skip){visibility:hidden}
+@keyframes bulldog-bar-in{from{transform:scaleY(0)}}
+@media (max-width:600px){.bulldog-intro-title{padding:10px 16px 12px 12px}.bulldog-intro-title span{min-width:48px;min-height:48px;font-size:18px}}
+@media (prefers-reduced-motion:reduce){.bulldog-intro *{animation:none!important;transition:none!important}}
+
+.flight-app:has(>.bulldog-intro) :is(.flight-telemetry,.flight-key-hint,.flight-minimap,.flight-oil,.flight-notice,.oil-bot-label){display:none}

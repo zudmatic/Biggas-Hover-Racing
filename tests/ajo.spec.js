@@ -8,7 +8,7 @@ for(const backend of ['webgpu','webgl2'])test(`Ajo can select every ship, fly an
   const errors=[],modelRequests=[];page.on('pageerror',error=>errors.push(error.message));page.on('console',message=>{if(message.type()==='error')errors.push(message.text());});
   page.on('request',request=>{if(request.url().endsWith('/models/ajo/ajo.glb'))modelRequests.push(request.url());});
   await page.goto(backend==='webgl2'?'/?renderer=webgl2':'/');await page.getByRole('button',{name:'Jugar',exact:true}).click();
-  await page.locator('[data-pilot-choice=zud]').focus();await page.keyboard.press('End');
+  await page.locator('[data-pilot-choice=zud]').focus();await page.keyboard.press('End');await page.keyboard.press('ArrowLeft');await page.keyboard.press('ArrowLeft');
   const lobby=page.locator('.race-lobby'),canvas=page.locator('.lobby-preview-canvas');
   await expect(lobby).toHaveAttribute('data-pilot','ajo');await expect(lobby).toHaveAttribute('data-preview','ready',{timeout:60000});
   await expect(canvas).toHaveAttribute('data-backend',backend==='webgpu'?'WebGPU':'WebGL2');

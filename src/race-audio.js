@@ -40,7 +40,7 @@ export function createRaceAudio({music=null}={}){
   function applyLevels(){
     if(!context||disposed)return;
     smooth(master.gain,enabled?.55*volume:0,.035);
-    smooth(engineBus.gain,document.hidden?0:phase==='flying'?.85:phase==='countdown'?.35:0,.045);
+    smooth(engineBus.gain,document.hidden?0:phase==='flying'||phase==='intro'?.85:phase==='countdown'?.35:0,.045);
     smooth(spatialBus.gain,!document.hidden&&phase==='flying'?1:0,.035);
   }
   function stopVoices(){
@@ -75,12 +75,12 @@ export function createRaceAudio({music=null}={}){
     },
     setPhase(value){
       phase=value;music?.setPhase(value);
-      if(!['flying','countdown'].includes(phase))stopVoices();
+      if(!['flying','countdown','intro'].includes(phase))stopVoices();
       if(phase!=='countdown')lastCountdown=0;
       applyLevels();
     },
     update(state){
-      if(!context||disposed||!['flying','countdown'].includes(phase))return;
+      if(!context||disposed||!['flying','countdown','intro'].includes(phase))return;
       const speed=clamp(state.speed/72),throttle=clamp(state.throttle/52),boosting=state.boosting?1:0;
       const pitch=48+speed*116+throttle*13+boosting*22;
       smooth(hum.source.frequency,pitch);smooth(turbine.source.frequency,pitch*2.01);smooth(harmonic.source.frequency,pitch*3);
@@ -94,12 +94,14 @@ export function createRaceAudio({music=null}={}){
     },
     cue(name,intensity=1){
       if(!context||disposed||!enabled||context.state!=='running'||document.hidden)return;
-      if(!['flying','countdown'].includes(phase)&&!(name==='finish'&&phase==='finished'))return;
+      if(!['flying','countdown','intro'].includes(phase)&&!(name==='finish'&&phase==='finished'))return;
       if(name==='impact'){
         if(context.currentTime-lastImpact<.18)return;lastImpact=context.currentTime;
         const strength=clamp(intensity/14,.15,1);tone(100,.22,.23*strength,{end:32,type:'triangle'});tone(0,.09,.11*strength,{buffer:true});
       }else if(name==='countdown'){
         if(lastCountdown===intensity)return;lastCountdown=intensity;tone(520,.13,.12,{type:'triangle'});
+      }else if(name==='ignition'){
+        tone(42,.9,.2,{end:120,type:'sawtooth'});tone(0,.35,.12,{buffer:true});tone(880,.12,.06,{delay:.55,type:'triangle'});
       }else if(name==='go'){
         tone(784,.15,.13,{type:'triangle'});tone(1568,.32,.1,{delay:.08});
       }else if(name==='checkpoint'){

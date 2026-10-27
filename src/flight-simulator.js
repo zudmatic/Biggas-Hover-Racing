@@ -1,3 +1,6 @@
+import {createFlightBoostPads} from './flight-boost-pads.js';
+import {createFlightFovControls} from './flight-camera-fov-controls.js';
+import {smoothCameraFov} from './flight-camera-fov.js';
 import {createFlightRenderPose} from './flight-render-pose.js';
 import {createFlightCameraKlipp} from './flight-camera-klipp.js';
 import {pilotChoice,pilotConfig,pilotQuery} from './pilot-catalog.js';
@@ -17,6 +20,9 @@ import {soundControlMarkup,mountSoundControl} from './sound-control.js';
 import {shipConfig} from './ship-catalog.js';
 import {createCircuitSky,createSpeedAtmosphere,speedCameraProfile} from './flight-atmosphere.js';
 import {createFlightPerformance} from './flight-performance.js';
+import {BULLDOG_INTRO_DURATION,INTRO_IGNITION,createIntroCamera,introEyes,introInput,introLift} from './bulldog-intro.js';
+import {createIntroOverlay} from './bulldog-intro-overlay.js';
+import {EYE_CLOSED} from './ship-eyes.js';
 
 export async function createFlightSimulator({entryTransition}={}){
   const base=import.meta.env.BASE_URL,query=new URLSearchParams(location.search),reduced=matchMedia('(prefers-reduced-motion: reduce)');
@@ -61,7 +67,7 @@ export async function createFlightSimulator({entryTransition}={}){
   const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xb6c6bd,220,1100);scene.background=new THREE.Color(0xb6c6bd);
   scene.matrixWorldAutoUpdate=false;
   const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.15,7000);
-  const lighting=createCircuitLighting(scene,{mobile,headlightMounts:selectedShip.headlights});
+  const lighting=createCircuitLighting(scene,{mobile,headlightMounts:selectedShip.headlights,underglow:selectedShip.underglow});
   const skyWorld=createCircuitSky(scene,{mobile,map:mapConfig.id}),speedAtmosphere=createSpeedAtmosphere(scene,{mobile});
   let comicEnabled=initialComic;
   let shadowElapsed=Infinity,shadowInterval=1/30;
@@ -73,12 +79,12 @@ export async function createFlightSimulator({entryTransition}={}){
     lighting.sun.shadow.needsUpdate=true;
   }
   applyQuality(performanceControl.settings);lighting.sun.shadow.autoUpdate=false;
-  let landscape,world,vehicle,oil,fxControls,state,phase='loading',simulationTime=0,worldTime=0,gateIndex=0,cameraMode=0,accumulator=0,noticeUntil=0;
+  let landscape,world,vehicle,oil,boostPads,fxControls,state,phase='loading',simulationTime=0,worldTime=0,gateIndex=0,cameraMode=0,accumulator=0,noticeUntil=0;
   const keys=new Set(),touch={turn:0,accelerate:false,brake:false,boost:false,drift:false};let stickPointer=null;
   const mapCanvas=$('.flight-minimap canvas'),mapContext=mapCanvas.getContext('2d'),mapBase=document.createElement('canvas');mapBase.width=mapBase.height=192;
   const cameraAnchor=new THREE.Vector3(),followAnchor=new THREE.Vector3(),cameraPoint=new THREE.Vector3(),lookPoint=new THREE.Vector3(),desiredCamera=new THREE.Vector3(),desiredLook=new THREE.Vector3(),forward=new THREE.Vector3();
   const theme=getComputedStyle(app),mapPalette=Object.fromEntries(['ink','paper','blue','yellow','muted','dark'].map(name=>[name,theme.getPropertyValue(`--race-${name}`).trim()]));
-  let mapBitmap=null,lastHud=-1,lastPilotFrame=-1,disposed=false;
+  let mapBitmap=null,lastHud=-1,lastPilotFrame=-1,disposed=false,intro=null;
   const hud={speed:$('#flight-speed'),alt:$('#flight-altitude'),energy:$('.flight-energy span'),energyBar:$('.flight-energy'),energyValue:$('#flight-energy-value')};
   function setText(element,text){if(element.textContent!==text)element.textContent=text;}
   const mapHalf=()=>landscape.mapHalf;
@@ -89,12 +95,13 @@ export async function createFlightSimulator({entryTransition}={}){
     if(state){state.hull=scaledHull(selectedShip,scale);state.modelScale=scale;}
     vehicle?.root.scale.setScalar(scale);lighting.sun.shadow.needsUpdate=true;
   },clearInput);
+  const fovControls=createFlightFovControls();
   const klippCamera=createFlightCameraKlipp(camera,{enabled:query.get('camera')!=='actual',element:canvas,canOrbit:()=>phase==='flying'||phase==='paused'});
   const renderPose=createFlightRenderPose();
   app.dataset.map=mapConfig.id;app.dataset.pilot=choice.pilot;app.dataset.palette=choice.palette;app.dataset.hat=choice.hat;app.dataset.vehicle=selectedShip.id;
   function clearInput(){keys.clear();touch.turn=0;touch.accelerate=touch.brake=touch.boost=touch.drift=false;stickPointer=null;$('.flight-stick span').style.transform='none';document.querySelectorAll('[data-hold]').forEach(button=>button.setAttribute('aria-pressed','false'));}
   function setPhase(next){
-    scaleControl.setVisible(next==='flying');
+    scaleControl.setVisible(next==='flying'||next==='paused');
     const previousPhase=phase;phase=next;raceAudio.setPhase(next);app.dataset.phase=next;if(next!=='flying'||previousPhase==='paused')clearInput();
     if(previousPhase!==next)performanceControl.reset();
     $('.flight-status').hidden=next!=='flying';$('.flight-menu').hidden=next!=='paused';$('.flight-touch').hidden=next!=='flying';$('#flight-camera').disabled=next==='loading';
@@ -105,8 +112,32 @@ export async function createFlightSimulator({entryTransition}={}){
     }
   }
   function notice(text){setText($('.flight-notice'),text);$('.flight-notice').hidden=false;noticeUntil=performance.now()+2300;}
-  function resetFlight(){gpuGraphics?.reset();state=freshState();simulationTime=0;gateIndex=0;accumulator=0;world.reset();oil?.reset(state,true);syncShip();updateCamera(1,true);lastHud=-1;}
+  function resetFlight(){boostPads?.reset();gpuGraphics?.reset();state=freshState();simulationTime=0;gateIndex=0;accumulator=0;world.reset();oil?.reset(state,true);syncShip();updateCamera(1,true);lastHud=-1;}
   function start(){raceAudio.unlock();resetFlight();$('.flight-notice').hidden=true;setPhase('flying');updateCamera(1,true);}
+  // Bulldog 039 only: a skippable cinematic on the real track before free driving.
+  function prepareIntro(){
+    if(selectedShip.id!=='039'||reduced.matches||query.get('intro')==='0')return;
+    intro={time:0,eyes:false,ignited:false,finishing:false,headlights:lighting.headlightsEnabled,camera:createIntroCamera(camera,{landscape,surfaceHeight:world.surfaceHeight,clipCamera:world.clipCamera}),overlay:createIntroOverlay(app,{onSkip:()=>finishIntro()})};
+    // Parked on the grid, asleep, until the engine catches.
+    vehicle.root.position.y+=introLift(0)*modelScale;vehicle.eyes?.hold(EYE_CLOSED);intro.overlay.setShot(intro.camera.update(0,state,modelScale));
+  }
+  function playIntro(){raceAudio.unlock();setPhase('intro');app.dataset.introShot='ignition';}
+  function updateIntro(dt,viewState){
+    if(!intro.finishing)intro.time+=dt;
+    // The eyes are the headlamps: blink them awake, as if the bulldog opened them.
+    const eyes=introEyes(intro.time);if(eyes!==intro.eyes){intro.eyes=eyes;lighting.setHeadlights(eyes);vehicle.setHeadlights(eyes);vehicle.eyes?.hold(eyes?1:EYE_CLOSED);}
+    if(!intro.ignited&&intro.time>=INTRO_IGNITION){intro.ignited=true;raceAudio.cue('ignition');}
+    vehicle.root.position.y+=introLift(intro.time)*modelScale;
+    const shot=intro.camera.update(intro.time,viewState,modelScale);intro.overlay.setShot(shot);app.dataset.introShot=shot.id;
+    if(intro.time>=BULLDOG_INTRO_DURATION)finishIntro();
+  }
+  async function finishIntro(){
+    if(!intro||intro.finishing)return;intro.finishing=true;
+    await intro.overlay.cover();
+    lighting.setHeadlights(intro.headlights);vehicle.setHeadlights(intro.headlights);vehicle.eyes?.hold(null);
+    const overlay=intro.overlay;intro=null;delete app.dataset.introShot;start();
+    await overlay.reveal();
+  }
   function prepareOilTest(botDrops=false){
     if(phase!=='flying')return;
     resetFlight();
@@ -126,14 +157,15 @@ export async function createFlightSimulator({entryTransition}={}){
   function input(){return {reducedMotion:reduced.matches,turn:THREE.MathUtils.clamp(Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft'))+touch.turn,-1,1),throttle:Number(keys.has('KeyW')||touch.accelerate)-Number(keys.has('KeyS')),boost:keys.has('ShiftLeft')||keys.has('ShiftRight')||touch.boost,brake:keys.has('Space')||touch.brake,drift:keys.has('KeyE')||touch.drift};}
   function step(dt){
     if(artReview){if(perfReview?.trainRunning)world.train.step(dt);return;}
-    if(phase!=='flying')return;
+    if(phase!=='flying'&&phase!=='intro')return;
     renderPose.capture(state);
     simulationTime+=dt;
     const impactSerial=state.impactSerial;
     oil?.beforeStep(state,dt);
-    const previous=advanceHover(state,input(),dt,landscape,world.surfaceHeight);
+    const previous=advanceHover(state,phase==='intro'?introInput(intro.time,state,landscape):input(),dt,landscape,world.surfaceHeight);
     world.step(state,dt,previous);if(state.impactSerial!==impactSerial)raceAudio.cue('impact',state.impact);if(state.recoverNeeded){recover(false);return;}
     oil?.step(dt,state,previous);
+    boostPads?.step(dt,state,previous);
     // Track safe recovery checkpoints silently; free driving has no race progression UI.
     const gate=landscape.gates[gateIndex];
     if(crossesCircuitGate(previous,state,gate)){
@@ -147,7 +179,7 @@ export async function createFlightSimulator({entryTransition}={}){
     const state=viewState;
     if(snap)renderPose.reset(state);
     forward.set(Math.sin(state.yaw),0,Math.cos(state.yaw));
-    const profile=speedCameraProfile(state,{reducedMotion:reduced.matches,cameraMode}),distance=profile.distance,up=profile.height;
+    const profile=speedCameraProfile(state,{reducedMotion:reduced.matches,cameraMode,lens:fovControls.settings}),distance=profile.distance,up=profile.height;
     const useKlipp=klippCamera.enabled&&cameraMode!==2&&!oil?.lookingBack;
     app.dataset.cameraSystem=useKlipp?'Klipp':'Actual';
     if(useKlipp){
@@ -166,7 +198,7 @@ export async function createFlightSimulator({entryTransition}={}){
     desiredLook.set(state.x+Math.sin(state.yaw+profile.anticipation)*lookDistance,state.y+(cameraMode===2?2.4:2)+Math.sin(state.pitch)*(cameraMode===2?70:4),state.z+Math.cos(state.yaw+profile.anticipation)*lookDistance);
     const alpha=snap||reduced.matches?1:1-Math.exp(-dt*8);
     cameraPoint.lerp(desiredCamera,alpha);cameraAnchor.set(state.x,state.y+2.3,state.z);world.clipCamera?.(cameraAnchor,cameraPoint);lookPoint.lerp(desiredLook,alpha);camera.position.copy(cameraPoint);if(!reduced.matches&&state.impact>0){camera.position.x+=Math.sin(simulationTime*48)*state.impact*.008;camera.position.y+=Math.cos(simulationTime*39)*state.impact*.006;}camera.lookAt(lookPoint);
-    const fov=profile.fov;if(Math.abs(camera.fov-fov)>.01){camera.fov+=snap||reduced.matches?fov-camera.fov:(fov-camera.fov)*(1-Math.exp(-dt*4));camera.updateProjectionMatrix();}
+    const fov=profile.fov;if(Math.abs(camera.fov-fov)>.01){camera.fov=smoothCameraFov(camera.fov,fov,dt,snap||reduced.matches,profile.lens);camera.updateProjectionMatrix();}
   }
   function buildMap(){
     const ctx=mapBase.getContext('2d');
@@ -196,7 +228,7 @@ export async function createFlightSimulator({entryTransition}={}){
     drawMap();
   }
   async function loadWorld(){
-    const next=await createCircuitWorld({map:mapConfig.id,mobile,fxMaterialFactory:gpuModule?.createSmokeMaterial,anisotropy:Math.min(4,renderer.getMaxAnisotropy()),onProgress:value=>{$('.flight-loader progress').value=value;entryTransition?.progress(value);}});
+    const next=await createCircuitWorld({map:mapConfig.id,mobile,underglow:selectedShip.underglow,fxMaterialFactory:gpuModule?.createSmokeMaterial,anisotropy:Math.min(4,renderer.getMaxAnisotropy()),onProgress:value=>{$('.flight-loader progress').value=value;entryTransition?.progress(value);}});
     world=next;landscape=next.landscape;scene.add(world.root);lighting.setTrack(landscape);world.textures.applyRoot(lighting.root);
     await world.initWater?.(lighting.sun);
     app.dataset.water=world.water?'animated':'none';app.dataset.vegetationInstances=String(world.instanceCount??0);
@@ -217,6 +249,7 @@ export async function createFlightSimulator({entryTransition}={}){
   $('#flight-light').onclick=event=>{lighting.setNight(!lighting.night);event.currentTarget.setAttribute('aria-pressed',String(lighting.night));setText($('#flight-light-state'),lighting.night?'Noche':'Día');};
   $('#flight-comic').onclick=event=>{comicEnabled=!comicEnabled;event.currentTarget.setAttribute('aria-pressed',String(comicEnabled));setText($('#flight-comic-state'),comicEnabled?'Activado':'Desactivado');};
   document.addEventListener('keydown',event=>{
+    if(phase==='intro'){if(['Enter','Escape','Space'].includes(event.code)&&!event.repeat){event.preventDefault();finishIntro();}return;}
     if(event.code==='Escape'&&!event.repeat){event.preventDefault();pause();return;}
     if(/INPUT|SELECT|TEXTAREA/.test(event.target.tagName))return;
     if(event.target.closest?.('summary'))return;
@@ -247,18 +280,19 @@ export async function createFlightSimulator({entryTransition}={}){
   try{
     const worldLoadStarted=performance.now();const results=await Promise.allSettled([createFlightShip(selectedShip.id,{...choice,exhaust:false}),loadWorld()]);const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;app.dataset.worldReadyMs=String(performance.now()-worldLoadStarted);vehicle=results[0].value;vehicle.root.scale.setScalar(modelScale);vehicle.setHeadlights(lighting.headlightsEnabled);scene.add(vehicle.root);syncShip();updateCamera(1,true);
     oil=await createFlightOil({scene,landscape,surfaceHeight:world.surfaceHeight,app,clearInput,onPrepare:prepareOilTest,onNotice:notice,materialFactory:gpuModule?.oilMaterialFactory});oil.reset(state,true);
-    {gpuGraphics=await gpuModule.createFlightWebGPU(renderer,scene,camera,vehicle,oil,{naturalDesert});gpuGraphics.setQuality(performanceControl.settings);}
-    setPhase('loading');loader.hidden=!!entryTransition;setText($('#flight-load-status'),'Preparando gráficos…');
+    if(mapConfig.id==='mario-raceway')boostPads=await createFlightBoostPads({scene,landscape,surfaceHeight:world.surfaceHeight,onActivate:()=>notice('¡Placa turbo!')});
+    {gpuGraphics=await gpuModule.createFlightWebGPU(renderer,scene,camera,vehicle,oil,{naturalDesert,boostPads});gpuGraphics.setQuality(performanceControl.settings);}
+    if(!artReview)prepareIntro();setPhase('loading');loader.hidden=!!entryTransition;setText($('#flight-load-status'),'Preparando gráficos…');
     lighting.update(state,worldTime,{reducedMotion:reduced.matches});skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
     const compileStarted=performance.now();await renderer.compileAsync(scene,camera);app.dataset.compileMs=String(performance.now()-compileStarted);
     loader.hidden=true;
     if(entryTransition){
       // Draw the track before revealing it; driving starts once the cover is gone.
-      setPhase('loading');updateCamera(1,true);skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
+      setPhase('loading');if(intro)intro.camera.update(0,state,modelScale);else updateCamera(1,true);skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
       await gpuGraphics.render({state,phase,comic:comicEnabled,reduced:reduced.matches});
       await entryTransition.reveal();
     }
-    app.dataset.ready='true';start();if(document.hidden)pause();
+    app.dataset.ready='true';if(intro)playIntro();else{start();if(document.hidden)pause();}
     if(artReview){cameraMode=3;const {mountDesertArtReview}=await import('./desert-art-review.js');mountDesertArtReview({key:query.get('artView'),world,state,camera,vehicle,app});}
   }catch(error){console.error(error);fail('No se pudo cargar el simulador.');return;}
   const clock=new THREE.Clock();
@@ -284,11 +318,12 @@ export async function createFlightSimulator({entryTransition}={}){
     if(phase==='flying'&&!perfReview)performanceControl.sample(rawDelta*1000);
     accumulator+=dt;while(accumulator>=1/60){step(1/60);accumulator-=1/60;}
     raceAudio.update(state);
-    const viewState=phase==='flying'?renderPose.sample(state,accumulator*60):state;
-    syncShip(viewState);updateCamera(dt,false,viewState);
+    const viewState=phase==='flying'||phase==='intro'?renderPose.sample(state,accumulator*60):state;
+    syncShip(viewState);if(phase==='intro')updateIntro(dt,viewState);else updateCamera(dt,false,viewState);
     const pilotFrame=Math.floor(simulationTime*24);if(pilotFrame!==lastPilotFrame){vehicle.update(pilotFrame/24,state.speed,state.boosting,reduced.matches,viewState);lastPilotFrame=pilotFrame;}
     if(phase!=='paused')worldTime+=dt;
-    world.update(worldTime,reduced.matches,{state,phase,night:lighting.night,camera,scale:modelScale,dt:phase==='flying'?dt:0});
+    const driving=phase==='flying'||phase==='intro';
+    world.update(worldTime,reduced.matches,{state,phase,night:lighting.night,camera,scale:modelScale,dt:driving?dt:0});
     if(world.water)app.dataset.waterPhase=world.water.phase.value.toFixed(3);
     lighting.update(state,worldTime,{dt,reducedMotion:reduced.matches,paused:phase==='paused'});
     skyWorld.update(camera,worldTime,{night:lighting.night,dt,reducedMotion:reduced.matches});
@@ -296,6 +331,9 @@ export async function createFlightSimulator({entryTransition}={}){
     shadowElapsed+=dt;
     if(shadowElapsed>=shadowInterval){lighting.sun.shadow.needsUpdate=true;shadowElapsed=0;}
     oil?.update(state,camera,phase,modelScale,reduced.matches);
+    boostPads?.update(driving?dt:0,reduced.matches);
+    if(boostPads)app.dataset.boostPads=JSON.stringify(boostPads.sim.entries.map(p=>({remaining:p.remaining,activations:p.activations,x:p.x,y:p.y,z:p.z})));
+    app.dataset.padBoost=String(state.padBoostRemaining??0);
     scene.updateMatrixWorld(true);camera.updateMatrixWorld();updateHud(performance.now()/1000);
     if(noticeUntil&&performance.now()>noticeUntil){$('.flight-notice').hidden=true;noticeUntil=0;}
     if(gpuGraphics){await gpuGraphics.render({dt,state,phase,comic:comicEnabled,reduced:reduced.matches});app.dataset.boostPalette=gpuGraphics.boost.stats.palette;app.dataset.boostParticles=JSON.stringify({lifetimes:gpuGraphics.boost.stats.particleLifetimes,emitted:gpuGraphics.boost.stats.emittedByLayer});app.dataset.postSamples=String(gpuGraphics.stats.samples);app.dataset.glowSamples=String(gpuGraphics.stats.glowSamples);}
@@ -307,5 +345,5 @@ export async function createFlightSimulator({entryTransition}={}){
   let renderTask=Promise.resolve();
   renderer.setAnimationLoop(()=>{if(!rendering&&!disposed)renderTask=frame();});
   for(const event of ['webglcontextlost','graphicslost'])canvas.addEventListener(event,event=>{event.preventDefault();renderer.setAnimationLoop(null);raceAudio.setPhase('paused');clearInput();fail('Se interrumpió la vista 3D.');});
-  window.addEventListener('pagehide',()=>{disposed=true;renderer.setAnimationLoop(null);renderTask.finally(()=>{perfReview?.dispose();gpuGraphics?.dispose();klippCamera.dispose();fxControls?.dispose();oil?.dispose();scaleControl.dispose();soundControl.dispose();raceAudio.dispose();renderer.setAnimationLoop(null);world.dispose();lighting.dispose();skyWorld.dispose();speedAtmosphere.dispose();vehicle.dispose();renderer.dispose();});},{once:true});
+  window.addEventListener('pagehide',()=>{disposed=true;renderer.setAnimationLoop(null);renderTask.finally(()=>{perfReview?.dispose();boostPads?.dispose();gpuGraphics?.dispose();klippCamera.dispose();fxControls?.dispose();oil?.dispose();scaleControl.dispose();fovControls.dispose();soundControl.dispose();raceAudio.dispose();renderer.setAnimationLoop(null);world.dispose();lighting.dispose();skyWorld.dispose();speedAtmosphere.dispose();vehicle.dispose();renderer.dispose();});},{once:true});
 }

@@ -1,0 +1,6 @@
+*{box-sizing:border-box}body{margin:0;background:#182b34;color:#fff;font:14px/1.5 system-ui}canvas{display:block;width:100%;height:100dvh}
+header{position:absolute;top:16px;left:16px;max-width:380px;padding:16px;border-radius:12px;background:#14232be8}header p{margin:8px 0}a{color:#9fddff}
+kbd,code{font:12px ui-monospace,monospace;padding:0 4px;border-radius:4px;background:#ffffff1f}
+#hud{position:absolute;left:16px;bottom:16px;padding:10px 12px;border-radius:10px;background:#0b161ce6;font:12px/1.45 ui-monospace,monospace;font-variant-numeric:tabular-nums;white-space:pre;pointer-events:none}
+#dials{position:absolute;right:16px;top:16px;width:300px;max-height:calc(100dvh - 32px);overflow:auto}
+@media(max-width:760px){header{max-width:50%;font-size:11px}#dials{width:42%}#hud{font-size:10px}}

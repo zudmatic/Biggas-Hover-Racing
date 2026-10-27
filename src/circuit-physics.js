@@ -48,7 +48,7 @@ export function createCircuitLandscape(route,gameplay){
   const extent=Math.max(...samples.map(s=>Math.max(Math.abs(s.position[0]),Math.abs(s.position[2]))))+28;
   return {type:'circuit',seed:gameplay.road_width_m===18?35:34,samples,length,gates,spawn,yaw:Math.atan2(grid.forward_gltf[0],grid.forward_gltf[2]),roadAt,atDistance,mapHalf:extent,height:(x,z)=>roadAt(x,z).y};
 }
-export function createHoverState(landscape){return {...landscape.spawn,yaw:landscape.yaw,pitch:0,roll:0,pitchRate:0,rollRate:0,speed:0,throttle:0,energy:1,boosting:false,boostLocked:false,cooldown:0,hoverTime:0,wallHit:false,vx:0,vz:0,yawRate:0,hover:HOVER_HEIGHT,hoverVelocity:0,airborne:false,landingTime:0,slip:0,impact:0,impactSerial:0,acceleration:0,braking:false,drifting:false,driftBlend:0,offTrackTime:0,recoverNeeded:false,oilFactor:1,oilContact:false};}
+export function createHoverState(landscape){return {...landscape.spawn,yaw:landscape.yaw,pitch:0,roll:0,pitchRate:0,rollRate:0,speed:0,throttle:0,energy:1,padBoostRemaining:0,boosting:false,boostLocked:false,cooldown:0,hoverTime:0,wallHit:false,vx:0,vz:0,yawRate:0,hover:HOVER_HEIGHT,hoverVelocity:0,airborne:false,landingTime:0,slip:0,impact:0,impactSerial:0,acceleration:0,braking:false,drifting:false,driftBlend:0,offTrackTime:0,recoverNeeded:false,oilFactor:1,oilContact:false};}
 export function recoverHover(landscape,gateIndex,surfaceHeight){
   if(gateIndex===0){
     const state=createHoverState(landscape);
@@ -67,9 +67,12 @@ export function advanceHover(state,input,dt,landscape,surfaceHeight=landscape.he
   state.drifting=!!input.drift&&!state.braking&&state.speed>8;
   state.driftBlend+=(Number(state.drifting)-state.driftBlend)*(1-Math.exp(-dt*(state.drifting?10:5)));
   if(!input.boost)state.boostLocked=false;
-  state.boosting=!!input.boost&&!input.brake&&!state.boostLocked&&state.energy>0;
-  state.energy=clamp(state.energy+(state.boosting?-.23:.13)*dt,0,1);
-  if(state.energy===0){state.boostLocked=true;state.boosting=false;}
+  const padBoost=(state.padBoostRemaining??0)>0&&!input.brake;
+  state.padBoostRemaining=Math.max(0,(state.padBoostRemaining??0)-dt);
+  const manualBoost=!!input.boost&&!input.brake&&!state.boostLocked&&state.energy>0;
+  state.boosting=padBoost||manualBoost;
+  state.energy=clamp(state.energy+(manualBoost&&!padBoost?-.23:.13)*dt,0,1);
+  if(state.energy===0){state.boostLocked=true;state.boosting=padBoost;}
   const target=(input.brake?0:state.boosting?CIRCUIT_BOOST:state.throttle)*(state.oilFactor??1),acceleration=input.brake?65:state.boosting?38:24;
   // A damped steering response and a separate velocity vector carry momentum into turns.
   const desiredYaw=-turn*(2.65-.9*state.speed/CIRCUIT_BOOST)*(1+state.driftBlend*.18);

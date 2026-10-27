@@ -3,10 +3,10 @@ import * as THREE from 'three';
 import {createCircuitSky,createSpeedAtmosphere,speedCameraProfile} from '../src/flight-atmosphere.js';
 import {launchFromLobby,withFlightOptions} from './helpers/flight.js';
 
-test('speed camera builds a restrained rush while preserving accessible and alternate cameras',()=>{
+test('speed camera makes boost distinct while preserving accessible and alternate cameras',()=>{
   const stopped=speedCameraProfile({speed:0}),fast=speedCameraProfile({speed:72,boosting:true,yawRate:3});
-  expect(stopped.fov).toBe(62);expect(fast.fov).toBe(78);expect(fast.height).toBeLessThan(stopped.height);expect(fast.distance).toBeLessThan(stopped.distance);expect(fast.anticipation).toBeLessThanOrEqual(.22);
-  expect(speedCameraProfile({speed:1000,boosting:true}).fov).toBe(78);
+  expect(stopped.fov).toBe(62);expect(fast.fov).toBe(88);expect(fast.height).toBeLessThan(stopped.height);expect(fast.distance).toBeLessThan(stopped.distance);expect(fast.anticipation).toBeLessThanOrEqual(.22);
+  expect(speedCameraProfile({speed:1000,boosting:true}).fov).toBe(88);
   expect(speedCameraProfile({speed:72,boosting:true,yawRate:3},{reducedMotion:true})).toEqual({...stopped});
   expect(speedCameraProfile({speed:72},{cameraMode:1}).distance).toBe(24);expect(speedCameraProfile({speed:72},{cameraMode:2}).distance).toBe(-1.7);
 });
@@ -38,12 +38,12 @@ for(const map of ['ruins','nexus'])test(`${map}: clouds and speed effects work t
   await page.goto('/simulator.html');await launchFromLobby(page,{map});const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});await expect(app).toHaveAttribute('data-cloud-count','30');
   await page.screenshot({path:`.context/speed-sky-${map}.png`});
   await page.keyboard.down('KeyW');await page.keyboard.down('ShiftLeft');
-  await expect.poll(async()=>Number(await app.getAttribute('data-fov')),{timeout:20000}).toBeGreaterThan(67);
+  await expect.poll(async()=>Number(await app.getAttribute('data-fov')),{timeout:20000}).toBeGreaterThan(76);
   await expect.poll(async()=>Number(await app.getAttribute('data-speed-effect')),{timeout:15000}).toBeGreaterThan(.1);
   await page.screenshot({path:`.context/speed-rush-${map}.png`});await page.keyboard.up('KeyW');await page.keyboard.up('ShiftLeft');
   await page.keyboard.press('Escape');await expect(app).toHaveAttribute('data-speed-effect','0.000');
   await withFlightOptions(page,()=>page.getByRole('button',{name:'Iluminación nocturna'}).click());await expect(app).toHaveAttribute('data-lighting','night');
-  await page.emulateMedia({reducedMotion:'reduce'});await expect.poll(async()=>Number(await app.getAttribute('data-fov'))).toBe(62);await expect(app).toHaveAttribute('data-speed-effect','0.000');
+  await page.emulateMedia({reducedMotion:'reduce'});await expect.poll(async()=>Number(await app.getAttribute('data-fov'))).toBe(65);await expect(app).toHaveAttribute('data-speed-effect','0.000');
   await page.getByRole('button',{name:'Continuar',exact:false}).first().click();await page.screenshot({path:`.context/speed-night-${map}.png`});
   await withFlightOptions(page,()=>page.getByRole('button',{name:'Cómic',exact:true}).click());await expect(app).toHaveAttribute('data-comic','false');await page.screenshot({path:`.context/speed-normal-${map}.png`});expect(errors).toEqual([]);
 });

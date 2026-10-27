@@ -1,0 +1,28 @@
+BULLDOG 039 · INTEGRACIÓN EN BIGGAS HOVER RACING
+
+Modelo: Bulldog_Racer_Animated_Prototype.glb (SHA-256 f9c73c6f…54ac), copia
+animable del LOD0 con la lengua aprobada. Se conserva sin modificar: 14 mallas,
+2 pivotes, 108 primitivas, 62.892 triángulos, 31 materiales unlit, PNG de ojos
+embebido, morphs de párpados y lengua, y los clips Look, Blink y Collision.
+
+Materiales:
+- 30 materiales "<familia> toon 0|1|2" hornean un toon de tres tonos. Al cargar,
+  src/toon-surfaces.js crea un MeshStandardMaterial por familia (11) con el
+  color del tono 2 (albedo autoral) para que el shader cómic TSL del juego
+  sombree en tiempo real como en las otras naves.
+- Toon_new_eyes_graphic_unlit queda unlit a propósito.
+
+Rig facial (src/ship-eyes.js, según README_controles del prototipo):
+- CTRL_Eye_L/R: yaw ±3° hacia el lado del giro, suavizado.
+- Lid_L/R: cierre t∈[0,1] repartido entre Blink_*_025/050/075/100 con q=4t.
+  Los clips Blink y Collision se leen como curvas escalares (cierre y lengua),
+  sin el reposo inicial de la demo, y se re-posan por la trayectoria.
+- Tongue_Recoil en ambas mallas de lengua durante la reacción al choque.
+- flight-ship mantiene vivos (fuera del merge estático) los pivotes, párpados y
+  lengua; los ocho grupos rígidos sí se agrupan por material.
+
+Orientación: mira a +Z con +Y vertical. Dimensiones 4,18 × 3,09 × 5,64 u.
+Cabina vacía: el juego sienta al piloto con pilotOffset [0, 0.66, -0.52].
+Escapes: turbina (radio 0,44) y dos auxiliares (0,15). Faros desde los ojos.
+
+Miniaturas: node scripts/render-ship-previews.mjs 039 http://127.0.0.1:5173/

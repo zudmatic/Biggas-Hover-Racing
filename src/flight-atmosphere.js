@@ -54,9 +54,9 @@ export function createCircuitSky(scene,{mobile=false,map='ruins'}={}){
   return {root,clouds,dome,stars,sun,cloudCount:groups,update,dispose(){domeGeometry.dispose();dome.material.dispose();cloudGeometry.dispose();cloudMaterial.dispose();clouds.dispose();sun.geometry.dispose();sun.material.dispose();starsGeometry.dispose();stars.material.dispose();root.removeFromParent();}};
 }
 
-export function speedCameraProfile(state,{reducedMotion=false,cameraMode=0}={}){
+export function speedCameraProfile(state,{reducedMotion=false,cameraMode=0,lens={}}={}){
   const speed=clamp(state.speed/72,0,1),rush=reducedMotion?0:THREE.MathUtils.smoothstep(state.speed,8,60);
-  return {fov:62+(reducedMotion?0:speed*speed*12+(state.boosting?4:0))*(cameraMode===1?.7:1),distance:cameraMode===1?24:cameraMode===2?-1.7:10-rush*1.2,height:cameraMode===1?12:cameraMode===2?2.4:5.5-rush*.65,anticipation:reducedMotion?0:clamp((state.yawRate??0)*.13,-.22,.22)*rush};
+  return {fov:Math.min(110,(lens.base??62)+(reducedMotion?0:speed*speed*(lens.speed??12)+(state.boosting?(lens.boost??14):0))*(cameraMode===1?.7:1)),lens,distance:cameraMode===1?24:cameraMode===2?-1.7:10-rush*1.2,height:cameraMode===1?12:cameraMode===2?2.4:5.5-rush*.65,anticipation:reducedMotion?0:clamp((state.yawRate??0)*.13,-.22,.22)*rush};
 }
 
 export function createSpeedAtmosphere(scene,{mobile=false}={}){

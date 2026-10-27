@@ -1,0 +1,14 @@
+LOMI 040
+
+Escala: modelScale 0,6 y modelOffset [0, 1,55, 0]: 5,60 × 1,84 × 4,48 u,
+punto más bajo en y = 0, mira a +Z. Asiento en y 1,03, z −0,40.
+
+Lomi viene sentado en Lomi_Pilot_Rig (pelvis en y 1,074, z −0,37) con dos
+bucles: Lomi_Pilot_LookAround (4 s, el del juego) y Lomi_Pilot_Celebrate (3 s).
+
+Cristales, toberas y anclajes Lomi_Ship_Exhaust_Left/Right quedan fuera del
+merge estático (liveNodes) para conservar los atributos del plasma.
+
+Texturas de energía: lomi-040-noise.webp y lomi-040-flow.webp.
+
+Miniaturas: node scripts/render-ship-previews.mjs 040 http://127.0.0.1:5173/

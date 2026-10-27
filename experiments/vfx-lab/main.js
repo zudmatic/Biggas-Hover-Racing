@@ -5,6 +5,9 @@ import {createDither} from './dither.js';
 import {createEngineCore} from './engine-core.js';
 import {createFlameTrail} from './flame-trail.js';
 import {createControls} from './controls.js';
+import {createFlightBoostPads} from '../../src/flight-boost-pads.js';
+import {createBoostPadControls} from '../../src/boost-pad-controls.js';
+import {createPadBoostPalette,smoothBoostPower} from '../../src/vfx/pad-boost-palette.js';
 import * as THREE from 'three/webgpu';
 import {mix,step,uniform,uv,float,sin,smoothstep,abs,vec4} from 'three/tsl';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
@@ -72,7 +75,15 @@ async function main(){
     if(action==='Restablecer')controls.reset();
   });
   const {kits}=controls;
+  const padPalette=createPadBoostPalette(),padEngineEdge=new THREE.Color(),padEngineCore=new THREE.Color();
   const studioCamera=createStudioCamera(camera,orbit,ship);
+  const padState={x:5,y:0,z:0,speed:0,padBoostRemaining:0};
+  const pads=await createFlightBoostPads({scene,distances:[0],surfaceHeight:()=>-.4,
+    landscape:{spawn:{x:5,z:0},roadAt:()=>({distance:0}),atDistance:()=>({x:5,z:0,y:-.4,nx:0,nz:1,grade:0})}});
+  const padControls=createBoostPadControls(pads,padState,()=>{
+    kits.camera.setValues({'Cámara':'Fija'});
+    orbit.target.set(5,0,0);camera.position.set(12,8,-10);orbit.update();
+  });
   const unsubscribers=[kits.camera.subscribe(v=>studioCamera.configure(v))];
   unsubscribers.push(kits.print.subscribe(v=>{fireDither.configure(v,'Fuego');heat.configureDither(v);}));
   unsubscribers.push(kits.flame.subscribe(v=>{
@@ -121,12 +132,19 @@ async function main(){
     try{const dt=Math.min((now-last)/1000,.05);last=now;
       const studio=kits.studio.values,flame=kits.flame.values,fragment=kits.fragments.values,ember=kits.embers.values,haze=kits.heat.values,line=kits.streaks.values;
       const stepDt=dt*studio['Velocidad animación'];
-      if(!studio.Pausa){time+=stepDt;studioCamera.move(stepDt,time,studio);ship.updateMatrixWorld(true);flameTrail.record(time,ship);
-        const target={Turbo:1,'Aceleración':.45,Reposo:.13,Soltar:0}[studio.Modo];
-        power+=(target-power)*(1-Math.exp(-stepDt*(target>power?12:18)));clock.value=time;
-        accumulator+=stepDt*fragment['Cantidad por segundo']*target*(fragment.Activos?1:0);
-        emberAccumulator+=stepDt*ember['Cantidad por segundo']*target*(ember.Activas?1:0);
-        streakAccumulator+=stepDt*line['Cantidad por segundo']*target*(line.Activas?1:0);
+      if(!studio.Pausa){time+=stepDt;
+        const previousPadState={...padState},motion=studioCamera.move(stepDt,time,studio,padState.padBoostRemaining>0);
+        if(motion.reset){padState.padBoostRemaining=0;flameTrail.clear();particles.clear();embers.clear();streaks.clear();}
+        ship.updateMatrixWorld(true);flameTrail.record(time,ship);
+        Object.assign(padState,{x:ship.position.x,y:ship.position.y,z:ship.position.z,speed:motion.speed});
+        padState.padBoostRemaining=Math.max(0,padState.padBoostRemaining-stepDt);
+        pads.step(stepDt,padState,motion.reset?padState:previousPadState);padControls.update();pads.update(stepDt,false);
+        document.body.dataset.boostPad=JSON.stringify({remaining:pads.sim.entries[0].remaining,activations:pads.sim.entries[0].activations,turbo:padState.padBoostRemaining,speed:motion.speed});
+        const target=padState.padBoostRemaining>0?1:{Turbo:1,'Aceleración':.45,Reposo:.13,Soltar:0}[studio.Modo];
+        power=smoothBoostPower(power,target,stepDt);clock.value=time;
+        accumulator+=stepDt*fragment['Cantidad por segundo']*power*(fragment.Activos?1:0);
+        emberAccumulator+=stepDt*ember['Cantidad por segundo']*power*(ember.Activas?1:0);
+        streakAccumulator+=stepDt*line['Cantidad por segundo']*power*(line.Activas?1:0);
         const lineCount=Math.floor(streakAccumulator);streakAccumulator-=lineCount;
         const count=Math.floor(accumulator),sparkCount=Math.floor(emberAccumulator);accumulator-=count;emberAccumulator-=sparkCount;
         // Independent emitters: turning fragments off must never suppress the embers.
@@ -143,16 +161,23 @@ async function main(){
         await particles.system.update(stepDt);await embers.system.update(stepDt);await streaks.system.update(stepDt);
       }
       studioCamera.update(stepDt,power,studio.Pausa);
+      padPalette.update(studio.Pausa?0:stepDt,padState.padBoostRemaining>0);
+      padPalette.apply(fire.value,flame['Color fuego']);padPalette.apply(hot.value,flame['Color núcleo'],true);
+      padPalette.apply(fragmentColor.value,fragment.Color);padPalette.apply(fragmentHot.value,fragment['Color inicial'],true);
+      padPalette.apply(emberColor.value,ember.Color);padPalette.apply(streakColor.value,line.Color,true);
+      padPalette.apply(padEngineEdge,kits.engine.values['Color borde']);padPalette.apply(padEngineCore,kits.engine.values['Color centro'],true);
+      document.body.dataset.boostSource=padState.padBoostRemaining>0?'placa':studio.Modo==='Turbo'?'nitro':'motor';
       document.body.dataset.camera=kits.camera.values['Cámara'];
       document.body.dataset.shipPosition=ship.position.toArray().join(',');
       for(const cloth of vehicles[previousVehicle].cloth)cloth.update(time,power*52,studio.Modo==='Turbo',false);
-      engineCore.update(studio.Pausa?0:stepDt,time,power,kits.engine.values);
+      engineCore.update(studio.Pausa?0:stepDt,time,power,{...kits.engine.values,'Color borde':padEngineEdge,'Color centro':padEngineCore});
       flameTrail.update(time,flame,power,fragment.Velocidad,fragment.Elevación);
       document.body.dataset.time=time.toFixed(3);
       heat.update(ship,time*haze['Velocidad ondas'],power,haze.Activa?haze.Intensidad:0,flame.Longitud*haze.Longitud/1.5,haze.Turbulencia,haze.Ancho);
+      heat.updatePadField(pads.heatFields);
       await heat.render();
     }catch(error){status.textContent='Error de renderizado: '+error.message;console.error(error);renderer.setAnimationLoop(null);}finally{busy=false;}
   });
-  window.addEventListener('pagehide',()=>{renderer.setAnimationLoop(null);observer.disconnect();unsubscribers.forEach(fn=>fn());controls.dispose();studioCamera.dispose();particles.dispose();embers.dispose();streaks.dispose();streakGeometry.dispose();flameTrail.dispose();engineCore.dispose();flameMaterial.dispose();heat.dispose();orbit.dispose();renderer.dispose();},{once:true});
+  window.addEventListener('pagehide',()=>{renderer.setAnimationLoop(null);observer.disconnect();unsubscribers.forEach(fn=>fn());padControls.dispose();pads.dispose();controls.dispose();studioCamera.dispose();particles.dispose();embers.dispose();streaks.dispose();streakGeometry.dispose();flameTrail.dispose();engineCore.dispose();flameMaterial.dispose();heat.dispose();orbit.dispose();renderer.dispose();},{once:true});
 }
 main().catch(error=>{status.textContent='No se pudo iniciar: '+error.message;console.error(error);});

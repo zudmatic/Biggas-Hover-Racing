@@ -8,8 +8,8 @@ test('scale changes live, restores the original and persists across flights',asy
   const app=page.locator('.flight-app');
   await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
   await expect(app).toHaveAttribute('data-model-scale','0.75');
-  await expect(page.getByRole('button',{name:'DialKit',exact:true})).toHaveAttribute('aria-expanded','false');
-  await page.getByRole('button',{name:'DialKit',exact:true}).click();
+  await expect(page.getByRole('button',{name:'DialKit',exact:true})).toHaveAttribute('aria-expanded','true');
+  await page.getByText('Tamaño · nave y piloto',{exact:true}).click();
   const slider=page.getByRole('slider',{name:'Escala',exact:true});
   await slider.focus();await page.keyboard.press('ArrowLeft');
   await expect(app).toHaveAttribute('data-model-scale','0.74');

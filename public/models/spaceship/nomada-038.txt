@@ -19,5 +19,5 @@ Zudmatic 0,44) y una pose específica. Extensiones al manillar y estribos
 altos conectan sus manos y pies con los controles del vehículo.
 
 Las miniaturas normal y papel se renderizan desde el modelo real con
-scripts/render-nomada-previews.mjs. Ejecutar contra el servidor Vite local:
-node scripts/render-nomada-previews.mjs http://127.0.0.1:5173/
+scripts/render-ship-previews.mjs. Ejecutar contra el servidor Vite local:
+node scripts/render-ship-previews.mjs 038 http://127.0.0.1:5173/
