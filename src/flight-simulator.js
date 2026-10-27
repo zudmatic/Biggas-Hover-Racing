@@ -61,7 +61,7 @@ export async function createFlightSimulator({entryTransition}={}){
   const scene=new THREE.Scene();scene.fog=new THREE.Fog(0xb6c6bd,220,1100);scene.background=new THREE.Color(0xb6c6bd);
   scene.matrixWorldAutoUpdate=false;
   const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.15,7000);
-  const lighting=createCircuitLighting(scene,{mobile,headlightMounts:selectedShip.headlights});
+  const lighting=createCircuitLighting(scene,{mobile,headlightMounts:selectedShip.headlights,underglow:selectedShip.underglow});
   const skyWorld=createCircuitSky(scene,{mobile,map:mapConfig.id}),speedAtmosphere=createSpeedAtmosphere(scene,{mobile});
   let comicEnabled=query.get('comic')!=='0';
   let shadowElapsed=Infinity,shadowInterval=1/30;
@@ -217,7 +217,7 @@ export async function createFlightSimulator({entryTransition}={}){
     drawMap();
   }
   async function loadWorld(){
-    const next=await createCircuitWorld({map:mapConfig.id,mobile,fxMaterialFactory:gpuModule?.createSmokeMaterial,anisotropy:Math.min(4,renderer.getMaxAnisotropy()),onProgress:value=>{$('.flight-loader progress').value=value;entryTransition?.progress(value);}});
+    const next=await createCircuitWorld({map:mapConfig.id,mobile,underglow:selectedShip.underglow,fxMaterialFactory:gpuModule?.createSmokeMaterial,anisotropy:Math.min(4,renderer.getMaxAnisotropy()),onProgress:value=>{$('.flight-loader progress').value=value;entryTransition?.progress(value);}});
     world=next;landscape=next.landscape;scene.add(world.root);lighting.setTrack(landscape);world.textures.applyRoot(lighting.root);
     fxControls=createFlightFxControls(world.fx,message=>{notice(message);if(phase==='flying')canvas.focus({preventScroll:true});});
     setText($('#flight-seed'),`${Math.round(landscape.length)} M · HOVER`);buildMap();resetFlight();updateCamera(1,true);

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {MeshBasicNodeMaterial} from 'three/webgpu';
 import {Fn,If,attribute,float,vec2,vec3,vec4,uniform,texture,positionLocal,normalGeometry,cameraPosition,cameraProjectionMatrix,cameraViewMatrix,modelWorldMatrix,modelWorldMatrixInverse,modelScale,varying,mix,smoothstep,fract,floor,sin,cos,sqrt,abs,pow,exp,min,max,clamp,length,normalize,cross,dot,atan,fwidth,select} from 'three/tsl';
-import {BOOST_RATIO,PLASMA,PLASMA_QUALITY,THRUST,SINGULARITY} from './lomi-constants.js';
+import {BOOST_RATIO,PLASMA,PLASMA_QUALITY} from './lomi-constants.js';
 import {tiled} from './lomi-energy.js';
 
 const TAU=6.2831853;
@@ -148,7 +148,7 @@ function createField(u){
   });
   return {flowUv,warpUv,plasma};
 }
-const hash21=Fn(([p0])=>{const p=fract(p0.mul(vec2(123.34,456.21))).toVar();p.addAssign(dot(p,p.add(45.32)));return fract(p.x.mul(p.y));});
+const hash21=Fn(([p])=>{const p3=fract(vec3(p.x,p.y,p.x).mul(.1031)).toVar();p3.addAssign(dot(p3,p3.yzx.add(33.33)));return fract(p3.x.add(p3.y).mul(p3.z));});
 
 // Additive colour with the destination alpha kept: the comic post divides by
 // scene alpha, and plain AdditiveBlending also sums alpha in the HDR target.
@@ -184,7 +184,9 @@ export function createShardMaterial(u,detail){
     const edge=line.mul(smoothstep(.45,.7,pulse)).mul(u.edge.x);
     const knot=float(1).add(pow(clamp(stream.mul(region).mul(1.9),0,1),u.hotspots.y).mul(u.hotspots.x));
     const energy=filament.mul(coverage).mul(mix(.15,1,near)).add(edge).mul(knot).mul(u.emission);
-    return body.add(plasma(energy,stream.add(evolve.mul(.5)).add(aAlong.mul(.3))));
+    // The comic post's ACES bleaches channels above 1 to white; capping the brightest keeps the hue.
+    const color=body.add(plasma(energy,stream.add(evolve.mul(.5)).add(aAlong.mul(.3)))).toVar();
+    return color.div(max(float(1),max(color.r,max(color.g,color.b))));
   })();
   return material;
 }
@@ -278,9 +280,8 @@ export function createLomiPlasma(root,{crystals,exhausts,nozzles,scale,textures,
   const coils=ribbon(createCoilGeometry(space,exhausts,PLASMA.coils.strands,quality.coils),createCoilMaterial(uniforms,quality.detail));
   const lights=dorsalLightPositions(space,shards).map(position=>{const light=new THREE.PointLight(PLASMA.colors.base,0,1,PLASMA.light.decay);light.position.copy(position);space.add(light);return light;});
   const black=new THREE.MeshBasicMaterial({color:0});for(const mesh of nozzles)mesh.material=black;
-  const glows=exhausts.map(anchor=>{const light=new THREE.PointLight(SINGULARITY.glow.colors.hot,0,1,THRUST.light.decay);light.position.set(0,THRUST.light.offset,0);anchor.add(light);return light;});
   const drive=createPlasmaDrive(),turn=new THREE.Quaternion(),worldScale=new THREE.Vector3();let lastTime=0;
-  const plasma={root:space,uniforms,tongues,coils,lights,glows,driven:false,
+  const plasma={root:space,uniforms,tongues,coils,lights,driven:false,
     update(signals,dt){
       stepPlasmaDrive(drive,signals,dt);
       const emission=drive.emission*PLASMA.intensity,unit=space.getWorldScale(worldScale).x;
@@ -290,15 +291,13 @@ export function createLomiPlasma(root,{crystals,exhausts,nozzles,scale,textures,
       tongues.visible=coils.visible=emission>0;
       // Point lights live in world units: scale distance and the inverse-square intensity with the ship.
       for(const light of lights){light.intensity=PLASMA.light.intensity*emission*unit*unit;light.distance=PLASMA.light.distance*unit;light.color.lerpColors(PLASMA.colors.base,PLASMA.colors.burst[0],uniforms.burst.value);}
-      const energy=Math.min(signals.level+signals.surge,1.5);
-      for(const light of glows){light.intensity=THRUST.light.intensity*THREE.MathUtils.lerp(.3,1,energy)*unit*unit;light.distance=THRUST.light.distance*unit;}
     },
     idle(time,reduced){
       const dt=reduced?0:THREE.MathUtils.clamp(time-lastTime,0,.1);lastTime=time;IDLE.time=reduced?0:time;
       plasma.update(IDLE,dt);
     },
     dispose(){
-      space.removeFromParent();for(const light of glows)light.removeFromParent();
+      space.removeFromParent();
       for(const mesh of [tongues,coils]){mesh.geometry.dispose();mesh.material.dispose();}
       surface.dispose();black.dispose();
     }};

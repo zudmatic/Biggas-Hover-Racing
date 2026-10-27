@@ -11,7 +11,7 @@ import {createNexusDetails} from './nexus-details.js';
 import {loadFlightFx} from './flight-fx.js';
 export const createRoadSurface=createSurfaceIndex;
 
-export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotropy=4,map='ruins',fxMaterialFactory}={}){
+export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotropy=4,map='ruins',fxMaterialFactory,underglow}={}){
   const config=circuitMap(map),city=config.id==='nexus',base=`${import.meta.env.BASE_URL}models/${config.folder}/`,loader=new GLTFLoader(),colliderLoader=new GLTFLoader().register(collisionMaterials);
   const json=async file=>{const response=await fetch(base+file);if(!response.ok)throw new Error(`Circuito: ${response.status} ${file}`);return response.json();};
   const results=await Promise.allSettled([loader.loadAsync(base+config.model,e=>{if(e.total)onProgress(e.loaded/e.total*.8);}),colliderLoader.loadAsync(base+config.collider),json('route_gltf.json'),json('gameplay.json')]);
@@ -42,7 +42,7 @@ export async function createCircuitWorld({onProgress=()=>{},mobile=false,anisotr
   const floor=colliders.scene.getObjectByName(config.surface);if(!floor)throw new Error('Falta la superficie de pista.');
   const collision=config.physicalBoundaries?createCityCollision(colliders.scene):null,surfaceHeight=collision?.surfaceHeight??createRoadSurface(floor);
   colliders.scene.traverse(o=>{if(o.isMesh){o.geometry.dispose();o.material.dispose();}});
-  const details=createCircuitDetails(root,landscape,{mobile,city,islands:config.id==='ruins'});
+  const details=createCircuitDetails(root,landscape,{mobile,city,islands:config.id==='ruins',underglow});
   const urban=city?createNexusDetails(root,anchors,{mobile}):null;textures.applyRoot(root);
   const fx=await loadFlightFx(root,{surfaceHeight,mobile,materialFactory:fxMaterialFactory});
   onProgress(1);

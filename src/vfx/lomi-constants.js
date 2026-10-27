@@ -1,7 +1,7 @@
 import {Color,Vector3} from 'three';
 
 // Tuning in the GLB's authoring units. The game scales the ship, not these numbers.
-export const THRUST={idle:.2,cruise:1,rate:2.5,light:{intensity:40,distance:9,decay:2,offset:.8}};
+export const THRUST={idle:.2,cruise:1,rate:2.5};
 export const BOOST_RATIO=2.5;
 export const ENERGY={surge:{gain:2.2,attack:3,decay:1.4},drag:{turn:.9,slip:.06,max:1.4,rate:5}};
 export const SINGULARITY={
