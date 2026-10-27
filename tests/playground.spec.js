@@ -74,3 +74,23 @@ test('playground: turning state circles at speed / radius, with optional drift',
   expect(wrap(info.ship.yaw-info.ship.travel)).toBeCloseTo(20*Math.PI/180,2);
   expect(errors).toEqual([]);
 });
+
+test('playground: manual driving uses the game physics and keyboard',async({page})=>{
+  test.setTimeout(240000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/playground?vehicle=039&backend=webgl2&state=manejar');
+  const body=page.locator('body');
+  await expect(body).toHaveAttribute('data-ready','true',{timeout:120000});
+  await expect(body).toHaveAttribute('data-view','carrera');
+  const settle=()=>page.waitForFunction(()=>playground.info().pendingSteps===0,null,{timeout:90000});
+  await page.evaluate(()=>playground.pause(true));
+  const start=await page.evaluate(()=>playground.info().ship.position);
+  await page.locator('canvas').focus();await page.keyboard.down('KeyW');
+  await page.evaluate(()=>playground.step(90));await settle();
+  const driving=await page.evaluate(()=>playground.info());
+  expect(driving.speed).toBeGreaterThan(10);expect(driving.mode).toBe('Aceleración');
+  expect(Math.hypot(driving.ship.position[0]-start[0],driving.ship.position[2]-start[2])).toBeGreaterThan(5);
+  await page.keyboard.down('ShiftLeft');await page.evaluate(()=>playground.step(10));await settle();
+  expect(await page.evaluate(()=>playground.info().mode)).toBe('Turbo');
+  await page.keyboard.up('ShiftLeft');await page.keyboard.up('KeyW');
+  expect(errors).toEqual([]);
+});

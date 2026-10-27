@@ -15,7 +15,9 @@ import {createCircuitWorld} from './circuit-world.js';
 import {createCircuitLighting} from './circuit-lighting.js';
 import {createFlightShip} from './flight-ship.js';
 import {createBaseMaterials} from './base-materials.js';
-import {createHoverState} from './circuit-physics.js';
+import {createHoverState,advanceHover} from './circuit-physics.js';
+import {createFlightRenderPose} from './flight-render-pose.js';
+import {scaledHull} from './flight-scale.js';
 import {createFlightBoostPads} from './flight-boost-pads.js';
 import {createBoostPadControls} from './boost-pad-controls.js';
 import './playground.css';
@@ -34,8 +36,10 @@ const VIEWS={
   frontal:{label:'Frontal',camera:[0,1.6,7.5],target:[0,.9,0]},
 };
 // Speed is a factor of the "Velocidad" dial; "wall" pins the ship and shakes it against the barrier;
-// "turn" leaves the track and circles at Radio giro, nose turned into the curve by Deriva degrees.
+// "turn" leaves the track and circles at Radio giro, nose turned into the curve by Deriva degrees;
+// "manual" hands the ship to the game's own hover physics and the keyboard (W/S, A/D, Shift, Space, E, R).
 const STATES={
+  manejar:{label:'Manejar',mode:'Aceleración',speed:0,manual:true},
   parada:{label:'Parada',mode:'Reposo',speed:0},
   acelerando:{label:'Acelerando',mode:'Aceleración',speed:1},
   turbo:{label:'Turbo',mode:'Turbo',speed:1.4},
@@ -158,7 +162,7 @@ async function main(){
   function setState(id){if(!STATES[id])throw new Error(`Estado desconocido: ${id}`);stateKit.setValue('Estado',STATES[id].label);document.body.dataset.state=id;}
   function info(){
     const s=STATES[stateId()],local=ship.root.worldToLocal(camera.position.clone());
-    return {view:viewId(),state:stateId(),mode:s.mode,speed:state.speed,time,paused:timeKit.values.Pausa,power:boost.stats.power,palette:boost.stats.palette,
+    return {view:viewId(),state:stateId(),mode:currentMode,speed:state.speed,time,paused:timeKit.values.Pausa,power:boost.stats.power,palette:boost.stats.palette,
       cameraLocal:{x:local.x,y:local.y,z:local.z},camera:camera.position.toArray(),ship:{position:ship.root.position.toArray(),yaw:state.yaw,travel:STATES[stateId()].turn?circle.heading:state.yaw},pendingSteps,frame:Number(document.body.dataset.frame??0),backend};
   }
   function setTurn({radius,direction,drift}={}){
@@ -183,15 +187,34 @@ async function main(){
     lighting.setNight(v.Noche);lighting.setHeadlights(v.Faros);ship.setHeadlights(v.Faros);renderer.shadowMap.enabled=v.Sombras;
     if(lastRoute!==v['Posición en pista']){clearFx();lastRoute=v['Posición en pista'];route=world.landscape.length*lastRoute/100;place();lastPosition.copy(ship.root.position);if(viewId()==='libre')frameShip();}
   }));
+  // Manual driving: same fixed 60 Hz hover physics and wall collisions as the race, rendered from an interpolated pose.
+  const keys=new Set(),renderPose=createFlightRenderPose(),DRIVE_KEYS=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight','Space','KeyE']);
+  let manualAccumulator=0,activeState=null,currentMode='Aceleración';
+  const pressed=(...codes)=>codes.some(code=>keys.has(code));
+  const driveInput=()=>({reducedMotion:false,turn:Number(pressed('KeyD','ArrowRight'))-Number(pressed('KeyA','ArrowLeft')),
+    throttle:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),boost:pressed('ShiftLeft','ShiftRight'),brake:pressed('Space'),drift:pressed('KeyE')});
+  function backToTrack(){
+    const road=world.landscape.roadAt(state.x,state.z);route=road.distance;place();
+    Object.assign(state,{speed:0,throttle:0,vx:0,vz:0,yawRate:0,roll:0,pitch:0,recoverNeeded:false,boosting:false});renderPose.reset(state);manualAccumulator=0;
+  }
+  function startManual(){
+    Object.assign(state,createHoverState(world.landscape),{x:state.x,y:state.y,z:state.z,yaw:state.yaw,pitch:0,roll:0,hull:scaledHull(ship.config,SCALE),modelScale:SCALE});
+    renderPose.reset(state);manualAccumulator=0;if(viewId()==='libre')setView('carrera');
+  }
   const views=Object.keys(VIEWS);
+  const onKeyUp=event=>keys.delete(event.code),onBlur=()=>keys.clear();
   const onKey=event=>{
     if(event.target.closest?.('input,select,textarea,[contenteditable]'))return;
+    if(STATES[stateId()].manual){
+      if(DRIVE_KEYS.has(event.code)){keys.add(event.code);event.preventDefault();return;}
+      if(event.code==='KeyR'){backToTrack();return;}
+    }
     const index=Number(event.key)-1;
     if(index>=0&&index<views.length)setView(views[index]);
     else if(event.key==='p'||event.key==='P')timeKit.setValue('Pausa',!timeKit.values.Pausa);
     else if(event.key==='.')window.playground.step(1);
   };
-  window.addEventListener('keydown',onKey);
+  window.addEventListener('keydown',onKey);window.addEventListener('keyup',onKeyUp);window.addEventListener('blur',onBlur);
   const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);};window.addEventListener('resize',resize);
 
   place();lastPosition.copy(ship.root.position);frameShip();
@@ -205,23 +228,41 @@ async function main(){
     try{
       const elapsed=(now-previous)/1000,real=Math.min(elapsed,.05),t=timeKit.values;previous=now;
       let dt=t.Pausa?0:real*t['Velocidad tiempo'];
-      if(t.Pausa&&pendingSteps>0){dt=1/60;pendingSteps--;}
+      // Queued steps run together (n × 1/60 s), so scripted steps don't depend on the frame rate.
+      if(t.Pausa&&pendingSteps>0){dt=pendingSteps/60;pendingSteps=0;}
       time+=dt;
-      const s=STATES[stateId()],v=stateKit.values,speed=s.speed*v.Velocidad,previousPadPosition={x:state.x,y:state.y,z:state.z};
-      if(s.turn){if(circle.key)circle.heading+=(v.Sentido==='Izquierda'?1:-1)*dt*speed/v['Radio giro'];}
-      else if(v['Mover nave']&&speed>0)route=(route+dt*speed)%world.landscape.length;
-      place();
+      const id=stateId(),s=STATES[id],v=stateKit.values,speed=s.speed*v.Velocidad,previousPadPosition={x:state.x,y:state.y,z:state.z};
+      if(id!==activeState){if(s.manual)startManual();else if(STATES[activeState]?.manual)backToTrack();activeState=id;}
+      if(s.manual){
+        manualAccumulator+=dt;
+        while(manualAccumulator>=1/60-1e-9){
+          renderPose.capture(state);const before=advanceHover(state,driveInput(),1/60,world.landscape,world.surfaceHeight);world.step(state,1/60,before);
+          if(v['Activar placas'])pads.step(1/60,state,before);
+          if(state.recoverNeeded)backToTrack();
+          manualAccumulator-=1/60;
+        }
+        const pose=renderPose.sample(state,manualAccumulator*60);
+        ship.root.position.set(pose.x,pose.y,pose.z);ship.root.rotation.set(-pose.pitch,pose.yaw,pose.roll,'YXZ');ship.root.updateMatrixWorld();
+        currentMode=state.boosting?'Turbo':state.speed>1?'Aceleración':'Reposo';
+      }else{
+        if(s.turn){if(circle.key)circle.heading+=(v.Sentido==='Izquierda'?1:-1)*dt*speed/v['Radio giro'];}
+        else if(v['Mover nave']&&speed>0)route=(route+dt*speed)%world.landscape.length;
+        place();currentMode=s.mode;
+      }
       if(viewId()==='libre'){delta.subVectors(ship.root.position,lastPosition);camera.position.add(delta);orbit.target.add(delta);}
       lastPosition.copy(ship.root.position);applyView(Math.min(elapsed,.25));
-      state.speed=speed;state.vx=Math.sin(state.yaw)*speed;state.vz=Math.cos(state.yaw)*speed;
-      state.drifting=Boolean(s.drift);state.braking=Boolean(s.braking);state.slip=s.drift?.55:0;state.boosting=v['VFX activos']&&s.mode==='Turbo';
-      state.hull=ship.config.hull?{halfWidth:ship.config.hull.halfWidth*SCALE,halfLength:ship.config.hull.halfLength*SCALE}:undefined;
-      state.padBoostRemaining=Math.max(0,(state.padBoostRemaining??0)-dt);
-      // Pads on the route would override the chosen state with their own turbo; opt in when testing them.
-      if(dt>0&&v['Activar placas']){pads.step(dt,state,previousPadPosition);padControls.update();}
+      if(!s.manual){
+        state.speed=speed;state.vx=Math.sin(state.yaw)*speed;state.vz=Math.cos(state.yaw)*speed;
+        state.drifting=Boolean(s.drift);state.braking=Boolean(s.braking);state.slip=s.drift?.55:0;state.boosting=v['VFX activos']&&s.mode==='Turbo';
+        state.hull=ship.config.hull?{halfWidth:ship.config.hull.halfWidth*SCALE,halfLength:ship.config.hull.halfLength*SCALE}:undefined;
+        state.padBoostRemaining=Math.max(0,(state.padBoostRemaining??0)-dt);
+        // Pads on the route would override the chosen state with their own turbo; opt in when testing them.
+        if(dt>0&&v['Activar placas'])pads.step(dt,state,previousPadPosition);
+      }
+      if(dt>0&&v['Activar placas'])padControls.update();
       pads.update(dt,false);
       const padTurbo=state.padBoostRemaining>0;state.boosting=state.boosting||padTurbo;
-      await boost.update(dt,padTurbo?'Turbo':s.mode,v['VFX activos'],padTurbo);smoke.update(dt,{state,camera,scale:SCALE,reduced:!v['VFX activos']});oil.update(dt,state);
+      await boost.update(dt,padTurbo?'Turbo':currentMode,v['VFX activos'],padTurbo);smoke.update(dt,{state,camera,scale:SCALE,reduced:!v['VFX activos']});oil.update(dt,state);
       ship.pilot.update(time,true);if(orbit.enabled)orbit.update();lighting.update(state,time,{dt});boost.updateHeat(comicPost.heat);
       comicPost.heat.updatePadFields(pads.heatFields??[]);
       comicStyle.pixelRatio.value=renderer.getPixelRatio();renderer.getDrawingBufferSize(comicStyle.resolution.value);comicMaterials.sync();
@@ -238,7 +279,7 @@ async function main(){
     }catch(error){renderer.setAnimationLoop(null);status.textContent=`Error: ${error.message}`;console.error(error);}finally{busy=false;}
   });
   window.addEventListener('pagehide',()=>{
-    renderer.setAnimationLoop(null);window.removeEventListener('resize',resize);window.removeEventListener('keydown',onKey);unsubscribers.forEach(u=>u());
+    renderer.setAnimationLoop(null);window.removeEventListener('resize',resize);window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onKeyUp);window.removeEventListener('blur',onBlur);unsubscribers.forEach(u=>u());
     for(const kit of [viewKit,stateKit,timeKit,sceneKit,smokeKit])kit.destroy();
     padControls.dispose();pads.dispose();boost.dispose();smoke.dispose();oil.dispose();root.destroy();orbit.dispose();
     comicMaterials.dispose();comicPost.dispose();baseline.dispose();lighting.dispose();ship.dispose();world.dispose();renderer.dispose();delete window.playground;
