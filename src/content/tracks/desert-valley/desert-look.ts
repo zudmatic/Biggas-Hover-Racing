@@ -1,7 +1,7 @@
 import {NearestFilter,NearestMipmapLinearFilter,Vector2,MeshStandardMaterial,MeshPhysicalMaterial} from 'three';
 import {MeshStandardNodeMaterial,MeshPhysicalNodeMaterial} from 'three/webgpu';
 import {uniform,vec4,mix} from 'three/tsl';
-import {createDialKit} from '../../../tools/dials/dev-dials';
+import {createDialKit} from '@/core/debug/dials';
 
 // Authored PS2 look: native PBR, original saturation and shadow model, with
 // adjustable vertex snapping; no screen pixelation or affine UV warp.

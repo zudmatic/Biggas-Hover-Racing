@@ -1,5 +1,5 @@
-import {createDialKit} from './dev-dials';
-import {PAD_TRANSITION} from '../../sim/boost-pad-envelope';
+import {createDialKit} from '@/core/debug/dials';
+import {PAD_TRANSITION} from '@/sim/boost-pad-envelope';
 
 export function createBoostPadControls(pads,state,focus){
   const kit=createDialKit('Placa turbo · laboratorio',{

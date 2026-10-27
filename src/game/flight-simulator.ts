@@ -1,5 +1,5 @@
 import {createFlightBoostPads} from './boost-pads/boost-pads';
-import {createFlightFovControls} from '../tools/dials/fov-controls';
+import {createFlightFovControls} from '@/game/camera/fov-dials';
 import {smoothCameraFov} from './camera/camera-fov';
 import {createFlightRenderPose} from '../sim/render-interpolator';
 import {createFlightCameraKlipp} from './camera/klipp-camera';
@@ -12,7 +12,7 @@ import {createHoverState,advanceHover,recoverHover,crossesCircuitGate} from '../
 import {createFlightShip} from '../content/vehicles/flight-ship';
 import {createFlightScale,scaledHull} from './model-scale';
 import {createFlightOil} from './oil/oil-gameplay';
-import {createFlightFxControls} from '../tools/dials/fx-controls';
+import {createFlightFxControls} from '@/fx/drift/drift-fx-dials';
 import './flight-simulator.css';
 import {raceAudio} from '../audio/race-audio';
 import {gameMusic} from '../audio/music-player';

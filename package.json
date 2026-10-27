@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
-    "preview": "vite preview --host 0.0.0.0"
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc -p tsconfig.json && tsc -p tsconfig.node.json"
   },
   "dependencies": {
+    "@gitchad/babble": "^0.1.0",
     "@pmndrs/klipp": "0.16.0",
     "dialkit": "^2.0.2",
     "three": "0.182.0",
@@ -16,6 +18,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.55.0",
+    "@types/node": "^24.19.2",
+    "@types/three": "^0.182.0",
+    "typescript": "^5.9.3",
     "vite": "^7.1.0"
   }
 }

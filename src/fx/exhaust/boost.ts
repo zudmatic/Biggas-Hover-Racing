@@ -1,7 +1,7 @@
 import * as THREE from 'three/webgpu';
 import {uniform,uv,float,smoothstep,mix,vec4,step} from 'three/tsl';
 import {VFXParticles,Appearance,Blending} from 'vanilla-vfx';
-import {createDialKit} from '../../tools/dials/dev-dials';
+import {createDialKit} from '@/core/debug/dials';
 import {createPadBoostPalette,smoothBoostPower} from './pad-boost-palette';
 import {createFlameMaterial} from './flame-material';
 import {createFlameTrail} from './flame-trail';

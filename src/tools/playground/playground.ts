@@ -10,7 +10,7 @@ import {createComicPost} from '../../render/post/comic-post';
 import * as THREE from 'three';
 import {WebGPURenderer} from 'three/webgpu';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {createDialKit,createDialRoot} from '../dials/dev-dials';
+import {createDialKit,createDialRoot} from '@/core/debug/dials';
 import 'dialkit/vanilla/styles.css';
 import {createCircuitWorld} from '../../content/tracks/circuit-world';
 import {createCircuitLighting} from '../../render/lighting/track-lighting';
@@ -20,7 +20,7 @@ import {createHoverState,advanceHover} from '../../sim/hover-physics';
 import {createFlightRenderPose} from '../../sim/render-interpolator';
 import {scaledHull} from '../../game/model-scale';
 import {createFlightBoostPads} from '../../game/boost-pads/boost-pads';
-import {createBoostPadControls} from '../dials/boost-pad-controls';
+import {createBoostPadControls} from '@/game/boost-pads/boost-pad-dials';
 import './playground.css';
 
 // Debug playground: the preview scene plus reproducible camera views, ship states and time control,

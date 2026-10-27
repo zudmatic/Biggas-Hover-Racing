@@ -2,7 +2,7 @@ import {attribute} from 'three/tsl';
 import {createOilMaterial} from '../../fx/oil/oil-material';
 import * as THREE from 'three';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
-import {createDialKit} from '../../tools/dials/dev-dials';
+import {createDialKit} from '@/core/debug/dials';
 import {createFlightShip} from '../../content/vehicles/flight-ship';
 import {createOilSimulation,updateOilResistance,clearOilEffect} from '../../sim/oil-simulation';
 import './oil-gameplay.css';

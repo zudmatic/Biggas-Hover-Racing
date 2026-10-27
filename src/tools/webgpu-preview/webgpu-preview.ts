@@ -13,7 +13,7 @@ import {createCharacterComic} from '../../render/materials/character-comic';
 import * as THREE from 'three';
 import {WebGPURenderer} from 'three/webgpu';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {createDialKit,createDialRoot} from '../dials/dev-dials';
+import {createDialKit,createDialRoot} from '@/core/debug/dials';
 import 'dialkit/vanilla/styles.css';
 import {createCircuitWorld} from '../../content/tracks/circuit-world';
 import {createCircuitLighting} from '../../render/lighting/track-lighting';
@@ -21,7 +21,7 @@ import {createFlightShip} from '../../content/vehicles/flight-ship';
 import {createBaseMaterials} from '../../render/materials/base-materials';
 import {createHoverState} from '../../sim/hover-physics';
 import {createFlightBoostPads} from '../../game/boost-pads/boost-pads';
-import {createBoostPadControls} from '../dials/boost-pad-controls';
+import {createBoostPadControls} from '@/game/boost-pads/boost-pad-dials';
 import './webgpu-preview.css';
 
 const query=new URLSearchParams(location.search),status=document.querySelector('#status');

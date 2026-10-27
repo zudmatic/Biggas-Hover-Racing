@@ -1,6 +1,6 @@
 import * as THREE from 'three/webgpu';
 import {float,positionWorld,texture,vec2} from 'three/tsl';
-import {createDialKit} from '../../tools/dials/dev-dials';
+import {createDialKit} from '@/core/debug/dials';
 import {CIRCUIT_BOOST} from '../../sim/hover-physics';
 import {createWaterFxMaterial} from './hover-material';
 

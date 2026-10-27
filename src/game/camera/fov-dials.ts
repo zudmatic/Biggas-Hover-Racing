@@ -1,4 +1,4 @@
-import {createDialKit} from './dev-dials';
+import {createDialKit} from '@/core/debug/dials';
 
 export function createFlightFovControls(){
   const settings={};

@@ -1,7 +1,7 @@
 import {smoothCameraFov} from './camera-fov';
 import {Object3D,Vector3} from 'three';
 import {KlippThree,VirtualCameraThree,FollowBodyThree,RotationComposerAimThree} from '@pmndrs/klipp/three';
-import {createDialKit} from '../../tools/dials/dev-dials';
+import {createDialKit} from '@/core/debug/dials';
 
 export function createFlightCameraKlipp(camera,{enabled=true,element=null,canOrbit=()=>true}={}){
   const target=new Object3D(),anchor=new Vector3(),safePosition=new Vector3(),rearPosition=new Vector3();
