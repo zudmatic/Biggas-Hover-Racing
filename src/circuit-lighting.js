@@ -13,9 +13,15 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
   const lamps=Array.from({length:mobile?3:5},()=>{const light=new THREE.PointLight(0xffca7d,0,24,2);root.add(light);return light;});
   const headlights=headlightMounts.map(([x,y,z])=>{const light=new THREE.SpotLight(0xd8f4ff,0,55,.48,.65,1.2);light.userData.offset=x;light.userData.height=y;light.userData.forward=z;root.add(light,light.target);return light;});
   const engine=new THREE.PointLight(0x64e9ff,12,9,2);root.add(engine);
-  const fixtures=[],matrix=new THREE.Matrix4();let night=false,blend=0,headlightsEnabled=false;
+  const fixtures=[],matrix=new THREE.Matrix4();let night=false,blend=0,headlightsEnabled=false,desert=false;
   function setTrack(track){
-    if(track.map==='desert-valley')return;
+    if(track.map==='desert-valley'){
+      desert=true;dayFog.set(0xc7d9dc);daySky.set(0xb5d9ed);dayGround.set(0xa47d50);daySun.set(0xffead0);
+      scene.fog.near=300;scene.fog.far=1400;
+      sun.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
+      Object.assign(sun.shadow.camera,{left:-55,right:55,top:55,bottom:-55});sun.shadow.camera.updateProjectionMatrix();
+      return;
+    }
     const count=Math.floor(track.length/28),poleGeometry=new THREE.CylinderGeometry(.08,.12,4.5,6),capGeometry=new THREE.BoxGeometry(.7,.16,.7);
     const poles=new THREE.InstancedMesh(poleGeometry,new THREE.MeshStandardMaterial({color:0x385258,roughness:.8}),count);
     const caps=new THREE.InstancedMesh(capGeometry,new THREE.MeshBasicMaterial({color:0xffd79e}),count);
@@ -32,10 +38,10 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
   function update(state,time,{dt=0,reducedMotion=false,paused=false}={}){
     // User changes remain available while paused; decorative light movement stops.
     blend=reducedMotion?Number(night):THREE.MathUtils.damp(blend,Number(night),5,dt);
-    sky.color.copy(daySky).lerp(nightSky,blend);sky.groundColor.copy(dayGround).lerp(nightGround,blend);sky.intensity=1.7-blend*.8;
-    sun.color.copy(daySun).lerp(nightSun,blend);sun.intensity=3.4-blend*2.7;fill.intensity=.45-blend*.23;
+    sky.color.copy(daySky).lerp(nightSky,blend);sky.groundColor.copy(dayGround).lerp(nightGround,blend);sky.intensity=desert?1.35-blend*.8:1.7-blend*.8;
+    sun.color.copy(daySun).lerp(nightSun,blend);sun.intensity=desert?4.1-blend*3.4:3.4-blend*2.7;fill.intensity=desert?0:.45-blend*.23;
     scene.background.copy(dayFog).lerp(nightFog,blend);scene.fog.color.copy(scene.background);
-    const arc=reducedMotion?0:Math.sin(time*.018)*18;
+    const arc=reducedMotion||desert?0:Math.sin(time*.018)*18;
     sun.position.set(state.x-110+arc,state.y+180,state.z+70);sun.target.position.set(state.x,state.y,state.z);
     anchor.set(state.x,state.y,state.z);
     const nearest=fixtures.map((position,index)=>({position,index,distance:position.distanceToSquared(anchor)})).sort((a,b)=>a.distance-b.distance).slice(0,lamps.length);

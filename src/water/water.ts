@@ -35,7 +35,7 @@ export function createWater(
   contactInfo: WaterContact,
   mesh: THREE.Mesh,
   bedPattern: THREE.Texture,
-  options: { geometry?: THREE.BufferGeometry; maxWaveHeight?: number } = {}
+  options: { geometry?: THREE.BufferGeometry; maxWaveHeight?: number; desert?: boolean } = {}
 ) {
   pattern.colorSpace = THREE.NoColorSpace
   pattern.wrapS = pattern.wrapT = THREE.RepeatWrapping
@@ -166,8 +166,8 @@ export function createWater(
   ).toVar()
   const patches = a.a.mul(0.5).add(b.a.mul(0.5))
   const body = mix(
-    color("#104e58"),
-    color("#267c79"),
+    color(options.desert ? "#086878" : "#104e58"),
+    color(options.desert ? "#20a397" : "#267c79"),
     patches.smoothstep(0.25, 0.72)
   )
   const transmission = waterDepth.mul(-0.38).exp().mul(clarity)
@@ -176,7 +176,7 @@ export function createWater(
     .smoothstep(0.18, 0.55)
   const nearColor = mix(
     body,
-    color("#c5dfb6"),
+    color(options.desert ? "#b6e4cd" : "#c5dfb6"),
     ribbons.mul(caustics).mul(transmission.mul(0.4).add(0.5)).clamp()
   ).mul(1.15)
 
@@ -184,7 +184,7 @@ export function createWater(
   const farMix = distance
     .smoothstep(blueDistance.mul(0.45), blueDistance)
     .mul(distantBlue)
-  const deepColor = mix(color("#174c65"), color("#287487"), patches).mul(1.05)
+  const deepColor = mix(color(options.desert ? "#07566d" : "#174c65"), color(options.desert ? "#158e9d" : "#287487"), patches).mul(1.05)
   const waterColor = mix(nearColor, deepColor, farMix.mul(0.94))
 
   // Only the surface layer drives the highlights; changing bed depth cannot

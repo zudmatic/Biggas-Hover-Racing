@@ -30,16 +30,16 @@ export function applyWaterfrontPreset(water: ReturnType<typeof createWater>) {
 export const DESERT_WATER_PRESET = {
   speed: 1.25,
   scale: 0.55,
-  caustics: 0.24,
-  glints: 0.55,
+  caustics: 0.32,
+  glints: 0.48,
   ripples: 0.55,
-  distantBlue: 0.72,
+  distantBlue: 0.58,
   blueDistance: 180,
   foam: 0.65,
   foamWidth: 1.2,
   waveHeight: 0.38,
   waterDepth: 2.8,
-  clarity: 0.16,
+  clarity: 0.26,
   sunStrength: 1,
 } as const
 

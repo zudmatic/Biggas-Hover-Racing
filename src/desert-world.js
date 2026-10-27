@@ -15,6 +15,7 @@ import {createDesertWaterSurface,RIVER_SURFACE} from './water/desert-surface.js'
 import {createHoverWaterEffects} from './water/hover-effects.js';
 import {createDesertTrain} from './desert-train.js';
 import {createDesertTrainAudio} from './desert-train-audio.js';
+import {createDesertLod} from './desert-lod.js';
 
 // Keep the authored scene hierarchy and EXT_mesh_gpu_instancing. The legacy
 // circuit batcher bakes only a mesh's base geometry, losing instance transforms.
@@ -23,11 +24,12 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
   const draco=new DRACOLoader().setDecoderPath(`${base}draco/`);
   const loader=new GLTFLoader().setDRACOLoader(draco).setMeshoptDecoder(MeshoptDecoder);
   const json=async name=>{const response=await fetch(path+name);if(!response.ok)throw new Error(`Desert Valley: ${response.status} ${name}`);return response.json();};
-  let asset,trainAsset,guides,legacyGameplay,railway;
+  let asset,trainAsset,detailAsset,detailManifest,guides,legacyGameplay,railway;
   try{
-    [asset,trainAsset,guides,legacyGameplay,railway]=await Promise.all([
+    [asset,trainAsset,guides,legacyGameplay,railway,detailAsset,detailManifest]=await Promise.all([
       loader.loadAsync(`${path}desert-valley-static-game.glb`,e=>{if(e.total)onProgress(e.loaded/e.total*.75);}),
       loader.loadAsync(`${path}freight-train-40-game.glb`),json('driving-guides.json'),json('gameplay.json'),json('railway.json'),
+      loader.loadAsync(`${path}desert-detail-game.glb`),json('desert-detail-manifest.json'),
     ]);
   }finally{draco.dispose();}
   const root=asset.scene;root.name='Desert Valley 039';root.updateMatrixWorld(true);
@@ -78,6 +80,13 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
     isFloor:m=>m===surface||isDryFloor(m),
     isSolid:m=>!m.isInstancedMesh&&!/Deck_Markings/.test(m.name),exploration:true,surfaceHeightOverride:surfaceHeight,
   });
+  // Capture the original collision proxies first; visual detail never changes
+  // driveable surfaces, train clearance or the authored collision geometry.
+  detailAsset.scene.traverse(collectResources);
+  const lod=createDesertLod(root,detailAsset.scene,detailManifest,{mode:import.meta.env.DEV&&new URLSearchParams(location.search).get('lod')==='full'?'full':'adaptive'});
+  lod.update(landscape.spawn,0,true);
+  instanceCount=0;root.traverse(mesh=>{if(mesh.isInstancedMesh&&!mesh.userData.visualDetail)instanceCount+=mesh.count;});
+  instanceCount+=detailManifest.instanceCount;
   landscape.spawn.y=(surfaceHeight(landscape.spawn.x,landscape.spawn.z)??landscape.spawn.y-.65)+.65;
   // Moving vehicles must stay out of the immutable scenery octree.
   const train=createDesertTrain({root:trainAsset.scene,railway});root.add(train.root);
@@ -86,7 +95,7 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
   const toSun=new THREE.Vector3(-110,180,70).normalize();
   onProgress(1);
   return {
-    root,landscape,fx,train,instanceCount,detailCount:instanceCount,
+    root,landscape,fx,train,lod,instanceCount,detailCount:instanceCount,
     textures:{count:3,applyRoot(){}},surfaceHeight:collision.surfaceHeight,clipCamera:collision.clipCamera,
     get water(){return water;},
     get waterStats(){return {surfaceTriangles:river.triangles,effectTriangles:waterFx?.triangles??0};},
@@ -98,7 +107,7 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
       const [pattern,bed]=await Promise.all(['water-pattern.png','water-bed.png'].map(name=>textureLoader.loadAsync(`${base}textures/water/${name}`)));
       const contact=createDesertWaterContact(root,surface);
       for(const texture of [pattern,bed,contact.texture])ownedTextures.add(texture);
-      water=createWater(pattern,sun,toSun,contact.texture,contact.info,surface,bed,{geometry:river.geometry,maxWaveHeight:RIVER_SURFACE.maximumWaveHeight});
+      water=createWater(pattern,sun,toSun,contact.texture,contact.info,surface,bed,{geometry:river.geometry,maxWaveHeight:RIVER_SURFACE.maximumWaveHeight,desert:true});
       speed=applyDesertWaterPreset(water);
       surface.geometry=water.geometry;surface.material=water.material;surface.castShadow=false;
       root.add(water.seabed);
@@ -109,6 +118,7 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
     step(state,dt,previous){train.step(dt);collision.step(state,dt,landscape,previous);train.collide(state,dt,previous);},
     reset(){fx.reset();train.reset();trainAudio.reset();waterFx?.reset();if(water)water.phase.value=0;},
     update(time,reduced,context){
+      lod.update(context.state,context.dt??0);
       fx.update(context.dt??0,{...context,reduced});
       if(context.camera)trainAudio.update(context.camera,context.phase);
       if(water){
@@ -119,6 +129,7 @@ export async function createDesertWorld({onProgress=()=>{},mobile=false,anisotro
       waterFx?.update(context.dt??0,{...context,reduced});
     },
     dispose(){
+      lod.dispose();
       trainAudio.dispose();train.dispose();
       waterFx?.dispose();river.dispose();
       fx.dispose();collision.dispose();

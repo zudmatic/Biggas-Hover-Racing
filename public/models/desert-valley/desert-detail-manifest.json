@@ -1,0 +1,8512 @@
+{
+  "version": 1,
+  "sourceStage": 27,
+  "units": "meters",
+  "upAxis": "Y",
+  "geometryFile": "desert-detail-game.glb",
+  "families": [
+    {
+      "id": "DatePalm_Young",
+      "nodes": [
+        "DETAIL_DatePalm_Young_LOD0",
+        "DETAIL_DatePalm_Young_LOD1",
+        "DETAIL_DatePalm_Young_LOD2"
+      ],
+      "triangles": [
+        3056,
+        1696,
+        604
+      ],
+      "distances": [
+        55,
+        150
+      ],
+      "cullDistance": 600,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            0.6797308,
+            -0.0,
+            -0.3169637,
+            0.0,
+            0.0,
+            0.75,
+            -0.0,
+            0.0,
+            0.3169637,
+            -0.0,
+            0.6797308,
+            0.0,
+            216.0,
+            1.3175082,
+            -309.0,
+            1.0
+          ],
+          "source": "SM_DatePalm_Young_S07",
+          "parent": "INST_S15_Palm_01"
+        },
+        {
+          "matrix": [
+            -0.6717047,
+            0.0,
+            0.4703326,
+            0.0,
+            -0.0,
+            0.82,
+            -1e-07,
+            0.0,
+            -0.4703326,
+            -1e-07,
+            -0.6717047,
+            0.0,
+            239.0,
+            1.1015085,
+            -288.0,
+            1.0
+          ],
+          "source": "SM_DatePalm_Young_S07",
+          "parent": "INST_S15_Palm_03"
+        },
+        {
+          "matrix": [
+            0.7250462,
+            -0.0,
+            -0.3380946,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.3380946,
+            -0.0,
+            0.7250462,
+            0.0,
+            265.0,
+            1.1012388,
+            -174.0,
+            1.0
+          ],
+          "source": "SM_DatePalm_Young_S07",
+          "parent": "INST_S18_MiddleRiverbank_01"
+        },
+        {
+          "matrix": [
+            -0.7703617,
+            0.0,
+            0.3592255,
+            0.0,
+            -0.0,
+            0.85,
+            -1e-07,
+            0.0,
+            -0.3592255,
+            -1e-07,
+            -0.7703617,
+            0.0,
+            270.0,
+            1.2064941,
+            -191.0,
+            1.0
+          ],
+          "source": "SM_DatePalm_Young_S07",
+          "parent": "INST_S18_MiddleRiverbank_02"
+        },
+        {
+          "matrix": [
+            0.4416194,
+            -0.0,
+            -0.779012,
+            0.0,
+            0.0,
+            0.8954817,
+            -0.0,
+            0.0,
+            0.779012,
+            -0.0,
+            0.4416194,
+            0.0,
+            231.1758118,
+            0.7330121,
+            -18.9071865,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.7066117,
+            -0.0,
+            -0.5232888,
+            0.0,
+            0.0,
+            0.8792787,
+            -1e-07,
+            0.0,
+            0.5232888,
+            -1e-07,
+            -0.7066117,
+            0.0,
+            -225.2606506,
+            27.9770088,
+            128.5816193,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6110039,
+            0.0,
+            0.5341926,
+            0.0,
+            -0.0,
+            0.8115956,
+            -1e-07,
+            0.0,
+            -0.5341926,
+            -1e-07,
+            -0.6110039,
+            0.0,
+            -1.1716946,
+            8.1510706,
+            245.744339,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.1789738,
+            -0.0,
+            -0.8227073,
+            0.0,
+            0.0,
+            0.8419495,
+            -0.0,
+            0.0,
+            0.8227073,
+            -0.0,
+            0.1789738,
+            0.0,
+            190.9396057,
+            0.889703,
+            27.8597107,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.0473067,
+            -0.0,
+            -0.8465043,
+            0.0,
+            0.0,
+            0.8478251,
+            -0.0,
+            0.0,
+            0.8465043,
+            -0.0,
+            -0.0473067,
+            0.0,
+            52.4858627,
+            6.3901753,
+            317.2218933,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7924382,
+            0.0,
+            0.2550859,
+            0.0,
+            -0.0,
+            0.8324825,
+            -0.0,
+            0.0,
+            -0.2550859,
+            -0.0,
+            0.7924382,
+            0.0,
+            -1.3888574,
+            6.0392337,
+            224.1934967,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6312468,
+            0.0,
+            0.4979939,
+            0.0,
+            -0.0,
+            0.8040339,
+            -1e-07,
+            0.0,
+            -0.4979939,
+            -1e-07,
+            -0.6312468,
+            0.0,
+            251.8866882,
+            0.7532288,
+            -140.829834,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.8877388,
+            -0.0,
+            -0.1821407,
+            0.0,
+            0.0,
+            0.9062315,
+            -0.0,
+            0.0,
+            0.1821407,
+            -0.0,
+            0.8877388,
+            0.0,
+            282.8848877,
+            0.7359184,
+            -221.7988739,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.076064,
+            0.0,
+            0.799112,
+            0.0,
+            -0.0,
+            0.8027239,
+            -0.0,
+            0.0,
+            -0.799112,
+            -0.0,
+            0.076064,
+            0.0,
+            -238.6979065,
+            26.6270828,
+            220.1778564,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.8556298,
+            0.0,
+            0.2341347,
+            0.0,
+            -0.0,
+            0.8870859,
+            -0.0,
+            0.0,
+            -0.2341347,
+            -0.0,
+            0.8556298,
+            0.0,
+            47.9833031,
+            1.8014976,
+            288.2729797,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.7494008,
+            0.0,
+            0.2844116,
+            0.0,
+            -0.0,
+            0.8015558,
+            -1e-07,
+            0.0,
+            -0.2844116,
+            -1e-07,
+            -0.7494008,
+            0.0,
+            69.0981445,
+            3.8127956,
+            336.7944031,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7408951,
+            0.0,
+            0.3386577,
+            0.0,
+            -0.0,
+            0.8146254,
+            -0.0,
+            0.0,
+            -0.3386577,
+            -0.0,
+            0.7408951,
+            0.0,
+            -0.5044248,
+            4.6392393,
+            136.4517975,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.5215512,
+            0.0,
+            0.6506305,
+            0.0,
+            -0.0,
+            0.833868,
+            -1e-07,
+            0.0,
+            -0.6506305,
+            -1e-07,
+            -0.5215512,
+            0.0,
+            248.7512665,
+            0.7162901,
+            -68.1856842,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.3939218,
+            -0.0,
+            -0.7437819,
+            0.0,
+            0.0,
+            0.8416567,
+            -0.0,
+            0.0,
+            0.7437819,
+            -0.0,
+            0.3939218,
+            0.0,
+            24.2528992,
+            3.878638,
+            266.005249,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.1822123,
+            -0.0,
+            -0.7798331,
+            0.0,
+            0.0,
+            0.8008376,
+            -0.0,
+            0.0,
+            0.7798331,
+            -0.0,
+            0.1822123,
+            0.0,
+            -17.9118843,
+            6.2940912,
+            160.3864441,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6402534,
+            -0.0,
+            -0.6798227,
+            0.0,
+            0.0,
+            0.933854,
+            -1e-07,
+            0.0,
+            0.6798227,
+            -1e-07,
+            -0.6402534,
+            0.0,
+            243.4219055,
+            0.7434274,
+            -109.9233246,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_DatePalm_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        }
+      ]
+    },
+    {
+      "id": "DatePalm_Tall",
+      "nodes": [
+        "DETAIL_DatePalm_Tall_LOD0",
+        "DETAIL_DatePalm_Tall_LOD1",
+        "DETAIL_DatePalm_Tall_LOD2"
+      ],
+      "triangles": [
+        3056,
+        1696,
+        604
+      ],
+      "distances": [
+        55,
+        150
+      ],
+      "cullDistance": 600,
+      "role": "vegetation",
+      "placements": []
+    },
+    {
+      "id": "DatePalm_Leaning",
+      "nodes": [
+        "DETAIL_DatePalm_Leaning_LOD0",
+        "DETAIL_DatePalm_Leaning_LOD1",
+        "DETAIL_DatePalm_Leaning_LOD2"
+      ],
+      "triangles": [
+        3056,
+        1696,
+        604
+      ],
+      "distances": [
+        55,
+        150
+      ],
+      "cullDistance": 600,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            -0.1070208,
+            0.0,
+            0.8907691,
+            0.0,
+            -0.0,
+            0.897175,
+            -0.0,
+            0.0,
+            -0.8907691,
+            -0.0,
+            -0.1070208,
+            0.0,
+            349.5310974,
+            1.3868622,
+            -139.5874023,
+            1.0
+          ],
+          "source": "SM_DatePalm_Leaning_S07",
+          "parent": "GN_S13_Palms"
+        },
+        {
+          "matrix": [
+            0.79428,
+            -0.0,
+            -0.2761362,
+            0.0,
+            0.0,
+            0.8409113,
+            -0.0,
+            0.0,
+            0.2761362,
+            -0.0,
+            0.79428,
+            0.0,
+            354.2683105,
+            1.2129419,
+            -151.9876099,
+            1.0
+          ],
+          "source": "SM_DatePalm_Leaning_S07",
+          "parent": "GN_S13_Palms"
+        },
+        {
+          "matrix": [
+            -0.2907171,
+            -0.0,
+            -0.7987387,
+            0.0,
+            0.0,
+            0.85,
+            -0.0,
+            0.0,
+            0.7987387,
+            -0.0,
+            -0.2907171,
+            0.0,
+            221.0,
+            1.1825429,
+            -303.0,
+            1.0
+          ],
+          "source": "SM_DatePalm_Leaning_S07",
+          "parent": "INST_S15_Palm_02"
+        }
+      ]
+    },
+    {
+      "id": "Saguaro_Branching",
+      "nodes": [
+        "DETAIL_Saguaro_Branching_LOD0",
+        "DETAIL_Saguaro_Branching_LOD1",
+        "DETAIL_Saguaro_Branching_LOD2"
+      ],
+      "triangles": [
+        1952,
+        1200,
+        564
+      ],
+      "distances": [
+        35,
+        100
+      ],
+      "cullDistance": 360,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            -0.9033715,
+            -0.0,
+            -0.1060211,
+            0.0,
+            0.0,
+            0.9095715,
+            -1e-07,
+            0.0,
+            0.1060211,
+            -1e-07,
+            -0.9033715,
+            0.0,
+            -194.7247772,
+            27.4892559,
+            -225.9563599,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            -0.0091788,
+            -0.0,
+            -0.9719799,
+            0.0,
+            0.0,
+            0.9720232,
+            -0.0,
+            0.0,
+            0.9719799,
+            -0.0,
+            -0.0091788,
+            0.0,
+            -359.7894592,
+            27.6740265,
+            -10.9833517,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            0.1930161,
+            -0.0,
+            -0.8680351,
+            0.0,
+            0.0,
+            0.8892357,
+            -0.0,
+            0.0,
+            0.8680351,
+            -0.0,
+            0.1930161,
+            0.0,
+            -372.9944458,
+            27.7427502,
+            7.597558,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            -0.9033715,
+            -0.0,
+            -0.1060211,
+            0.0,
+            0.0,
+            0.9095715,
+            -1e-07,
+            0.0,
+            0.1060211,
+            -1e-07,
+            -0.9033715,
+            0.0,
+            -194.7247772,
+            27.4892559,
+            -225.9563599,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            -0.0091788,
+            -0.0,
+            -0.9719799,
+            0.0,
+            0.0,
+            0.9720232,
+            -0.0,
+            0.0,
+            0.9719799,
+            -0.0,
+            -0.0091788,
+            0.0,
+            -359.7894592,
+            27.6740265,
+            -10.9833517,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            0.1930161,
+            -0.0,
+            -0.8680351,
+            0.0,
+            0.0,
+            0.8892357,
+            -0.0,
+            0.0,
+            0.8680351,
+            -0.0,
+            0.1930161,
+            0.0,
+            -372.9944458,
+            27.7427502,
+            7.597558,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            -0.5821938,
+            0.0,
+            0.4885186,
+            0.0,
+            -0.0,
+            0.76,
+            -1e-07,
+            0.0,
+            -0.4885186,
+            -1e-07,
+            -0.5821938,
+            0.0,
+            100.0,
+            10.2578421,
+            -311.0,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "INST_S18_NorthClimb_02"
+        },
+        {
+          "matrix": [
+            0.7794228,
+            -0.0,
+            -0.45,
+            0.0,
+            0.0,
+            0.9,
+            -0.0,
+            0.0,
+            0.45,
+            -0.0,
+            0.7794228,
+            0.0,
+            -224.0,
+            28.3118305,
+            -154.0,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "INST_S18_AsphaltBend_01"
+        },
+        {
+          "matrix": [
+            0.8370866,
+            -0.0,
+            -0.1476009,
+            0.0,
+            0.0,
+            0.85,
+            -0.0,
+            0.0,
+            0.1476009,
+            -0.0,
+            0.8370866,
+            0.0,
+            -280.0,
+            28.0474148,
+            -156.0,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "INST_S18_ShortcutEdge_01"
+        },
+        {
+          "matrix": [
+            -0.85,
+            0.0,
+            1e-07,
+            0.0,
+            -0.0,
+            0.85,
+            -1e-07,
+            0.0,
+            -1e-07,
+            -1e-07,
+            -0.85,
+            0.0,
+            -286.0,
+            27.0138931,
+            251.0,
+            1.0
+          ],
+          "source": "SM_Saguaro_Branching_S07",
+          "parent": "INST_S18_SouthernSweep_01"
+        },
+        {
+          "matrix": [
+            0.5310943,
+            -0.0,
+            -0.626716,
+            0.0,
+            0.0,
+            0.8214828,
+            -0.0,
+            0.0,
+            0.626716,
+            -0.0,
+            0.5310943,
+            0.0,
+            -119.7298126,
+            27.9538937,
+            -19.8508759,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6109959,
+            0.0,
+            0.5819125,
+            0.0,
+            -0.0,
+            0.8437643,
+            -1e-07,
+            0.0,
+            -0.5819125,
+            -1e-07,
+            -0.6109959,
+            0.0,
+            -105.8598633,
+            26.7652245,
+            316.5979004,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.7170168,
+            0.0,
+            0.3680643,
+            0.0,
+            -0.0,
+            0.805968,
+            -1e-07,
+            0.0,
+            -0.3680643,
+            -1e-07,
+            -0.7170168,
+            0.0,
+            -330.1972656,
+            28.6206608,
+            -320.7201233,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7693154,
+            -0.0,
+            -0.6097774,
+            0.0,
+            0.0,
+            0.9816693,
+            -0.0,
+            0.0,
+            0.6097774,
+            -0.0,
+            0.7693154,
+            0.0,
+            -200.4111481,
+            28.0533829,
+            -147.252594,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.3450351,
+            -0.0,
+            -0.7415371,
+            0.0,
+            0.0,
+            0.8178793,
+            -1e-07,
+            0.0,
+            0.7415371,
+            -1e-07,
+            -0.3450351,
+            0.0,
+            -107.9824982,
+            27.1225052,
+            204.5267181,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.416896,
+            -0.0,
+            -0.7988613,
+            0.0,
+            0.0,
+            0.9011002,
+            -0.0,
+            0.0,
+            0.7988613,
+            -0.0,
+            0.416896,
+            0.0,
+            -144.5517883,
+            28.5638275,
+            218.7534637,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.1333397,
+            0.0,
+            0.8602867,
+            0.0,
+            -0.0,
+            0.8705588,
+            -0.0,
+            0.0,
+            -0.8602867,
+            -0.0,
+            -0.1333397,
+            0.0,
+            -312.2573242,
+            28.2795448,
+            -334.4039307,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.4263134,
+            -0.0,
+            -0.7870924,
+            0.0,
+            0.0,
+            0.89513,
+            -0.0,
+            0.0,
+            0.7870924,
+            -0.0,
+            0.4263134,
+            0.0,
+            -315.5159607,
+            28.6053448,
+            -349.7432861,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.0479654,
+            -0.0,
+            -0.9185502,
+            0.0,
+            0.0,
+            0.9198018,
+            -0.0,
+            0.0,
+            0.9185502,
+            -0.0,
+            -0.0479654,
+            0.0,
+            -21.0105915,
+            20.0576878,
+            -268.3556519,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.5452377,
+            0.0,
+            0.7686979,
+            0.0,
+            -0.0,
+            0.9424334,
+            -0.0,
+            0.0,
+            -0.7686979,
+            -0.0,
+            0.5452377,
+            0.0,
+            -135.2412567,
+            26.159071,
+            -317.0912781,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.8301511,
+            -0.0,
+            -0.5142343,
+            0.0,
+            0.0,
+            0.9765182,
+            -1e-07,
+            0.0,
+            0.5142343,
+            -1e-07,
+            -0.8301511,
+            0.0,
+            -143.5159149,
+            24.8560524,
+            229.1264954,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.3812023,
+            -0.0,
+            -0.8797225,
+            0.0,
+            0.0,
+            0.9587632,
+            -1e-07,
+            0.0,
+            0.8797225,
+            -1e-07,
+            -0.3812023,
+            0.0,
+            -305.0310059,
+            28.2872829,
+            -356.4214172,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.8425633,
+            0.0,
+            0.1865005,
+            0.0,
+            -0.0,
+            0.8629572,
+            -0.0,
+            0.0,
+            -0.1865005,
+            -0.0,
+            0.8425633,
+            0.0,
+            -163.8525391,
+            28.0365601,
+            -64.1856308,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.1465799,
+            -0.0,
+            -0.947561,
+            0.0,
+            0.0,
+            0.9588314,
+            -0.0,
+            0.0,
+            0.947561,
+            -0.0,
+            -0.1465799,
+            0.0,
+            -121.5916977,
+            26.0052567,
+            -303.1096497,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6315379,
+            -0.0,
+            -0.7257138,
+            0.0,
+            0.0,
+            0.9620295,
+            -0.0,
+            0.0,
+            0.7257138,
+            -0.0,
+            0.6315379,
+            0.0,
+            -39.1399498,
+            26.4148273,
+            -253.0700531,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7428369,
+            0.0,
+            0.6463406,
+            0.0,
+            -0.0,
+            0.9846639,
+            -0.0,
+            0.0,
+            -0.6463406,
+            -0.0,
+            0.7428369,
+            0.0,
+            -39.3311119,
+            27.399519,
+            -346.4995728,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.8820401,
+            0.0,
+            0.1848638,
+            0.0,
+            -0.0,
+            0.9012045,
+            -1e-07,
+            0.0,
+            -0.1848638,
+            -1e-07,
+            -0.8820401,
+            0.0,
+            214.4294891,
+            0.7668444,
+            -4.1668568,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.4178818,
+            -0.0,
+            -0.8057333,
+            0.0,
+            0.0,
+            0.9076515,
+            -1e-07,
+            0.0,
+            0.8057333,
+            -1e-07,
+            -0.4178818,
+            0.0,
+            -137.6519775,
+            28.2705498,
+            213.3008118,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.2103871,
+            0.0,
+            0.9521092,
+            0.0,
+            -0.0,
+            0.9750767,
+            -0.0,
+            0.0,
+            -0.9521092,
+            -0.0,
+            0.2103871,
+            0.0,
+            -51.0577965,
+            27.3941936,
+            322.5178223,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.5864779,
+            0.0,
+            0.7528793,
+            0.0,
+            -0.0,
+            0.9543499,
+            -0.0,
+            0.0,
+            -0.7528793,
+            -0.0,
+            0.5864779,
+            0.0,
+            114.652504,
+            26.8339958,
+            -279.772644,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6831947,
+            0.0,
+            0.702626,
+            0.0,
+            -0.0,
+            0.9800196,
+            -0.0,
+            0.0,
+            -0.702626,
+            -0.0,
+            0.6831947,
+            0.0,
+            -26.5737057,
+            28.0953007,
+            -346.6698914,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.7268184,
+            -0.0,
+            -0.533902,
+            0.0,
+            0.0,
+            0.9018404,
+            -1e-07,
+            0.0,
+            0.533902,
+            -1e-07,
+            -0.7268184,
+            0.0,
+            -11.3379602,
+            28.7812328,
+            -357.0892334,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.5907926,
+            -0.0,
+            -0.7817369,
+            0.0,
+            0.0,
+            0.9798716,
+            -0.0,
+            0.0,
+            0.7817369,
+            -0.0,
+            0.5907926,
+            0.0,
+            -110.4891205,
+            27.9459019,
+            -73.3718491,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.8954136,
+            0.0,
+            0.0247835,
+            0.0,
+            -0.0,
+            0.8957565,
+            -1e-07,
+            0.0,
+            -0.0247835,
+            -1e-07,
+            -0.8954136,
+            0.0,
+            -112.3523178,
+            24.9676495,
+            -303.0323181,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.9257886,
+            -0.0,
+            -0.3630072,
+            0.0,
+            0.0,
+            0.9944139,
+            -1e-07,
+            0.0,
+            0.3630072,
+            -1e-07,
+            -0.9257886,
+            0.0,
+            -9.0162582,
+            27.2195282,
+            -344.1516724,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.0330127,
+            -0.0,
+            -0.8119944,
+            0.0,
+            0.0,
+            0.8126651,
+            -0.0,
+            0.0,
+            0.8119944,
+            -0.0,
+            -0.0330127,
+            0.0,
+            -307.6433716,
+            27.9981289,
+            252.8136444,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.5146041,
+            -0.0,
+            -0.7335326,
+            0.0,
+            0.0,
+            0.89604,
+            -0.0,
+            0.0,
+            0.7335326,
+            -0.0,
+            0.5146041,
+            0.0,
+            16.767086,
+            26.0868988,
+            -347.016571,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.1582812,
+            -0.0,
+            -0.8734323,
+            0.0,
+            0.0,
+            0.8876581,
+            -0.0,
+            0.0,
+            0.8734323,
+            -0.0,
+            0.1582812,
+            0.0,
+            -205.4244232,
+            28.1749458,
+            -139.2709198,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.333912,
+            0.0,
+            0.7892867,
+            0.0,
+            -0.0,
+            0.8570127,
+            -0.0,
+            0.0,
+            -0.7892867,
+            -0.0,
+            0.333912,
+            0.0,
+            1.1184514,
+            27.0921078,
+            -345.3451538,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.4039461,
+            0.0,
+            0.6998049,
+            0.0,
+            -0.0,
+            0.8080218,
+            -1e-07,
+            0.0,
+            -0.6998049,
+            -1e-07,
+            -0.4039461,
+            0.0,
+            13.0780144,
+            28.1194592,
+            -358.1402588,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.4410023,
+            0.0,
+            0.8470674,
+            0.0,
+            -0.0,
+            0.9549901,
+            -1e-07,
+            0.0,
+            -0.8470674,
+            -1e-07,
+            -0.4410023,
+            0.0,
+            -266.0352173,
+            27.901844,
+            -373.446106,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7201101,
+            -0.0,
+            -0.4861051,
+            0.0,
+            0.0,
+            0.8688248,
+            -0.0,
+            0.0,
+            0.4861051,
+            -0.0,
+            0.7201101,
+            0.0,
+            -28.3848362,
+            28.7834167,
+            -363.0574951,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.1326015,
+            -0.0,
+            -0.8372939,
+            0.0,
+            0.0,
+            0.8477288,
+            -0.0,
+            0.0,
+            0.8372939,
+            -0.0,
+            -0.1326015,
+            0.0,
+            213.2945404,
+            0.6595502,
+            5.7022104,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.7957615,
+            -0.0,
+            -0.5416821,
+            0.0,
+            0.0,
+            0.9626296,
+            -1e-07,
+            0.0,
+            0.5416821,
+            -1e-07,
+            -0.7957615,
+            0.0,
+            -113.3970642,
+            28.0259705,
+            -13.6331596,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.155653,
+            0.0,
+            0.9458221,
+            0.0,
+            -0.0,
+            0.9585443,
+            -0.0,
+            0.0,
+            -0.9458221,
+            -0.0,
+            -0.155653,
+            0.0,
+            -127.7875748,
+            27.5594234,
+            -294.9369507,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6283636,
+            0.0,
+            0.6521288,
+            0.0,
+            -0.0,
+            0.9056008,
+            -0.0,
+            0.0,
+            -0.6521288,
+            -0.0,
+            0.6283636,
+            0.0,
+            -139.0705414,
+            27.3405247,
+            -305.5056458,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.8568521,
+            0.0,
+            0.2908757,
+            0.0,
+            -0.0,
+            0.9048779,
+            -1e-07,
+            0.0,
+            -0.2908757,
+            -1e-07,
+            -0.8568521,
+            0.0,
+            -120.1245117,
+            16.7562275,
+            294.1592102,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.9153022,
+            -0.0,
+            -0.2824958,
+            0.0,
+            0.0,
+            0.9579049,
+            -1e-07,
+            0.0,
+            0.2824958,
+            -1e-07,
+            -0.9153022,
+            0.0,
+            -65.3880768,
+            27.5203152,
+            322.5445251,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7935366,
+            0.0,
+            0.3846412,
+            0.0,
+            -0.0,
+            0.8818442,
+            -0.0,
+            0.0,
+            -0.3846412,
+            -0.0,
+            0.7935366,
+            0.0,
+            -266.0651855,
+            28.2231007,
+            -95.3632889,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6394153,
+            -0.0,
+            -0.6220009,
+            0.0,
+            0.0,
+            0.8920409,
+            -1e-07,
+            0.0,
+            0.6220009,
+            -1e-07,
+            -0.6394153,
+            0.0,
+            -266.1941223,
+            28.2790222,
+            -124.6707687,
+            1.0
+          ],
+          "source": "SRC_S20_0_SM_Saguaro_Branching_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        }
+      ]
+    },
+    {
+      "id": "Saguaro_Young",
+      "nodes": [
+        "DETAIL_Saguaro_Young_LOD0",
+        "DETAIL_Saguaro_Young_LOD1",
+        "DETAIL_Saguaro_Young_LOD2"
+      ],
+      "triangles": [
+        1096,
+        632,
+        292
+      ],
+      "distances": [
+        35,
+        100
+      ],
+      "cullDistance": 360,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            -0.3226145,
+            0.0,
+            0.7607559,
+            0.0,
+            -0.0,
+            0.826335,
+            -1e-07,
+            0.0,
+            -0.7607559,
+            -1e-07,
+            -0.3226145,
+            0.0,
+            -362.7687378,
+            27.6936646,
+            1.5935385,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            0.7127836,
+            0.0,
+            0.580443,
+            0.0,
+            -0.0,
+            0.919225,
+            -0.0,
+            0.0,
+            -0.580443,
+            -0.0,
+            0.7127836,
+            0.0,
+            -372.1140442,
+            27.6667786,
+            0.8672268,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            -0.658061,
+            0.0,
+            0.6592202,
+            0.0,
+            -0.0,
+            0.9314588,
+            -1e-07,
+            0.0,
+            -0.6592202,
+            -1e-07,
+            -0.658061,
+            0.0,
+            -186.8036194,
+            27.582222,
+            -218.4604187,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            -0.219775,
+            0.0,
+            0.9618102,
+            0.0,
+            -0.0,
+            0.9866002,
+            -1e-07,
+            0.0,
+            -0.9618102,
+            -1e-07,
+            -0.219775,
+            0.0,
+            -180.6798553,
+            27.4808617,
+            -222.2783661,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            -0.3226145,
+            0.0,
+            0.7607559,
+            0.0,
+            -0.0,
+            0.826335,
+            -1e-07,
+            0.0,
+            -0.7607559,
+            -1e-07,
+            -0.3226145,
+            0.0,
+            -362.7687378,
+            27.6936646,
+            1.5935385,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            0.7127836,
+            0.0,
+            0.580443,
+            0.0,
+            -0.0,
+            0.919225,
+            -0.0,
+            0.0,
+            -0.580443,
+            -0.0,
+            0.7127836,
+            0.0,
+            -372.1140442,
+            27.6667786,
+            0.8672268,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            -0.658061,
+            0.0,
+            0.6592202,
+            0.0,
+            -0.0,
+            0.9314588,
+            -1e-07,
+            0.0,
+            -0.6592202,
+            -1e-07,
+            -0.658061,
+            0.0,
+            -186.8036194,
+            27.582222,
+            -218.4604187,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            -0.219775,
+            0.0,
+            0.9618102,
+            0.0,
+            -0.0,
+            0.9866002,
+            -1e-07,
+            0.0,
+            -0.9618102,
+            -1e-07,
+            -0.219775,
+            0.0,
+            -180.6798553,
+            27.4808617,
+            -222.2783661,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            0.2736161,
+            -0.0,
+            -0.7517541,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.7517541,
+            -0.0,
+            0.2736161,
+            0.0,
+            94.0,
+            10.3521557,
+            -310.0,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "INST_S18_NorthClimb_01"
+        },
+        {
+          "matrix": [
+            -0.8210369,
+            0.0,
+            0.2199962,
+            0.0,
+            -0.0,
+            0.85,
+            -1e-07,
+            0.0,
+            -0.2199962,
+            -1e-07,
+            -0.8210369,
+            0.0,
+            -232.0,
+            28.4437828,
+            -157.0,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "INST_S18_AsphaltBend_02"
+        },
+        {
+          "matrix": [
+            -0.7987387,
+            0.0,
+            0.2907171,
+            0.0,
+            -0.0,
+            0.85,
+            -1e-07,
+            0.0,
+            -0.2907171,
+            -1e-07,
+            -0.7987387,
+            0.0,
+            -278.0,
+            28.0300713,
+            -143.0,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "INST_S18_ShortcutEdge_02"
+        },
+        {
+          "matrix": [
+            0.6010408,
+            -0.0,
+            -0.6010408,
+            0.0,
+            0.0,
+            0.85,
+            -0.0,
+            0.0,
+            0.6010408,
+            -0.0,
+            0.6010408,
+            0.0,
+            -280.0,
+            26.7642002,
+            258.0,
+            1.0
+          ],
+          "source": "SM_Saguaro_Young_S07",
+          "parent": "INST_S18_SouthernSweep_02"
+        },
+        {
+          "matrix": [
+            -0.6002797,
+            -0.0,
+            -0.7348232,
+            0.0,
+            0.0,
+            0.948842,
+            -1e-07,
+            0.0,
+            0.7348232,
+            -1e-07,
+            -0.6002797,
+            0.0,
+            -181.8287201,
+            28.4530334,
+            -79.5683517,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6480361,
+            -0.0,
+            -0.5784338,
+            0.0,
+            0.0,
+            0.8686405,
+            -1e-07,
+            0.0,
+            0.5784338,
+            -1e-07,
+            -0.6480361,
+            0.0,
+            12.1501408,
+            19.0706234,
+            -328.0129395,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6011016,
+            0.0,
+            0.681868,
+            0.0,
+            -0.0,
+            0.9089924,
+            -1e-07,
+            0.0,
+            -0.681868,
+            -1e-07,
+            -0.6011016,
+            0.0,
+            -216.1308441,
+            28.6722622,
+            -140.1588287,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6492806,
+            -0.0,
+            -0.6094179,
+            0.0,
+            0.0,
+            0.8904805,
+            -1e-07,
+            0.0,
+            0.6094179,
+            -1e-07,
+            -0.6492806,
+            0.0,
+            -28.7256241,
+            21.506012,
+            -264.6379089,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6649975,
+            -0.0,
+            -0.4512886,
+            0.0,
+            0.0,
+            0.8036684,
+            -1e-07,
+            0.0,
+            0.4512886,
+            -1e-07,
+            -0.6649975,
+            0.0,
+            -130.4382782,
+            26.2909031,
+            -308.2454529,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.3758146,
+            0.0,
+            0.7646493,
+            0.0,
+            -0.0,
+            0.8520124,
+            -1e-07,
+            0.0,
+            -0.7646493,
+            -1e-07,
+            -0.3758146,
+            0.0,
+            -261.3296814,
+            27.8725777,
+            -381.3912964,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.0566985,
+            -0.0,
+            -0.8298415,
+            0.0,
+            0.0,
+            0.8317762,
+            -0.0,
+            0.0,
+            0.8298415,
+            -0.0,
+            0.0566985,
+            0.0,
+            -50.283165,
+            27.5386639,
+            336.7152405,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.8929861,
+            0.0,
+            0.0182926,
+            0.0,
+            -0.0,
+            0.8931735,
+            -1e-07,
+            0.0,
+            -0.0182926,
+            -1e-07,
+            -0.8929861,
+            0.0,
+            -53.7144203,
+            27.3251476,
+            305.3967285,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7686117,
+            0.0,
+            0.3282521,
+            0.0,
+            -0.0,
+            0.8357711,
+            -0.0,
+            0.0,
+            -0.3282521,
+            -0.0,
+            0.7686117,
+            0.0,
+            -171.7835999,
+            28.2428284,
+            -70.8332977,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.5833103,
+            0.0,
+            0.5908281,
+            0.0,
+            -0.0,
+            0.8302583,
+            -1e-07,
+            0.0,
+            -0.5908281,
+            -1e-07,
+            -0.5833103,
+            0.0,
+            -171.8524933,
+            28.1870422,
+            -80.4359894,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.3289644,
+            -0.0,
+            -0.9339783,
+            0.0,
+            0.0,
+            0.9902188,
+            -0.0,
+            0.0,
+            0.9339783,
+            -0.0,
+            0.3289644,
+            0.0,
+            -227.1049042,
+            29.0671082,
+            -139.2639465,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7654567,
+            -0.0,
+            -0.2390004,
+            0.0,
+            0.0,
+            0.8019009,
+            -0.0,
+            0.0,
+            0.2390004,
+            -0.0,
+            0.7654567,
+            0.0,
+            -49.4217567,
+            25.128561,
+            -259.5315247,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.861374,
+            0.0,
+            0.0005182,
+            0.0,
+            -0.0,
+            0.8613742,
+            -0.0,
+            0.0,
+            -0.0005182,
+            -0.0,
+            0.861374,
+            0.0,
+            -49.0222206,
+            27.3526783,
+            313.5307922,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6534708,
+            0.0,
+            0.6712632,
+            0.0,
+            -0.0,
+            0.936813,
+            -1e-07,
+            0.0,
+            -0.6712632,
+            -1e-07,
+            -0.6534708,
+            0.0,
+            -42.2940559,
+            24.6848011,
+            -338.0226746,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6477464,
+            0.0,
+            0.5202627,
+            0.0,
+            -0.0,
+            0.8308122,
+            -0.0,
+            0.0,
+            -0.5202627,
+            -0.0,
+            0.6477464,
+            0.0,
+            -252.464386,
+            27.936451,
+            -375.7863464,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.0472652,
+            0.0,
+            0.8135475,
+            0.0,
+            -0.0,
+            0.8149194,
+            -0.0,
+            0.0,
+            -0.8135475,
+            -0.0,
+            -0.0472652,
+            0.0,
+            -31.4469948,
+            28.7701054,
+            -354.3593445,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.9174724,
+            0.0,
+            0.2482259,
+            0.0,
+            -0.0,
+            0.9504586,
+            -1e-07,
+            0.0,
+            -0.2482259,
+            -1e-07,
+            -0.9174724,
+            0.0,
+            -121.1217804,
+            28.125679,
+            201.9706116,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.1693745,
+            0.0,
+            0.8242655,
+            0.0,
+            -0.0,
+            0.8414875,
+            -0.0,
+            0.0,
+            -0.8242655,
+            -0.0,
+            0.1693745,
+            0.0,
+            -289.032196,
+            27.1905537,
+            242.1559753,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.2026331,
+            0.0,
+            0.7813639,
+            0.0,
+            -0.0,
+            0.807211,
+            -0.0,
+            0.0,
+            -0.7813639,
+            -0.0,
+            0.2026331,
+            0.0,
+            -267.1925964,
+            28.2161674,
+            -115.5117722,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.5990764,
+            -0.0,
+            -0.5595625,
+            0.0,
+            0.0,
+            0.8197578,
+            -0.0,
+            0.0,
+            0.5595625,
+            -0.0,
+            0.5990764,
+            0.0,
+            26.8368225,
+            16.3783798,
+            -330.7313232,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.4502226,
+            0.0,
+            0.8283409,
+            0.0,
+            -0.0,
+            0.9427879,
+            -1e-07,
+            0.0,
+            -0.8283409,
+            -1e-07,
+            -0.4502226,
+            0.0,
+            26.6870327,
+            26.9153404,
+            -359.47229,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.4696741,
+            0.0,
+            0.6605008,
+            0.0,
+            -0.0,
+            0.8104659,
+            -1e-07,
+            0.0,
+            -0.6605008,
+            -1e-07,
+            -0.4696741,
+            0.0,
+            -60.1104469,
+            25.0577774,
+            -343.8587646,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.3219498,
+            -0.0,
+            -0.7813014,
+            0.0,
+            0.0,
+            0.8450347,
+            -0.0,
+            0.0,
+            0.7813014,
+            -0.0,
+            0.3219498,
+            0.0,
+            -50.2720451,
+            25.3059635,
+            -342.370636,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.3866678,
+            0.0,
+            0.8882,
+            0.0,
+            -0.0,
+            0.9687163,
+            -0.0,
+            0.0,
+            -0.8882,
+            -0.0,
+            0.3866678,
+            0.0,
+            -5.8248115,
+            28.6771641,
+            -365.2295227,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6756533,
+            0.0,
+            0.4812559,
+            0.0,
+            -0.0,
+            0.8295268,
+            -1e-07,
+            0.0,
+            -0.4812559,
+            -1e-07,
+            -0.6756533,
+            0.0,
+            -162.8757172,
+            28.0345097,
+            -85.7657623,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.8384481,
+            -0.0,
+            -0.1368768,
+            0.0,
+            0.0,
+            0.8495471,
+            -1e-07,
+            0.0,
+            0.1368768,
+            -1e-07,
+            -0.8384481,
+            0.0,
+            -46.3038101,
+            28.3192177,
+            -355.7036133,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.7659729,
+            -0.0,
+            -0.36641,
+            0.0,
+            0.0,
+            0.8490999,
+            -1e-07,
+            0.0,
+            0.36641,
+            -1e-07,
+            -0.7659729,
+            0.0,
+            -7.7316804,
+            22.3881721,
+            -330.168335,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.0226679,
+            0.0,
+            0.8936645,
+            0.0,
+            -0.0,
+            0.893952,
+            -0.0,
+            0.0,
+            -0.8936645,
+            -0.0,
+            -0.0226679,
+            0.0,
+            -29.3239384,
+            25.3829746,
+            -337.4737244,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.3754885,
+            -0.0,
+            -0.7542715,
+            0.0,
+            0.0,
+            0.8425658,
+            -1e-07,
+            0.0,
+            0.7542715,
+            -1e-07,
+            -0.3754885,
+            0.0,
+            2.3394883,
+            19.6535549,
+            -327.6133728,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.8710731,
+            0.0,
+            0.2790357,
+            0.0,
+            -0.0,
+            0.9146744,
+            -0.0,
+            0.0,
+            -0.2790357,
+            -0.0,
+            0.8710731,
+            0.0,
+            -129.5413971,
+            20.840416,
+            306.5776367,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.9042157,
+            0.0,
+            0.0764563,
+            0.0,
+            -0.0,
+            0.9074423,
+            -0.0,
+            0.0,
+            -0.0764563,
+            -0.0,
+            0.9042157,
+            0.0,
+            -0.4901459,
+            23.7599354,
+            -335.3031311,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7162694,
+            -0.0,
+            -0.472539,
+            0.0,
+            0.0,
+            0.8580996,
+            -0.0,
+            0.0,
+            0.472539,
+            -0.0,
+            0.7162694,
+            0.0,
+            -58.6785774,
+            27.317421,
+            316.2066956,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.8342392,
+            -0.0,
+            -0.2919041,
+            0.0,
+            0.0,
+            0.8838343,
+            -1e-07,
+            0.0,
+            0.2919041,
+            -1e-07,
+            -0.8342392,
+            0.0,
+            -132.9803619,
+            26.8709011,
+            220.4715271,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.4667451,
+            -0.0,
+            -0.7891429,
+            0.0,
+            0.0,
+            0.9168411,
+            -1e-07,
+            0.0,
+            0.7891429,
+            -1e-07,
+            -0.4667451,
+            0.0,
+            -168.8140869,
+            28.0657043,
+            -96.2345963,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6073976,
+            0.0,
+            0.7413003,
+            0.0,
+            -0.0,
+            0.9583621,
+            -0.0,
+            0.0,
+            -0.7413003,
+            -0.0,
+            0.6073976,
+            0.0,
+            -114.1664963,
+            27.7167263,
+            -113.265007,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.741532,
+            0.0,
+            0.3767682,
+            0.0,
+            -0.0,
+            0.8317595,
+            -0.0,
+            0.0,
+            -0.3767682,
+            -0.0,
+            0.741532,
+            0.0,
+            89.4728317,
+            26.7308197,
+            -268.1846619,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.9525477,
+            -0.0,
+            -0.0788962,
+            0.0,
+            0.0,
+            0.9558095,
+            -0.0,
+            0.0,
+            0.0788962,
+            -0.0,
+            0.9525477,
+            0.0,
+            95.6059036,
+            25.7054787,
+            -279.0291138,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.1179105,
+            0.0,
+            0.7925994,
+            0.0,
+            -0.0,
+            0.8013218,
+            -0.0,
+            0.0,
+            -0.7925994,
+            -0.0,
+            -0.1179105,
+            0.0,
+            -31.6920033,
+            24.5389595,
+            268.2035522,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.7883651,
+            -0.0,
+            -0.3460499,
+            0.0,
+            0.0,
+            0.8609703,
+            -1e-07,
+            0.0,
+            0.3460499,
+            -1e-07,
+            -0.7883651,
+            0.0,
+            -17.9744301,
+            27.4796181,
+            -344.2238464,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.5744936,
+            -0.0,
+            -0.6411346,
+            0.0,
+            0.0,
+            0.8608696,
+            -0.0,
+            0.0,
+            0.6411346,
+            -0.0,
+            0.5744936,
+            0.0,
+            126.0021744,
+            25.0759354,
+            -296.3753052,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.818983,
+            0.0,
+            0.4283099,
+            0.0,
+            -0.0,
+            0.9242199,
+            -0.0,
+            0.0,
+            -0.4283099,
+            -0.0,
+            0.818983,
+            0.0,
+            39.4493256,
+            13.2195749,
+            -331.771637,
+            1.0
+          ],
+          "source": "SRC_S20_1_SM_Saguaro_Young_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        }
+      ]
+    },
+    {
+      "id": "BarrelCactus_Cluster",
+      "nodes": [
+        "DETAIL_BarrelCactus_Cluster_LOD0",
+        "DETAIL_BarrelCactus_Cluster_LOD1",
+        "DETAIL_BarrelCactus_Cluster_LOD2"
+      ],
+      "triangles": [
+        1644,
+        768,
+        276
+      ],
+      "distances": [
+        35,
+        100
+      ],
+      "cullDistance": 360,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            0.6445149,
+            0.0,
+            0.5495792,
+            0.0,
+            -0.0,
+            0.8470164,
+            -0.0,
+            0.0,
+            -0.5495792,
+            -0.0,
+            0.6445149,
+            0.0,
+            -357.689209,
+            27.7036209,
+            -0.9208711,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            0.8692923,
+            -0.0,
+            -0.0288478,
+            0.0,
+            0.0,
+            0.8697708,
+            -0.0,
+            0.0,
+            0.0288478,
+            -0.0,
+            0.8692923,
+            0.0,
+            -355.0097656,
+            27.7264252,
+            7.1818857,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            -0.2141422,
+            -0.0,
+            -0.8524166,
+            0.0,
+            0.0,
+            0.8789033,
+            -0.0,
+            0.0,
+            0.8524166,
+            -0.0,
+            -0.2141422,
+            0.0,
+            -367.2817383,
+            27.7000103,
+            6.79952,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            0.7775388,
+            -0.0,
+            -0.4205132,
+            0.0,
+            0.0,
+            0.8839672,
+            -0.0,
+            0.0,
+            0.4205132,
+            -0.0,
+            0.7775388,
+            0.0,
+            -194.3495331,
+            27.6363983,
+            -220.2740784,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "GN_S13_DryCacti"
+        },
+        {
+          "matrix": [
+            0.6445149,
+            0.0,
+            0.5495792,
+            0.0,
+            -0.0,
+            0.8470164,
+            -0.0,
+            0.0,
+            -0.5495792,
+            -0.0,
+            0.6445149,
+            0.0,
+            -357.689209,
+            27.7036209,
+            -0.9208711,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            0.8692923,
+            -0.0,
+            -0.0288478,
+            0.0,
+            0.0,
+            0.8697708,
+            -0.0,
+            0.0,
+            0.0288478,
+            -0.0,
+            0.8692923,
+            0.0,
+            -355.0097656,
+            27.7264252,
+            7.1818857,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            -0.2141422,
+            -0.0,
+            -0.8524166,
+            0.0,
+            0.0,
+            0.8789033,
+            -0.0,
+            0.0,
+            0.8524166,
+            -0.0,
+            -0.2141422,
+            0.0,
+            -367.2817383,
+            27.7000103,
+            6.79952,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            0.7775388,
+            -0.0,
+            -0.4205132,
+            0.0,
+            0.0,
+            0.8839672,
+            -0.0,
+            0.0,
+            0.4205132,
+            -0.0,
+            0.7775388,
+            0.0,
+            -194.3495331,
+            27.6363983,
+            -220.2740784,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "GN_S13_DryCacti.001"
+        },
+        {
+          "matrix": [
+            0.2736161,
+            -0.0,
+            -0.7517541,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.7517541,
+            -0.0,
+            0.2736161,
+            0.0,
+            -222.0,
+            28.6151829,
+            -145.0,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "INST_S18_AsphaltBend_03"
+        },
+        {
+          "matrix": [
+            0.0653668,
+            -0.0,
+            -0.747146,
+            0.0,
+            0.0,
+            0.75,
+            -0.0,
+            0.0,
+            0.747146,
+            -0.0,
+            0.0653668,
+            0.0,
+            -281.0,
+            27.9368877,
+            -137.0,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "INST_S18_ShortcutEdge_03"
+        },
+        {
+          "matrix": [
+            -0.5142301,
+            -0.0,
+            -0.6128356,
+            0.0,
+            0.0,
+            0.8,
+            -1e-07,
+            0.0,
+            0.6128356,
+            -1e-07,
+            -0.5142301,
+            0.0,
+            -291.0,
+            27.2825127,
+            256.0,
+            1.0
+          ],
+          "source": "SM_BarrelCactus_Cluster_S07",
+          "parent": "INST_S18_SouthernSweep_03"
+        },
+        {
+          "matrix": [
+            0.0330745,
+            -0.0,
+            -0.9297912,
+            0.0,
+            0.0,
+            0.9303793,
+            -0.0,
+            0.0,
+            0.9297912,
+            -0.0,
+            0.0330745,
+            0.0,
+            -113.1400375,
+            27.9601173,
+            329.4868774,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.3530349,
+            0.0,
+            0.8837563,
+            0.0,
+            -0.0,
+            0.9516612,
+            -1e-07,
+            0.0,
+            -0.8837563,
+            -1e-07,
+            -0.3530349,
+            0.0,
+            -61.3392792,
+            27.5518818,
+            330.9320068,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.2106059,
+            0.0,
+            0.8767762,
+            0.0,
+            -0.0,
+            0.9017159,
+            -0.0,
+            0.0,
+            -0.8767762,
+            -0.0,
+            -0.2106059,
+            0.0,
+            -140.721817,
+            21.255827,
+            237.0512085,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.4413447,
+            -0.0,
+            -0.682584,
+            0.0,
+            0.0,
+            0.8128384,
+            -0.0,
+            0.0,
+            0.682584,
+            -0.0,
+            0.4413447,
+            0.0,
+            -40.9910774,
+            27.4219589,
+            324.4863586,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.2886217,
+            -0.0,
+            -0.90232,
+            0.0,
+            0.0,
+            0.9473562,
+            -0.0,
+            0.0,
+            0.90232,
+            -0.0,
+            0.2886217,
+            0.0,
+            -324.0925903,
+            28.1063995,
+            -313.684082,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.1667322,
+            0.0,
+            0.9124212,
+            0.0,
+            -0.0,
+            0.9275302,
+            -0.0,
+            0.0,
+            -0.9124212,
+            -0.0,
+            0.1667322,
+            0.0,
+            -114.3210754,
+            27.823431,
+            195.9792786,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6664159,
+            0.0,
+            0.4901672,
+            0.0,
+            -0.0,
+            0.827269,
+            -0.0,
+            0.0,
+            -0.4901672,
+            -0.0,
+            0.6664159,
+            0.0,
+            -36.1221886,
+            22.9624882,
+            -330.5350342,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6438794,
+            -0.0,
+            -0.7297266,
+            0.0,
+            0.0,
+            0.9731811,
+            -0.0,
+            0.0,
+            0.7297266,
+            -0.0,
+            0.6438794,
+            0.0,
+            -173.1248627,
+            28.2065392,
+            -56.0174789,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.5981724,
+            -0.0,
+            -0.6001736,
+            0.0,
+            0.0,
+            0.8473598,
+            -1e-07,
+            0.0,
+            0.6001736,
+            -1e-07,
+            -0.5981724,
+            0.0,
+            -176.7873077,
+            28.2388668,
+            -88.0724258,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.2626228,
+            -0.0,
+            -0.8450907,
+            0.0,
+            0.0,
+            0.884957,
+            -1e-07,
+            0.0,
+            0.8450907,
+            -1e-07,
+            -0.2626228,
+            0.0,
+            35.1750374,
+            26.2293491,
+            -357.9364319,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6226252,
+            0.0,
+            0.5346131,
+            0.0,
+            -0.0,
+            0.8206542,
+            -1e-07,
+            0.0,
+            -0.5346131,
+            -1e-07,
+            -0.6226252,
+            0.0,
+            -121.8597946,
+            25.4593544,
+            -312.0015564,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.9859305,
+            -0.0,
+            -0.0301534,
+            0.0,
+            0.0,
+            0.9863915,
+            -0.0,
+            0.0,
+            0.0301534,
+            -0.0,
+            0.9859305,
+            0.0,
+            -346.3931274,
+            28.1366196,
+            -282.7158508,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6290247,
+            -0.0,
+            -0.5747664,
+            0.0,
+            0.0,
+            0.8520731,
+            -0.0,
+            0.0,
+            0.5747664,
+            -0.0,
+            0.6290247,
+            0.0,
+            -19.3791637,
+            22.429039,
+            -329.0384827,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.881668,
+            -0.0,
+            -0.3029946,
+            0.0,
+            0.0,
+            0.9322791,
+            -1e-07,
+            0.0,
+            0.3029946,
+            -1e-07,
+            -0.881668,
+            0.0,
+            -274.6478271,
+            27.9181862,
+            -95.4417801,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.5298144,
+            -0.0,
+            -0.8113725,
+            0.0,
+            0.0,
+            0.9690349,
+            -1e-07,
+            0.0,
+            0.8113725,
+            -1e-07,
+            -0.5298144,
+            0.0,
+            -254.5362854,
+            27.908392,
+            171.6040649,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.8769661,
+            0.0,
+            0.0785156,
+            0.0,
+            -0.0,
+            0.8804739,
+            -0.0,
+            0.0,
+            -0.0785156,
+            -0.0,
+            0.8769661,
+            0.0,
+            103.0929031,
+            24.179184,
+            -287.4085999,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.9161881,
+            -0.0,
+            -0.2026228,
+            0.0,
+            0.0,
+            0.9383265,
+            -1e-07,
+            0.0,
+            0.2026228,
+            -1e-07,
+            -0.9161881,
+            0.0,
+            -274.2608948,
+            27.9313431,
+            -108.9013748,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.1616016,
+            -0.0,
+            -0.8988611,
+            0.0,
+            0.0,
+            0.9132723,
+            -0.0,
+            0.0,
+            0.8988611,
+            -0.0,
+            -0.1616016,
+            0.0,
+            -114.4804001,
+            27.9260578,
+            -32.3563118,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.4896058,
+            -0.0,
+            -0.8438557,
+            0.0,
+            0.0,
+            0.9756058,
+            -1e-07,
+            0.0,
+            0.8438557,
+            -1e-07,
+            -0.4896058,
+            0.0,
+            -210.5485382,
+            28.0670567,
+            -152.9117126,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7593813,
+            0.0,
+            0.6193834,
+            0.0,
+            -0.0,
+            0.9799468,
+            -0.0,
+            0.0,
+            -0.6193834,
+            -0.0,
+            0.7593813,
+            0.0,
+            -318.9212952,
+            28.2788391,
+            -327.9663696,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.942624,
+            -0.0,
+            -0.1157873,
+            0.0,
+            0.0,
+            0.9497087,
+            -1e-07,
+            0.0,
+            0.1157873,
+            -1e-07,
+            -0.942624,
+            0.0,
+            -110.6287308,
+            27.9085598,
+            -56.5949135,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.4967511,
+            -0.0,
+            -0.8531994,
+            0.0,
+            0.0,
+            0.9872745,
+            -0.0,
+            0.0,
+            0.8531994,
+            -0.0,
+            0.4967511,
+            0.0,
+            -112.9758072,
+            27.8733788,
+            -86.6946106,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.4829113,
+            -0.0,
+            -0.8724593,
+            0.0,
+            0.0,
+            0.9971903,
+            -1e-07,
+            0.0,
+            0.8724593,
+            -1e-07,
+            -0.4829113,
+            0.0,
+            -235.8323822,
+            28.9439774,
+            -146.1839752,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.8108184,
+            -0.0,
+            -0.2075722,
+            0.0,
+            0.0,
+            0.8369663,
+            -0.0,
+            0.0,
+            0.2075722,
+            -0.0,
+            0.8108184,
+            0.0,
+            -128.2539978,
+            25.0826588,
+            315.4847107,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.7340975,
+            -0.0,
+            -0.5029118,
+            0.0,
+            0.0,
+            0.8898424,
+            -0.0,
+            0.0,
+            0.5029118,
+            -0.0,
+            0.7340975,
+            0.0,
+            -123.9587021,
+            27.9053211,
+            -112.7768173,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.3913869,
+            -0.0,
+            -0.7694231,
+            0.0,
+            0.0,
+            0.8632472,
+            -0.0,
+            0.0,
+            0.7694231,
+            -0.0,
+            0.3913869,
+            0.0,
+            -297.8944092,
+            27.4293671,
+            243.266098,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.8372555,
+            -0.0,
+            -0.2610181,
+            0.0,
+            0.0,
+            0.876999,
+            -1e-07,
+            0.0,
+            0.2610181,
+            -1e-07,
+            -0.8372555,
+            0.0,
+            -1.9071916,
+            28.6397476,
+            -357.5105286,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.8179449,
+            0.0,
+            0.473544,
+            0.0,
+            -0.0,
+            0.9451337,
+            -0.0,
+            0.0,
+            -0.473544,
+            -0.0,
+            0.8179449,
+            0.0,
+            -127.9204559,
+            17.562273,
+            238.5593414,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6778485,
+            -0.0,
+            -0.6867707,
+            0.0,
+            0.0,
+            0.9649522,
+            -1e-07,
+            0.0,
+            0.6867707,
+            -1e-07,
+            -0.6778485,
+            0.0,
+            21.6945229,
+            28.1064358,
+            -368.0354309,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.5572545,
+            0.0,
+            0.5937009,
+            0.0,
+            -0.0,
+            0.8142563,
+            -1e-07,
+            0.0,
+            -0.5937009,
+            -1e-07,
+            -0.5572545,
+            0.0,
+            -127.3325348,
+            27.4728699,
+            208.9529877,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.0681678,
+            -0.0,
+            -0.9556125,
+            0.0,
+            0.0,
+            0.9580408,
+            -0.0,
+            0.0,
+            0.9556125,
+            -0.0,
+            0.0681678,
+            0.0,
+            -22.2866249,
+            28.8107796,
+            -355.6199341,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.3173618,
+            -0.0,
+            -0.9140628,
+            0.0,
+            0.0,
+            0.9675895,
+            -1e-07,
+            0.0,
+            0.9140628,
+            -1e-07,
+            -0.3173618,
+            0.0,
+            9.0828619,
+            22.8221779,
+            -337.5291443,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.8105921,
+            -0.0,
+            -0.0014722,
+            0.0,
+            0.0,
+            0.8105934,
+            -1e-07,
+            0.0,
+            0.0014722,
+            -1e-07,
+            -0.8105921,
+            0.0,
+            -19.5915985,
+            28.734457,
+            -364.6302185,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6363238,
+            -0.0,
+            -0.6662457,
+            0.0,
+            0.0,
+            0.9212987,
+            -0.0,
+            0.0,
+            0.6662457,
+            -0.0,
+            0.6363238,
+            0.0,
+            -323.5429382,
+            28.6913414,
+            -340.5308838,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6778152,
+            -0.0,
+            -0.7216957,
+            0.0,
+            0.0,
+            0.9900901,
+            -1e-07,
+            0.0,
+            0.7216957,
+            -1e-07,
+            -0.6778152,
+            0.0,
+            83.516449,
+            26.0081196,
+            -274.4270935,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.6708531,
+            -0.0,
+            -0.6031023,
+            0.0,
+            0.0,
+            0.9020954,
+            -1e-07,
+            0.0,
+            0.6031023,
+            -1e-07,
+            -0.6708531,
+            0.0,
+            -62.6594963,
+            27.2482967,
+            308.2987366,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.2788484,
+            0.0,
+            0.8296035,
+            0.0,
+            -0.0,
+            0.8752134,
+            -1e-07,
+            0.0,
+            -0.8296035,
+            -1e-07,
+            -0.2788484,
+            0.0,
+            -109.5726624,
+            27.9409943,
+            -24.1937485,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            -0.4681245,
+            -0.0,
+            -0.8104557,
+            0.0,
+            0.0,
+            0.9359375,
+            -1e-07,
+            0.0,
+            0.8104557,
+            -1e-07,
+            -0.4681245,
+            0.0,
+            -139.4125519,
+            26.1455956,
+            -327.4585266,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        },
+        {
+          "matrix": [
+            0.6093124,
+            -0.0,
+            -0.7217548,
+            0.0,
+            0.0,
+            0.944559,
+            -0.0,
+            0.0,
+            0.7217548,
+            -0.0,
+            0.6093124,
+            0.0,
+            -338.4734802,
+            27.9856415,
+            -272.4356079,
+            1.0
+          ],
+          "source": "SRC_S20_2_SM_BarrelCactus_Cluster_S07",
+          "parent": "S07_TERRAIN - Western plateau fitted to road"
+        }
+      ]
+    },
+    {
+      "id": "Agave_Rosette",
+      "nodes": [
+        "DETAIL_Agave_Rosette_LOD0",
+        "DETAIL_Agave_Rosette_LOD1",
+        "DETAIL_Agave_Rosette_LOD2"
+      ],
+      "triangles": [
+        120,
+        80,
+        48
+      ],
+      "distances": [
+        22,
+        60
+      ],
+      "cullDistance": 180,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            -0.4102223,
+            -0.0,
+            -0.7719213,
+            0.0,
+            0.0,
+            0.8741539,
+            -1e-07,
+            0.0,
+            0.7719213,
+            -1e-07,
+            -0.4102223,
+            0.0,
+            343.4825745,
+            0.7588586,
+            -148.8708038,
+            1.0
+          ],
+          "source": "SM_Agave_Rosette_S07",
+          "parent": "GN_S13_RiversideShrubs"
+        },
+        {
+          "matrix": [
+            -0.174464,
+            -0.0,
+            -0.8286659,
+            0.0,
+            0.0,
+            0.8468322,
+            -0.0,
+            0.0,
+            0.8286659,
+            -0.0,
+            -0.174464,
+            0.0,
+            346.722168,
+            1.4484677,
+            -131.4134369,
+            1.0
+          ],
+          "source": "SM_Agave_Rosette_S07",
+          "parent": "GN_S13_RiversideShrubs"
+        },
+        {
+          "matrix": [
+            -0.0,
+            -0.0,
+            -0.9,
+            0.0,
+            0.0,
+            0.9,
+            -0.0,
+            0.0,
+            0.9,
+            -0.0,
+            -0.0,
+            0.0,
+            218.0,
+            1.1478062,
+            -306.0,
+            1.0
+          ],
+          "source": "SM_Agave_Rosette_S07",
+          "parent": "INST_S15_Shrub_05"
+        },
+        {
+          "matrix": [
+            0.7703616,
+            -0.0,
+            -0.3592255,
+            0.0,
+            0.0,
+            0.85,
+            -0.0,
+            0.0,
+            0.3592255,
+            -0.0,
+            0.7703616,
+            0.0,
+            222.0,
+            0.846333,
+            -312.0,
+            1.0
+          ],
+          "source": "SM_Agave_Rosette_S07",
+          "parent": "INST_S15_Shrub_08"
+        },
+        {
+          "matrix": [
+            -0.7047695,
+            -0.0,
+            -0.2565151,
+            0.0,
+            0.0,
+            0.75,
+            -1e-07,
+            0.0,
+            0.2565151,
+            -1e-07,
+            -0.7047695,
+            0.0,
+            236.0,
+            0.389769,
+            -292.0,
+            1.0
+          ],
+          "source": "SM_Agave_Rosette_S07",
+          "parent": "INST_S15_Shrub_10"
+        },
+        {
+          "matrix": [
+            -0.7244444,
+            0.0,
+            0.1941143,
+            0.0,
+            -0.0,
+            0.75,
+            -1e-07,
+            0.0,
+            -0.1941143,
+            -1e-07,
+            -0.7244444,
+            0.0,
+            275.0,
+            0.6237291,
+            -186.0,
+            1.0
+          ],
+          "source": "SM_Agave_Rosette_S07",
+          "parent": "INST_S18_MiddleRiverbank_04"
+        }
+      ]
+    },
+    {
+      "id": "Bunchgrass_Straw",
+      "nodes": [
+        "DETAIL_Bunchgrass_Straw_LOD0",
+        "DETAIL_Bunchgrass_Straw_LOD1",
+        "DETAIL_Bunchgrass_Straw_LOD2"
+      ],
+      "triangles": [
+        168,
+        96,
+        40
+      ],
+      "distances": [
+        12,
+        32
+      ],
+      "cullDistance": 90,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            0.8011211,
+            -0.0,
+            -0.4901743,
+            0.0,
+            0.0,
+            0.9391837,
+            -0.0,
+            0.0,
+            0.4901743,
+            -0.0,
+            0.8011211,
+            0.0,
+            335.12146,
+            0.7064404,
+            -134.8152466,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "GN_S13_RiversideGrass"
+        },
+        {
+          "matrix": [
+            0.8320512,
+            0.0,
+            0.4810472,
+            0.0,
+            -0.0,
+            0.9611012,
+            -0.0,
+            0.0,
+            -0.4810472,
+            -0.0,
+            0.8320512,
+            0.0,
+            338.9848328,
+            0.879094,
+            -134.6015167,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "GN_S13_RiversideGrass"
+        },
+        {
+          "matrix": [
+            0.7735965,
+            0.0,
+            0.2447984,
+            0.0,
+            -0.0,
+            0.8114049,
+            -0.0,
+            0.0,
+            -0.2447984,
+            -0.0,
+            0.7735965,
+            0.0,
+            346.2411804,
+            1.1481333,
+            -140.4854889,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "GN_S13_RiversideGrass"
+        },
+        {
+          "matrix": [
+            -0.7203143,
+            0.0,
+            0.5157453,
+            0.0,
+            -0.0,
+            0.8859152,
+            -1e-07,
+            0.0,
+            -0.5157453,
+            -1e-07,
+            -0.7203143,
+            0.0,
+            337.8146667,
+            0.7704572,
+            -137.5999146,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "GN_S13_RiversideGrass"
+        },
+        {
+          "matrix": [
+            -0.5463695,
+            -0.0,
+            -0.6511378,
+            0.0,
+            0.0,
+            0.85,
+            -1e-07,
+            0.0,
+            0.6511378,
+            -1e-07,
+            -0.5463695,
+            0.0,
+            232.0,
+            0.892985,
+            -292.0,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "INST_S15_Grass_14"
+        },
+        {
+          "matrix": [
+            0.51423,
+            0.0,
+            0.6128356,
+            0.0,
+            -0.0,
+            0.8,
+            -0.0,
+            0.0,
+            -0.6128356,
+            -0.0,
+            0.51423,
+            0.0,
+            217.0,
+            0.8601922,
+            -315.0,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "INST_S15_Grass_16"
+        },
+        {
+          "matrix": [
+            0.6062177,
+            -0.0,
+            -0.35,
+            0.0,
+            0.0,
+            0.7,
+            -0.0,
+            0.0,
+            0.35,
+            -0.0,
+            0.6062177,
+            0.0,
+            92.0,
+            10.5925417,
+            -308.0,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "INST_S18_NorthClimb_03"
+        },
+        {
+          "matrix": [
+            -0.3750001,
+            -0.0,
+            -0.649519,
+            0.0,
+            0.0,
+            0.75,
+            -0.0,
+            0.0,
+            0.649519,
+            -0.0,
+            -0.3750001,
+            0.0,
+            98.0,
+            10.9156227,
+            -307.0,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "INST_S18_NorthClimb_04"
+        },
+        {
+          "matrix": [
+            0.7727407,
+            -0.0,
+            -0.2070552,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.2070552,
+            -0.0,
+            0.7727407,
+            0.0,
+            -220.0,
+            28.252346,
+            -150.0,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "INST_S18_AsphaltBend_06"
+        },
+        {
+          "matrix": [
+            0.3749999,
+            0.0,
+            0.6495191,
+            0.0,
+            -0.0,
+            0.75,
+            -0.0,
+            0.0,
+            -0.6495191,
+            -0.0,
+            0.3749999,
+            0.0,
+            -225.0,
+            28.704567,
+            -145.0,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "INST_S18_AsphaltBend_07"
+        },
+        {
+          "matrix": [
+            -0.649519,
+            -0.0,
+            -0.3750001,
+            0.0,
+            0.0,
+            0.75,
+            -1e-07,
+            0.0,
+            0.3750001,
+            -1e-07,
+            -0.649519,
+            0.0,
+            -276.0,
+            27.9426155,
+            -138.0,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "INST_S18_ShortcutEdge_06"
+        },
+        {
+          "matrix": [
+            0.5142301,
+            -0.0,
+            -0.6128356,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.6128356,
+            -0.0,
+            0.5142301,
+            0.0,
+            -278.0,
+            26.6251526,
+            263.0,
+            1.0
+          ],
+          "source": "SM_Bunchgrass_Straw_S07",
+          "parent": "INST_S18_SouthernSweep_05"
+        },
+        {
+          "matrix": [
+            -0.5894375,
+            -0.0492864,
+            -0.1833081,
+            0.0,
+            -0.0440939,
+            0.6172032,
+            -0.0241623,
+            0.0,
+            0.184626,
+            -0.0099466,
+            -0.5910007,
+            0.0,
+            -77.9002151,
+            28.0257893,
+            130.6361389,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.2912563,
+            -0.01093,
+            -0.8188358,
+            0.0,
+            0.0087167,
+            0.8689935,
+            -0.0147,
+            0.0,
+            0.8188624,
+            -0.013138,
+            -0.2910903,
+            0.0,
+            -69.363327,
+            27.939043,
+            130.6936798,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.4383239,
+            -0.0447043,
+            -0.3755193,
+            0.0,
+            0.0422599,
+            0.5770442,
+            -0.0193674,
+            0.0,
+            0.3758022,
+            -0.0127484,
+            0.4401718,
+            0.0,
+            -80.2097397,
+            28.1120968,
+            128.3937683,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.4457156,
+            -0.0434058,
+            0.5312182,
+            0.0,
+            -0.005333,
+            0.6920887,
+            0.0610252,
+            0.0,
+            -0.5329618,
+            -0.0432255,
+            0.4436467,
+            0.0,
+            -77.8859711,
+            28.0633984,
+            128.2275696,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.2567457,
+            -0.0097589,
+            0.6151452,
+            0.0,
+            -0.0123702,
+            0.6665095,
+            0.0054108,
+            0.0,
+            -0.6150982,
+            -0.0093307,
+            -0.2568742,
+            0.0,
+            -76.4158478,
+            28.0644588,
+            125.3320847,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.9481842,
+            -0.0252917,
+            -0.4809173,
+            0.0,
+            -0.0008107,
+            1.0620874,
+            -0.0542574,
+            0.0,
+            0.4815813,
+            -0.0480089,
+            -0.9469684,
+            0.0,
+            -74.1792145,
+            28.0293694,
+            124.4058685,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.5526861,
+            -0.0334706,
+            -0.4105556,
+            0.0,
+            0.0551819,
+            0.6868468,
+            0.01829,
+            0.0,
+            0.4082048,
+            -0.0475319,
+            0.5533965,
+            0.0,
+            -78.219902,
+            28.1449547,
+            123.6739349,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.012548,
+            -0.0201925,
+            -0.6743699,
+            0.0,
+            0.009289,
+            0.6744276,
+            -0.0200214,
+            0.0,
+            0.6746081,
+            -0.008911,
+            0.0128193,
+            0.0,
+            -79.4046783,
+            28.1875343,
+            123.1978149,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.1089021,
+            -0.0390252,
+            -0.6885477,
+            0.0,
+            0.044732,
+            0.6952117,
+            -0.0464778,
+            0.0,
+            0.6882005,
+            -0.0513632,
+            -0.105936,
+            0.0,
+            -73.0212784,
+            28.0307884,
+            122.8125153,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.2455353,
+            -0.0348569,
+            0.5525836,
+            0.0,
+            -0.0555174,
+            0.6029844,
+            0.0133675,
+            0.0,
+            -0.5508915,
+            -0.0452313,
+            -0.2476366,
+            0.0,
+            -74.8145447,
+            28.0990543,
+            120.0840073,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.2280201,
+            -0.0106427,
+            0.6619898,
+            0.0,
+            -0.0231975,
+            0.6995919,
+            0.0192375,
+            0.0,
+            -0.6616689,
+            -0.0281946,
+            0.2274563,
+            0.0,
+            -72.1407318,
+            28.0320587,
+            121.658371,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.3878088,
+            -0.0286199,
+            -0.7480457,
+            0.0,
+            0.0322684,
+            0.8423216,
+            -0.0154979,
+            0.0,
+            0.7478972,
+            -0.0215021,
+            0.3885545,
+            0.0,
+            -69.9842834,
+            28.0084496,
+            121.833046,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.5026323,
+            -0.0676971,
+            0.8977361,
+            0.0,
+            -0.078654,
+            1.0275443,
+            0.0334483,
+            0.0,
+            -0.8968426,
+            -0.0521761,
+            -0.5060665,
+            0.0,
+            -79.1186676,
+            28.2838097,
+            116.7571411,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.1483818,
+            -0.0754814,
+            -1.022061,
+            0.0,
+            0.0712167,
+            1.0309808,
+            -0.065801,
+            0.0,
+            1.0223669,
+            -0.0608617,
+            0.152921,
+            0.0,
+            -78.2287521,
+            28.2919559,
+            114.9836884,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.144172,
+            -0.0397476,
+            -1.0496839,
+            0.0,
+            0.0743442,
+            1.0564815,
+            -0.0502161,
+            0.0,
+            1.0478021,
+            -0.0804291,
+            -0.140868,
+            0.0,
+            -66.4460983,
+            28.0074139,
+            114.3951416,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.5405895,
+            -0.0169173,
+            1.0025734,
+            0.0,
+            -0.0367437,
+            1.1378947,
+            0.039013,
+            0.0,
+            -1.0020427,
+            -0.0508519,
+            0.5394452,
+            0.0,
+            -75.5326462,
+            28.3153019,
+            110.0409393,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -1.0382266,
+            -0.0179655,
+            -0.3790587,
+            0.0,
+            0.0048919,
+            1.1034412,
+            -0.0656962,
+            0.0,
+            0.3794526,
+            -0.0633811,
+            -1.0363017,
+            0.0,
+            -51.1872597,
+            25.7008839,
+            139.6695404,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.2087551,
+            -0.0037437,
+            -0.7478365,
+            0.0,
+            0.0180766,
+            0.7761738,
+            -0.0089315,
+            0.0,
+            0.7476274,
+            -0.0198121,
+            -0.2085976,
+            0.0,
+            -50.0548668,
+            25.588686,
+            137.9846497,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.1329826,
+            -0.0363776,
+            -0.631294,
+            0.0,
+            0.0027202,
+            0.6450641,
+            -0.0377441,
+            0.0,
+            0.6323354,
+            -0.0104253,
+            -0.1326012,
+            0.0,
+            -45.3172798,
+            24.0838451,
+            137.4248505,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.4881828,
+            -0.0008493,
+            0.9014269,
+            0.0,
+            -0.051196,
+            1.0235021,
+            -0.0267617,
+            0.0,
+            -0.8999723,
+            -0.0577625,
+            -0.4874495,
+            0.0,
+            -49.1769562,
+            25.5265503,
+            136.5391846,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.5553154,
+            -0.0203103,
+            -0.0647142,
+            0.0,
+            0.0250803,
+            0.5574271,
+            0.0402686,
+            0.0,
+            0.0630191,
+            -0.0428727,
+            0.5542257,
+            0.0,
+            -40.9984016,
+            22.7044868,
+            136.3744202,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.8254332,
+            -0.0200902,
+            0.5498058,
+            0.0,
+            -0.0491103,
+            0.9900544,
+            -0.0375531,
+            0.0,
+            -0.5479765,
+            -0.0584674,
+            -0.8248233,
+            0.0,
+            -35.7062836,
+            20.5092392,
+            135.7521667,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.8672325,
+            -0.0162887,
+            0.1826541,
+            0.0,
+            0.008693,
+            0.8855638,
+            0.0376991,
+            0.0,
+            -0.1831728,
+            -0.0350922,
+            0.8665658,
+            0.0,
+            -50.2659569,
+            26.0683823,
+            135.1006165,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -1.0973359,
+            -0.0808541,
+            -0.2240558,
+            0.0,
+            -0.0743605,
+            1.1197164,
+            -0.0398796,
+            0.0,
+            0.2262938,
+            -0.0241344,
+            -1.0995877,
+            0.0,
+            -44.696888,
+            24.3377495,
+            134.7285767,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.7793637,
+            -0.0502496,
+            0.0075747,
+            0.0,
+            0.050246,
+            0.7794005,
+            0.0006141,
+            0.0,
+            -0.0075985,
+            -0.0001255,
+            0.7809817,
+            0.0,
+            -39.3892593,
+            22.3278999,
+            134.8597717,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.3468274,
+            -0.003766,
+            0.4806852,
+            0.0,
+            -0.0263503,
+            0.5919972,
+            -0.0143743,
+            0.0,
+            -0.4799772,
+            -0.0297788,
+            -0.3465498,
+            0.0,
+            -36.0719604,
+            21.1977329,
+            133.3733215,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.0782206,
+            -0.0233018,
+            0.5778616,
+            0.0,
+            -0.0276611,
+            0.5826065,
+            0.0197488,
+            0.0,
+            -0.5776693,
+            -0.0247423,
+            -0.0791923,
+            0.0,
+            -57.5483932,
+            27.6145458,
+            132.5538635,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.8071707,
+            -0.0131359,
+            0.7307324,
+            0.0,
+            -0.0543759,
+            1.0867692,
+            -0.0405277,
+            0.0,
+            -0.7288249,
+            -0.0665333,
+            -0.8062597,
+            0.0,
+            -52.3352432,
+            26.8933887,
+            131.0032654,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.773176,
+            -0.0356408,
+            -0.7786913,
+            0.0,
+            0.0734107,
+            1.095228,
+            0.0227621,
+            0.0,
+            0.776042,
+            -0.0680953,
+            0.7736623,
+            0.0,
+            -50.0101891,
+            26.3173389,
+            132.8333435,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.5031235,
+            -0.0142736,
+            -0.2223992,
+            0.0,
+            -0.0116894,
+            0.5500757,
+            -0.0088595,
+            0.0,
+            0.22255,
+            -0.0033759,
+            -0.5032479,
+            0.0,
+            -46.1519775,
+            25.3043098,
+            131.8324432,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.8631398,
+            -0.0043637,
+            0.5531849,
+            0.0,
+            -0.0455257,
+            1.0222548,
+            -0.0629702,
+            0.0,
+            -0.5513256,
+            -0.0775808,
+            -0.8608508,
+            0.0,
+            -39.8595581,
+            23.0000744,
+            132.7620087,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.6979098,
+            -0.0563082,
+            -0.2412303,
+            0.0,
+            -0.0361581,
+            0.7366139,
+            -0.0673312,
+            0.0,
+            0.2450618,
+            -0.0516747,
+            -0.6969328,
+            0.0,
+            -49.6931763,
+            26.4867496,
+            130.6894531,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.7414495,
+            -0.0390418,
+            -0.355338,
+            0.0,
+            0.0377446,
+            0.8221788,
+            -0.0115767,
+            0.0,
+            0.3554782,
+            -0.0058661,
+            0.7423865,
+            0.0,
+            -19.2792549,
+            9.3090181,
+            145.7926331,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.677708,
+            -0.05395,
+            -0.7847332,
+            0.0,
+            0.0361602,
+            1.036867,
+            -0.0400555,
+            0.0,
+            0.785754,
+            -0.0011848,
+            0.6786709,
+            0.0,
+            -11.7463665,
+            6.4456606,
+            144.125,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.5738015,
+            -0.0278911,
+            -0.5635571,
+            0.0,
+            0.0100665,
+            0.8031325,
+            -0.0499974,
+            0.0,
+            0.5641571,
+            -0.0426985,
+            -0.5722991,
+            0.0,
+            -11.9575682,
+            6.5348763,
+            143.944397,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.6017013,
+            -0.0223059,
+            -0.2307972,
+            0.0,
+            -0.0128764,
+            0.6440661,
+            -0.0286777,
+            0.0,
+            0.2315148,
+            -0.0221508,
+            -0.6014313,
+            0.0,
+            -22.4020729,
+            12.0617905,
+            141.7032623,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.2842753,
+            -0.0481175,
+            -0.9659745,
+            0.0,
+            0.049025,
+            1.0048249,
+            -0.0644802,
+            0.0,
+            0.9659289,
+            -0.0651603,
+            -0.2810161,
+            0.0,
+            -11.9491062,
+            6.7851272,
+            142.7902679,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.5907075,
+            -0.0015591,
+            -0.6573977,
+            0.0,
+            0.033484,
+            0.8827258,
+            0.0279937,
+            0.0,
+            0.6565463,
+            -0.0436165,
+            0.5900459,
+            0.0,
+            -19.9088783,
+            10.8680868,
+            141.2533875,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.8558767,
+            -0.0662403,
+            -0.0214777,
+            0.0,
+            -0.0655887,
+            0.8558089,
+            -0.0257574,
+            0.0,
+            0.0233922,
+            -0.0240321,
+            -0.8580498,
+            0.0,
+            -18.8929825,
+            10.5658007,
+            140.5700684,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.6612581,
+            -0.0353057,
+            -0.3254982,
+            0.0,
+            -0.0214511,
+            0.7366669,
+            -0.0363254,
+            0.0,
+            0.3267038,
+            -0.0230909,
+            -0.6612029,
+            0.0,
+            -19.4226799,
+            11.8015957,
+            137.3312073,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.6815645,
+            -0.0553053,
+            -0.7374107,
+            0.0,
+            0.0934218,
+            1.0012537,
+            0.0112534,
+            0.0,
+            0.7335568,
+            -0.0761288,
+            0.683712,
+            0.0,
+            -14.2516422,
+            9.3023462,
+            137.3698883,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.0629441,
+            -0.0547973,
+            -1.1297396,
+            0.0,
+            0.0483764,
+            1.1305828,
+            -0.0521429,
+            0.0,
+            1.1300329,
+            -0.0453477,
+            0.06516,
+            0.0,
+            -10.2244797,
+            7.3934903,
+            137.2773132,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.0938535,
+            -0.0083375,
+            -0.71778,
+            0.0,
+            0.0291989,
+            0.7232456,
+            -0.0122189,
+            0.0,
+            0.7172343,
+            -0.0305347,
+            -0.0934275,
+            0.0,
+            -22.933424,
+            14.2859354,
+            135.1564026,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.9491459,
+            -0.0812761,
+            0.3792735,
+            0.0,
+            0.0680914,
+            1.0219269,
+            0.0485917,
+            0.0,
+            -0.3818609,
+            -0.0197937,
+            0.9513792,
+            0.0,
+            -19.6406574,
+            12.2520847,
+            136.2046356,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.8886871,
+            -0.0093116,
+            -0.4033837,
+            0.0,
+            0.0375073,
+            0.9734186,
+            0.0601615,
+            0.0,
+            0.4017441,
+            -0.0702816,
+            0.8866974,
+            0.0,
+            -18.1597748,
+            11.9007301,
+            134.8642273,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.4009486,
+            -0.0307653,
+            -0.9557807,
+            0.0,
+            0.0024999,
+            1.0363556,
+            -0.0344076,
+            0.0,
+            0.9562725,
+            -0.0156086,
+            -0.4006524,
+            0.0,
+            -11.0876322,
+            8.5203791,
+            134.7075958,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.4609005,
+            -0.0423621,
+            0.441084,
+            0.0,
+            0.0007693,
+            0.6365052,
+            0.0603266,
+            0.0,
+            -0.4431129,
+            -0.0429574,
+            0.4588948,
+            0.0,
+            -10.1405392,
+            8.2456074,
+            134.0543976,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            0.9454833,
+            -0.004126,
+            -0.4647281,
+            0.0,
+            0.0105301,
+            1.0534095,
+            0.0120708,
+            0.0,
+            0.4646271,
+            -0.0154778,
+            0.9454153,
+            0.0,
+            -11.3554373,
+            9.2310104,
+            132.6184845,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        },
+        {
+          "matrix": [
+            -0.2865244,
+            -0.0178353,
+            0.9316909,
+            0.0,
+            -0.0280549,
+            0.9744613,
+            0.0100263,
+            0.0,
+            -0.9314392,
+            -0.0238643,
+            -0.2869039,
+            0.0,
+            -13.7396536,
+            10.9475431,
+            130.4662933,
+            1.0
+          ],
+          "source": "SM_S23_Bunchgrass_LOD0",
+          "parent": "GN_S23_DryTufts"
+        }
+      ]
+    },
+    {
+      "id": "RiverGrass_Sage",
+      "nodes": [
+        "DETAIL_RiverGrass_Sage_LOD0",
+        "DETAIL_RiverGrass_Sage_LOD1",
+        "DETAIL_RiverGrass_Sage_LOD2"
+      ],
+      "triangles": [
+        168,
+        96,
+        40
+      ],
+      "distances": [
+        12,
+        32
+      ],
+      "cullDistance": 90,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            -0.5972391,
+            -0.0,
+            -0.65032,
+            0.0,
+            0.0,
+            0.8829556,
+            -1e-07,
+            0.0,
+            0.65032,
+            -1e-07,
+            -0.5972391,
+            0.0,
+            345.4967957,
+            1.3955866,
+            -130.2130585,
+            1.0
+          ],
+          "source": "SM_RiverGrass_Sage_S07",
+          "parent": "GN_S13_RiversideGrass"
+        },
+        {
+          "matrix": [
+            0.1726149,
+            0.0,
+            0.8253331,
+            0.0,
+            -0.0,
+            0.8431907,
+            -0.0,
+            0.0,
+            -0.8253331,
+            -0.0,
+            0.1726149,
+            0.0,
+            348.2102661,
+            0.7444939,
+            -75.5416565,
+            1.0
+          ],
+          "source": "SM_RiverGrass_Sage_S07",
+          "parent": "GN_S13_RiversideGrass"
+        },
+        {
+          "matrix": [
+            0.5126608,
+            -0.0,
+            -0.6387368,
+            0.0,
+            0.0,
+            0.8190274,
+            -0.0,
+            0.0,
+            0.6387368,
+            -0.0,
+            0.5126608,
+            0.0,
+            342.2206726,
+            0.7557116,
+            -147.0827332,
+            1.0
+          ],
+          "source": "SM_RiverGrass_Sage_S07",
+          "parent": "GN_S13_RiversideGrass"
+        },
+        {
+          "matrix": [
+            0.7987387,
+            -0.0,
+            -0.2907171,
+            0.0,
+            0.0,
+            0.85,
+            -0.0,
+            0.0,
+            0.2907171,
+            -0.0,
+            0.7987387,
+            0.0,
+            223.0,
+            0.69447,
+            -310.0,
+            1.0
+          ],
+          "source": "SM_RiverGrass_Sage_S07",
+          "parent": "INST_S15_Grass_12"
+        },
+        {
+          "matrix": [
+            0.45,
+            -0.0,
+            -0.7794229,
+            0.0,
+            0.0,
+            0.9,
+            -0.0,
+            0.0,
+            0.7794229,
+            -0.0,
+            0.45,
+            0.0,
+            225.0,
+            0.5717009,
+            -313.0,
+            1.0
+          ],
+          "source": "SM_RiverGrass_Sage_S07",
+          "parent": "INST_S15_Grass_13"
+        },
+        {
+          "matrix": [
+            -0.7517541,
+            0.0,
+            0.2736161,
+            0.0,
+            -0.0,
+            0.8,
+            -1e-07,
+            0.0,
+            -0.2736161,
+            -1e-07,
+            -0.7517541,
+            0.0,
+            239.0,
+            0.2430749,
+            -294.0,
+            1.0
+          ],
+          "source": "SM_RiverGrass_Sage_S07",
+          "parent": "INST_S15_Grass_15"
+        },
+        {
+          "matrix": [
+            0.7727407,
+            -0.0,
+            -0.2070552,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.2070552,
+            -0.0,
+            0.7727407,
+            0.0,
+            276.0,
+            0.6850358,
+            -192.0,
+            1.0
+          ],
+          "source": "SM_RiverGrass_Sage_S07",
+          "parent": "INST_S18_MiddleRiverbank_06"
+        },
+        {
+          "matrix": [
+            0.2736161,
+            -0.0,
+            -0.7517541,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.7517541,
+            -0.0,
+            0.2736161,
+            0.0,
+            272.0,
+            0.609008,
+            -177.0,
+            1.0
+          ],
+          "source": "SM_RiverGrass_Sage_S07",
+          "parent": "INST_S18_MiddleRiverbank_07"
+        },
+        {
+          "matrix": [
+            -0.7047695,
+            -0.0,
+            -0.2565151,
+            0.0,
+            0.0,
+            0.75,
+            -1e-07,
+            0.0,
+            0.2565151,
+            -1e-07,
+            -0.7047695,
+            0.0,
+            270.0,
+            1.2034802,
+            -197.0,
+            1.0
+          ],
+          "source": "SM_RiverGrass_Sage_S07",
+          "parent": "INST_S18_MiddleRiverbank_08"
+        }
+      ]
+    },
+    {
+      "id": "Sagebrush_Olive",
+      "nodes": [
+        "DETAIL_Sagebrush_Olive_LOD0",
+        "DETAIL_Sagebrush_Olive_LOD1",
+        "DETAIL_Sagebrush_Olive_LOD2"
+      ],
+      "triangles": [
+        720,
+        432,
+        150
+      ],
+      "distances": [
+        22,
+        60
+      ],
+      "cullDistance": 180,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            -0.613893,
+            -0.0,
+            -0.672023,
+            0.0,
+            0.0,
+            0.9102085,
+            -1e-07,
+            0.0,
+            0.672023,
+            -1e-07,
+            -0.613893,
+            0.0,
+            346.0839233,
+            0.7464844,
+            -152.93396,
+            1.0
+          ],
+          "source": "SM_Sagebrush_Olive_S07",
+          "parent": "GN_S13_RiversideShrubs"
+        },
+        {
+          "matrix": [
+            0.8832418,
+            0.0,
+            0.2991492,
+            0.0,
+            -0.0,
+            0.9325268,
+            -0.0,
+            0.0,
+            -0.2991492,
+            -0.0,
+            0.8832418,
+            0.0,
+            352.2223511,
+            1.5800903,
+            -139.4925995,
+            1.0
+          ],
+          "source": "SM_Sagebrush_Olive_S07",
+          "parent": "GN_S13_RiversideShrubs"
+        },
+        {
+          "matrix": [
+            0.6812013,
+            0.0,
+            0.5438774,
+            0.0,
+            -0.0,
+            0.8716868,
+            -0.0,
+            0.0,
+            -0.5438774,
+            -0.0,
+            0.6812013,
+            0.0,
+            356.5272522,
+            1.652941,
+            -145.847168,
+            1.0
+          ],
+          "source": "SM_Sagebrush_Olive_S07",
+          "parent": "GN_S13_RiversideShrubs"
+        },
+        {
+          "matrix": [
+            0.4631268,
+            0.0,
+            0.7346449,
+            0.0,
+            -0.0,
+            0.8684409,
+            -0.0,
+            0.0,
+            -0.7346449,
+            -0.0,
+            0.4631268,
+            0.0,
+            349.3370056,
+            0.935636,
+            -78.6378632,
+            1.0
+          ],
+          "source": "SM_Sagebrush_Olive_S07",
+          "parent": "GN_S13_RiversideShrubs"
+        },
+        {
+          "matrix": [
+            0.6128356,
+            -0.0,
+            -0.5142301,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.5142301,
+            -0.0,
+            0.6128356,
+            0.0,
+            216.0,
+            1.0356827,
+            -313.0,
+            1.0
+          ],
+          "source": "SM_Sagebrush_Olive_S07",
+          "parent": "INST_S15_Shrub_04"
+        },
+        {
+          "matrix": [
+            -0.3750001,
+            -0.0,
+            -0.649519,
+            0.0,
+            0.0,
+            0.75,
+            -0.0,
+            0.0,
+            0.649519,
+            -0.0,
+            -0.3750001,
+            0.0,
+            219.0,
+            2.2012351,
+            -301.0,
+            1.0
+          ],
+          "source": "SM_Sagebrush_Olive_S07",
+          "parent": "INST_S15_Shrub_06"
+        },
+        {
+          "matrix": [
+            -0.273616,
+            0.0,
+            0.7517542,
+            0.0,
+            -0.0,
+            0.8,
+            -0.0,
+            0.0,
+            -0.7517542,
+            -0.0,
+            -0.273616,
+            0.0,
+            219.0,
+            0.9139268,
+            -311.0,
+            1.0
+          ],
+          "source": "SM_Sagebrush_Olive_S07",
+          "parent": "INST_S15_Shrub_09"
+        },
+        {
+          "matrix": [
+            0.6928203,
+            -0.0,
+            -0.4,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.4,
+            -0.0,
+            0.6928203,
+            0.0,
+            269.0,
+            0.9547192,
+            -181.0,
+            1.0
+          ],
+          "source": "SM_Sagebrush_Olive_S07",
+          "parent": "INST_S18_MiddleRiverbank_03"
+        },
+        {
+          "matrix": [
+            0.0,
+            0.0,
+            0.75,
+            0.0,
+            -0.0,
+            0.75,
+            -0.0,
+            0.0,
+            -0.75,
+            -0.0,
+            0.0,
+            0.0,
+            260.0,
+            2.0020776,
+            -175.0,
+            1.0
+          ],
+          "source": "SM_Sagebrush_Olive_S07",
+          "parent": "INST_S18_MiddleRiverbank_05"
+        }
+      ]
+    },
+    {
+      "id": "DesertScrub_Dry",
+      "nodes": [
+        "DETAIL_DesertScrub_Dry_LOD0",
+        "DETAIL_DesertScrub_Dry_LOD1",
+        "DETAIL_DesertScrub_Dry_LOD2"
+      ],
+      "triangles": [
+        720,
+        432,
+        150
+      ],
+      "distances": [
+        22,
+        60
+      ],
+      "cullDistance": 180,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            0.5950004,
+            -0.0,
+            -0.7134931,
+            0.0,
+            0.0,
+            0.9290307,
+            -0.0,
+            0.0,
+            0.7134931,
+            -0.0,
+            0.5950004,
+            0.0,
+            341.5490112,
+            1.0365899,
+            -134.3025208,
+            1.0
+          ],
+          "source": "SM_DesertScrub_Dry_S07",
+          "parent": "GN_S13_RiversideShrubs"
+        },
+        {
+          "matrix": [
+            0.5753754,
+            -0.0,
+            -0.8125292,
+            0.0,
+            0.0,
+            0.9956207,
+            -0.0,
+            0.0,
+            0.8125292,
+            -0.0,
+            0.5753754,
+            0.0,
+            353.3529053,
+            0.7546126,
+            -66.9761734,
+            1.0
+          ],
+          "source": "SM_DesertScrub_Dry_S07",
+          "parent": "GN_S13_RiversideShrubs"
+        },
+        {
+          "matrix": [
+            0.7386058,
+            -0.0,
+            -0.1302361,
+            0.0,
+            0.0,
+            0.75,
+            -0.0,
+            0.0,
+            0.1302361,
+            -0.0,
+            0.7386058,
+            0.0,
+            216.0,
+            2.3027821,
+            -304.0,
+            1.0
+          ],
+          "source": "SM_DesertScrub_Dry_S07",
+          "parent": "INST_S15_Shrub_07"
+        },
+        {
+          "matrix": [
+            0.4820907,
+            0.0,
+            0.5745333,
+            0.0,
+            -0.0,
+            0.75,
+            -0.0,
+            0.0,
+            -0.5745333,
+            -0.0,
+            0.4820907,
+            0.0,
+            210.0,
+            0.9999034,
+            -319.0,
+            1.0
+          ],
+          "source": "SM_DesertScrub_Dry_S07",
+          "parent": "INST_S15_Shrub_11"
+        },
+        {
+          "matrix": [
+            -0.649519,
+            0.0,
+            0.375,
+            0.0,
+            -0.0,
+            0.75,
+            -1e-07,
+            0.0,
+            -0.375,
+            -1e-07,
+            -0.649519,
+            0.0,
+            -228.0,
+            28.6305199,
+            -150.0,
+            1.0
+          ],
+          "source": "SM_DesertScrub_Dry_S07",
+          "parent": "INST_S18_AsphaltBend_04"
+        },
+        {
+          "matrix": [
+            -0.4588612,
+            -0.0,
+            -0.6553216,
+            0.0,
+            0.0,
+            0.8,
+            -1e-07,
+            0.0,
+            0.6553216,
+            -1e-07,
+            -0.4588612,
+            0.0,
+            -236.0,
+            28.6798058,
+            -154.0,
+            1.0
+          ],
+          "source": "SM_DesertScrub_Dry_S07",
+          "parent": "INST_S18_AsphaltBend_05"
+        },
+        {
+          "matrix": [
+            -0.5745333,
+            0.0,
+            0.4820907,
+            0.0,
+            -0.0,
+            0.75,
+            -1e-07,
+            0.0,
+            -0.4820907,
+            -1e-07,
+            -0.5745333,
+            0.0,
+            -279.0,
+            27.9859867,
+            -149.0,
+            1.0
+          ],
+          "source": "SM_DesertScrub_Dry_S07",
+          "parent": "INST_S18_ShortcutEdge_04"
+        },
+        {
+          "matrix": [
+            0.6928203,
+            -0.0,
+            -0.4,
+            0.0,
+            0.0,
+            0.8,
+            -0.0,
+            0.0,
+            0.4,
+            -0.0,
+            0.6928203,
+            0.0,
+            -274.0,
+            28.0672321,
+            -152.0,
+            1.0
+          ],
+          "source": "SM_DesertScrub_Dry_S07",
+          "parent": "INST_S18_ShortcutEdge_05"
+        },
+        {
+          "matrix": [
+            -0.649519,
+            0.0,
+            0.375,
+            0.0,
+            -0.0,
+            0.75,
+            -1e-07,
+            0.0,
+            -0.375,
+            -1e-07,
+            -0.649519,
+            0.0,
+            -286.0,
+            27.0674992,
+            260.0,
+            1.0
+          ],
+          "source": "SM_DesertScrub_Dry_S07",
+          "parent": "INST_S18_SouthernSweep_04"
+        }
+      ]
+    },
+    {
+      "id": "Saguaro_Ribbed",
+      "nodes": [
+        "DETAIL_Saguaro_Ribbed_LOD0",
+        "DETAIL_Saguaro_Ribbed_LOD1",
+        "DETAIL_Saguaro_Ribbed_LOD2"
+      ],
+      "triangles": [
+        1572,
+        660,
+        188
+      ],
+      "distances": [
+        35,
+        100
+      ],
+      "cullDistance": 360,
+      "role": "vegetation",
+      "placements": [
+        {
+          "matrix": [
+            0.5556325,
+            -0.0211405,
+            0.4301372,
+            0.0,
+            -0.006809,
+            0.7016217,
+            0.0432791,
+            0.0,
+            -0.4306025,
+            -0.0383734,
+            0.5543477,
+            0.0,
+            -68.2067184,
+            28.0201187,
+            115.8098526,
+            1.0
+          ],
+          "source": "SM_S23_Saguaro_Ribbed_LOD0",
+          "parent": "GN_S23_Cacti"
+        },
+        {
+          "matrix": [
+            -0.7784294,
+            -0.0611514,
+            0.1738029,
+            0.0,
+            -0.0629786,
+            0.7974526,
+            -0.0014903,
+            0.0,
+            -0.1731492,
+            -0.0151336,
+            -0.7808263,
+            0.0,
+            -80.1967468,
+            28.4116096,
+            112.1635971,
+            1.0
+          ],
+          "source": "SM_S23_Saguaro_Ribbed_LOD0",
+          "parent": "GN_S23_Cacti"
+        },
+        {
+          "matrix": [
+            -0.2280519,
+            -0.024824,
+            -0.6189823,
+            0.0,
+            0.0259003,
+            0.6586344,
+            -0.0359567,
+            0.0,
+            0.6189383,
+            -0.036708,
+            -0.2265635,
+            0.0,
+            -44.689743,
+            23.2063675,
+            141.3177338,
+            1.0
+          ],
+          "source": "SM_S23_Saguaro_Ribbed_LOD0",
+          "parent": "GN_S23_Cacti"
+        },
+        {
+          "matrix": [
+            0.4572485,
+            -0.0511006,
+            -0.6076845,
+            0.0,
+            0.0597518,
+            0.7596313,
+            -0.018918,
+            0.0,
+            0.6068949,
+            -0.0362891,
+            0.4597059,
+            0.0,
+            -39.219574,
+            21.5969181,
+            137.8212128,
+            1.0
+          ],
+          "source": "SM_S23_Saguaro_Ribbed_LOD0",
+          "parent": "GN_S23_Cacti"
+        },
+        {
+          "matrix": [
+            0.8442074,
+            -0.0200998,
+            -0.0596396,
+            0.0,
+            0.0210363,
+            0.8461951,
+            0.0125858,
+            0.0,
+            0.0593158,
+            -0.0140329,
+            0.8443529,
+            0.0,
+            -42.6767197,
+            23.8365765,
+            133.7687988,
+            1.0
+          ],
+          "source": "SM_S23_Saguaro_Ribbed_LOD0",
+          "parent": "GN_S23_Cacti"
+        },
+        {
+          "matrix": [
+            0.1756013,
+            -0.0232361,
+            0.7813583,
+            0.0,
+            0.0049126,
+            0.8008474,
+            0.0227116,
+            0.0,
+            -0.7816883,
+            -0.0001868,
+            0.1756699,
+            0.0,
+            -45.8517914,
+            25.3833714,
+            130.761261,
+            1.0
+          ],
+          "source": "SM_S23_Saguaro_Ribbed_LOD0",
+          "parent": "GN_S23_Cacti"
+        },
+        {
+          "matrix": [
+            0.5670361,
+            -0.0098507,
+            -0.3144259,
+            0.0,
+            0.0185636,
+            0.6480528,
+            0.0131746,
+            0.0,
+            0.314032,
+            -0.0205217,
+            0.5669686,
+            0.0,
+            -12.3159218,
+            7.1762452,
+            141.7496643,
+            1.0
+          ],
+          "source": "SM_S23_Saguaro_Ribbed_LOD0",
+          "parent": "GN_S23_Cacti"
+        }
+      ]
+    },
+    {
+      "id": "SandstoneBlock_0",
+      "nodes": [
+        "DETAIL_SandstoneBlock_0_LOD0",
+        "DETAIL_SandstoneBlock_0_LOD1",
+        "DETAIL_SandstoneBlock_0_LOD2"
+      ],
+      "triangles": [
+        140,
+        58,
+        16
+      ],
+      "distances": [
+        35,
+        95
+      ],
+      "cullDistance": 280,
+      "role": "rock",
+      "placements": [
+        {
+          "matrix": [
+            0.3598002,
+            -0.0086281,
+            -1.0903,
+            0.0,
+            0.0224059,
+            1.1479459,
+            -0.0016903,
+            0.0,
+            1.090104,
+            -0.020747,
+            0.3598996,
+            0.0,
+            -76.3463135,
+            28.1895275,
+            117.3588715,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_00_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            -1.4617809,
+            -0.0966766,
+            -1.3017088,
+            0.0,
+            0.0269774,
+            1.9517058,
+            -0.175246,
+            0.0,
+            1.305015,
+            -0.1486357,
+            -1.4544549,
+            0.0,
+            -44.4992599,
+            23.7285557,
+            137.9336548,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_00_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            0.5913988,
+            -0.0487884,
+            1.8857014,
+            0.0,
+            -0.1157814,
+            1.9715405,
+            0.087321,
+            0.0,
+            -1.8827758,
+            -0.1365649,
+            0.5869479,
+            0.0,
+            -41.2128601,
+            22.9233074,
+            135.8003387,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_00_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            1.620159,
+            -0.0937027,
+            0.8820766,
+            0.0,
+            0.0429941,
+            1.8428955,
+            0.1168005,
+            0.0,
+            -0.8859971,
+            -0.0819186,
+            1.6186579,
+            0.0,
+            -37.7951355,
+            22.4568844,
+            131.0871582,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_00_LOD0",
+          "parent": "GN_S23_Talus"
+        }
+      ]
+    },
+    {
+      "id": "SandstoneBlock_1",
+      "nodes": [
+        "DETAIL_SandstoneBlock_1_LOD0",
+        "DETAIL_SandstoneBlock_1_LOD1",
+        "DETAIL_SandstoneBlock_1_LOD2"
+      ],
+      "triangles": [
+        140,
+        58,
+        16
+      ],
+      "distances": [
+        35,
+        95
+      ],
+      "cullDistance": 280,
+      "role": "rock",
+      "placements": [
+        {
+          "matrix": [
+            -0.8787525,
+            -0.1138988,
+            -1.9332347,
+            0.0,
+            -0.0250159,
+            2.1234441,
+            -0.1137342,
+            0.0,
+            1.9364254,
+            -0.0242555,
+            -0.8787739,
+            0.0,
+            -73.6387253,
+            28.0300884,
+            123.5971298,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_01_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            0.3497556,
+            -0.1335063,
+            1.6778921,
+            0.0,
+            -0.0068273,
+            1.7136064,
+            0.1377712,
+            0.0,
+            -1.6831812,
+            -0.0346925,
+            0.3480977,
+            0.0,
+            -49.3303299,
+            25.2044678,
+            138.7868805,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_01_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            1.672326,
+            -0.1351977,
+            1.155493,
+            0.0,
+            0.0190791,
+            2.0262957,
+            0.2094725,
+            0.0,
+            -1.1632191,
+            -0.1611345,
+            1.6646543,
+            0.0,
+            -39.7476921,
+            22.8720837,
+            133.1183319,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_01_LOD0",
+          "parent": "GN_S23_Talus"
+        }
+      ]
+    },
+    {
+      "id": "SandstoneBlock_2",
+      "nodes": [
+        "DETAIL_SandstoneBlock_2_LOD0",
+        "DETAIL_SandstoneBlock_2_LOD1",
+        "DETAIL_SandstoneBlock_2_LOD2"
+      ],
+      "triangles": [
+        140,
+        58,
+        16
+      ],
+      "distances": [
+        35,
+        95
+      ],
+      "cullDistance": 280,
+      "role": "rock",
+      "placements": [
+        {
+          "matrix": [
+            -2.517405,
+            -0.1628567,
+            -0.6259882,
+            0.0,
+            -0.1324519,
+            2.5919302,
+            -0.1416608,
+            0.0,
+            0.6331193,
+            -0.1053043,
+            -2.5186868,
+            0.0,
+            -46.4911537,
+            23.1410141,
+            145.3121643,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_02_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            -1.6954751,
+            -0.1242741,
+            0.0608872,
+            0.0,
+            -0.1261598,
+            1.6956258,
+            -0.0522018,
+            0.0,
+            -0.0568772,
+            -0.0565443,
+            -1.6992217,
+            0.0,
+            -51.3379593,
+            25.5448284,
+            140.921402,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_02_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            -1.6483854,
+            -0.0449386,
+            -0.1055033,
+            0.0,
+            -0.0402302,
+            1.6502063,
+            -0.0743386,
+            0.0,
+            0.1073869,
+            -0.0715907,
+            -1.6473213,
+            0.0,
+            -53.4981728,
+            26.4280701,
+            138.321701,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_02_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            0.4240636,
+            -0.0626019,
+            0.8725092,
+            0.0,
+            -0.0344494,
+            0.967682,
+            0.0861739,
+            0.0,
+            -0.8740735,
+            -0.0685106,
+            0.4199083,
+            0.0,
+            -51.8731689,
+            26.8889275,
+            130.0159302,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_02_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            -1.0116042,
+            -0.0595615,
+            -0.7768703,
+            0.0,
+            -0.0431691,
+            1.2754704,
+            -0.0415756,
+            0.0,
+            0.7779534,
+            -0.0066734,
+            -1.0125029,
+            0.0,
+            -12.7245512,
+            9.7934904,
+            132.9689941,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_02_LOD0",
+          "parent": "GN_S23_Talus"
+        }
+      ]
+    },
+    {
+      "id": "SandstoneBlock_3",
+      "nodes": [
+        "DETAIL_SandstoneBlock_3_LOD0",
+        "DETAIL_SandstoneBlock_3_LOD1",
+        "DETAIL_SandstoneBlock_3_LOD2"
+      ],
+      "triangles": [
+        140,
+        58,
+        16
+      ],
+      "distances": [
+        35,
+        95
+      ],
+      "cullDistance": 280,
+      "role": "rock",
+      "placements": [
+        {
+          "matrix": [
+            0.3561272,
+            -0.0521114,
+            -1.2271621,
+            0.0,
+            0.0838178,
+            1.2757558,
+            -0.0298507,
+            0.0,
+            1.2254047,
+            -0.0721172,
+            0.3586797,
+            0.0,
+            -76.8214569,
+            27.9983082,
+            131.5865173,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_03_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            0.9460091,
+            -0.0612281,
+            0.566314,
+            0.0,
+            0.0098454,
+            1.0994573,
+            0.1024236,
+            0.0,
+            -0.5695292,
+            -0.082696,
+            0.9424391,
+            0.0,
+            -45.6716576,
+            23.5172443,
+            141.4555511,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_03_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            0.4087855,
+            -0.0007224,
+            -2.1999764,
+            0.0,
+            0.0413067,
+            2.237241,
+            0.0069407,
+            0.0,
+            2.1995888,
+            -0.0418795,
+            0.4087272,
+            0.0,
+            -46.5756569,
+            24.9414253,
+            134.8104858,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_03_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            1.8247865,
+            -0.0741229,
+            1.006814,
+            0.0,
+            0.001557,
+            2.0800045,
+            0.1503106,
+            0.0,
+            -1.0095376,
+            -0.1307727,
+            1.8200953,
+            0.0,
+            -47.3192215,
+            25.7488308,
+            131.4730988,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_03_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            1.6834399,
+            -0.0497193,
+            -1.3090695,
+            0.0,
+            0.1210915,
+            2.1283405,
+            0.0748857,
+            0.0,
+            1.3044049,
+            -0.1334129,
+            1.6825081,
+            0.0,
+            -40.0782661,
+            23.4153614,
+            130.9691772,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_03_LOD0",
+          "parent": "GN_S23_Talus"
+        },
+        {
+          "matrix": [
+            2.1719263,
+            -0.1169013,
+            0.3756325,
+            0.0,
+            0.0858105,
+            2.1975925,
+            0.1877565,
+            0.0,
+            -0.38393,
+            -0.1701471,
+            2.1669509,
+            0.0,
+            -19.7859497,
+            13.0555048,
+            133.7834015,
+            1.0
+          ],
+          "source": "SM_S23_SandstoneBlock_03_LOD0",
+          "parent": "GN_S23_Talus"
+        }
+      ]
+    },
+    {
+      "id": "SouthernMesa",
+      "nodes": [
+        "DETAIL_SouthernMesa_LOD0",
+        "DETAIL_SouthernMesa_LOD1",
+        "DETAIL_SouthernMesa_LOD2"
+      ],
+      "triangles": [
+        11980,
+        5030,
+        1436
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S23_SouthernMesa_LOD0",
+          "parent": "SM_S23_SouthernMesa_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Southern central mesa"
+    },
+    {
+      "id": "RockFormation_00",
+      "nodes": [
+        "DETAIL_RockFormation_00_LOD0",
+        "DETAIL_RockFormation_00_LOD1",
+        "DETAIL_RockFormation_00_LOD2"
+      ],
+      "triangles": [
+        26173,
+        10991,
+        3140
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_00_LOD0",
+          "parent": "SM_S27_RockFormation_00_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Western plateau river escarpment"
+    },
+    {
+      "id": "RockFormation_01",
+      "nodes": [
+        "DETAIL_RockFormation_01_LOD0",
+        "DETAIL_RockFormation_01_LOD1",
+        "DETAIL_RockFormation_01_LOD2"
+      ],
+      "triangles": [
+        10752,
+        4514,
+        1289
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_01_LOD0",
+          "parent": "SM_S27_RockFormation_01_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Central crown"
+    },
+    {
+      "id": "RockFormation_02",
+      "nodes": [
+        "DETAIL_RockFormation_02_LOD0",
+        "DETAIL_RockFormation_02_LOD1",
+        "DETAIL_RockFormation_02_LOD2"
+      ],
+      "triangles": [
+        11058,
+        4644,
+        1326
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_02_LOD0",
+          "parent": "SM_S27_RockFormation_02_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Northern crown buttress"
+    },
+    {
+      "id": "RockFormation_03",
+      "nodes": [
+        "DETAIL_RockFormation_03_LOD0",
+        "DETAIL_RockFormation_03_LOD1",
+        "DETAIL_RockFormation_03_LOD2"
+      ],
+      "triangles": [
+        11980,
+        5030,
+        1436
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_03_LOD0",
+          "parent": "SM_S27_RockFormation_03_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - East crown shelves"
+    },
+    {
+      "id": "RockFormation_04",
+      "nodes": [
+        "DETAIL_RockFormation_04_LOD0",
+        "DETAIL_RockFormation_04_LOD1",
+        "DETAIL_RockFormation_04_LOD2"
+      ],
+      "triangles": [
+        8294,
+        3482,
+        994
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_04_LOD0",
+          "parent": "SM_S27_RockFormation_04_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - High valley island"
+    },
+    {
+      "id": "RockFormation_05",
+      "nodes": [
+        "DETAIL_RockFormation_05_LOD0",
+        "DETAIL_RockFormation_05_LOD1",
+        "DETAIL_RockFormation_05_LOD2"
+      ],
+      "triangles": [
+        10136,
+        4256,
+        1216
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_05_LOD0",
+          "parent": "SM_S27_RockFormation_05_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - West canyon north wall"
+    },
+    {
+      "id": "RockFormation_06",
+      "nodes": [
+        "DETAIL_RockFormation_06_LOD0",
+        "DETAIL_RockFormation_06_LOD1",
+        "DETAIL_RockFormation_06_LOD2"
+      ],
+      "triangles": [
+        10136,
+        4256,
+        1216
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_06_LOD0",
+          "parent": "SM_S27_RockFormation_06_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - West canyon south wall"
+    },
+    {
+      "id": "RockFormation_07",
+      "nodes": [
+        "DETAIL_RockFormation_07_LOD0",
+        "DETAIL_RockFormation_07_LOD1",
+        "DETAIL_RockFormation_07_LOD2"
+      ],
+      "triangles": [
+        9216,
+        3870,
+        1104
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_07_LOD0",
+          "parent": "SM_S27_RockFormation_07_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Northwest rim"
+    },
+    {
+      "id": "RockFormation_08",
+      "nodes": [
+        "DETAIL_RockFormation_08_LOD0",
+        "DETAIL_RockFormation_08_LOD1",
+        "DETAIL_RockFormation_08_LOD2"
+      ],
+      "triangles": [
+        11058,
+        4644,
+        1326
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_08_LOD0",
+          "parent": "SM_S27_RockFormation_08_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Southwest rim"
+    },
+    {
+      "id": "RockFormation_09",
+      "nodes": [
+        "DETAIL_RockFormation_09_LOD0",
+        "DETAIL_RockFormation_09_LOD1",
+        "DETAIL_RockFormation_09_LOD2"
+      ],
+      "triangles": [
+        11058,
+        4644,
+        1326
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_09_LOD0",
+          "parent": "SM_S27_RockFormation_09_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Northern rim west"
+    },
+    {
+      "id": "RockFormation_10",
+      "nodes": [
+        "DETAIL_RockFormation_10_LOD0",
+        "DETAIL_RockFormation_10_LOD1",
+        "DETAIL_RockFormation_10_LOD2"
+      ],
+      "triangles": [
+        10136,
+        4256,
+        1216
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_10_LOD0",
+          "parent": "SM_S27_RockFormation_10_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Northern rim middle"
+    },
+    {
+      "id": "RockFormation_11",
+      "nodes": [
+        "DETAIL_RockFormation_11_LOD0",
+        "DETAIL_RockFormation_11_LOD1",
+        "DETAIL_RockFormation_11_LOD2"
+      ],
+      "triangles": [
+        11058,
+        4644,
+        1326
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_11_LOD0",
+          "parent": "SM_S27_RockFormation_11_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Northern rim east"
+    },
+    {
+      "id": "RockFormation_12",
+      "nodes": [
+        "DETAIL_RockFormation_12_LOD0",
+        "DETAIL_RockFormation_12_LOD1",
+        "DETAIL_RockFormation_12_LOD2"
+      ],
+      "triangles": [
+        10136,
+        4256,
+        1216
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_12_LOD0",
+          "parent": "SM_S27_RockFormation_12_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Northeast river wall"
+    },
+    {
+      "id": "RockFormation_13",
+      "nodes": [
+        "DETAIL_RockFormation_13_LOD0",
+        "DETAIL_RockFormation_13_LOD1",
+        "DETAIL_RockFormation_13_LOD2"
+      ],
+      "triangles": [
+        11058,
+        4644,
+        1326
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_13_LOD0",
+          "parent": "SM_S27_RockFormation_13_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - East river wall"
+    },
+    {
+      "id": "RockFormation_14",
+      "nodes": [
+        "DETAIL_RockFormation_14_LOD0",
+        "DETAIL_RockFormation_14_LOD1",
+        "DETAIL_RockFormation_14_LOD2"
+      ],
+      "triangles": [
+        10136,
+        4256,
+        1216
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_14_LOD0",
+          "parent": "SM_S27_RockFormation_14_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Eastern low mesa"
+    },
+    {
+      "id": "RockFormation_15",
+      "nodes": [
+        "DETAIL_RockFormation_15_LOD0",
+        "DETAIL_RockFormation_15_LOD1",
+        "DETAIL_RockFormation_15_LOD2"
+      ],
+      "triangles": [
+        12902,
+        5418,
+        1548
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_15_LOD0",
+          "parent": "SM_S27_RockFormation_15_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Southeast rim"
+    },
+    {
+      "id": "RockFormation_16",
+      "nodes": [
+        "DETAIL_RockFormation_16_LOD0",
+        "DETAIL_RockFormation_16_LOD1",
+        "DETAIL_RockFormation_16_LOD2"
+      ],
+      "triangles": [
+        11980,
+        5030,
+        1436
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_16_LOD0",
+          "parent": "SM_S27_RockFormation_16_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Southern rim west"
+    },
+    {
+      "id": "RockFormation_17",
+      "nodes": [
+        "DETAIL_RockFormation_17_LOD0",
+        "DETAIL_RockFormation_17_LOD1",
+        "DETAIL_RockFormation_17_LOD2"
+      ],
+      "triangles": [
+        11058,
+        4644,
+        1326
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_17_LOD0",
+          "parent": "SM_S27_RockFormation_17_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Southern rim east"
+    },
+    {
+      "id": "RockFormation_18",
+      "nodes": [
+        "DETAIL_RockFormation_18_LOD0",
+        "DETAIL_RockFormation_18_LOD1",
+        "DETAIL_RockFormation_18_LOD2"
+      ],
+      "triangles": [
+        10136,
+        4256,
+        1216
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_18_LOD0",
+          "parent": "SM_S27_RockFormation_18_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - River overlook"
+    },
+    {
+      "id": "RockFormation_19",
+      "nodes": [
+        "DETAIL_RockFormation_19_LOD0",
+        "DETAIL_RockFormation_19_LOD1",
+        "DETAIL_RockFormation_19_LOD2"
+      ],
+      "triangles": [
+        8294,
+        3482,
+        994
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_19_LOD0",
+          "parent": "SM_S27_RockFormation_19_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - High valley island.001"
+    },
+    {
+      "id": "RockFormation_20",
+      "nodes": [
+        "DETAIL_RockFormation_20_LOD0",
+        "DETAIL_RockFormation_20_LOD1",
+        "DETAIL_RockFormation_20_LOD2"
+      ],
+      "triangles": [
+        10136,
+        4256,
+        1216
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_20_LOD0",
+          "parent": "SM_S27_RockFormation_20_LOD0"
+        }
+      ],
+      "replacesSource": "S07_CLIFF - Northeast river wall.001"
+    },
+    {
+      "id": "RockFormation_21",
+      "nodes": [
+        "DETAIL_RockFormation_21_LOD0",
+        "DETAIL_RockFormation_21_LOD1",
+        "DETAIL_RockFormation_21_LOD2"
+      ],
+      "triangles": [
+        25697,
+        10792,
+        3082
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_21_LOD0",
+          "parent": "SM_S27_RockFormation_21_LOD0"
+        }
+      ],
+      "replacesSource": "S07_TALUS - Central"
+    },
+    {
+      "id": "RockFormation_22",
+      "nodes": [
+        "DETAIL_RockFormation_22_LOD0",
+        "DETAIL_RockFormation_22_LOD1",
+        "DETAIL_RockFormation_22_LOD2"
+      ],
+      "triangles": [
+        10752,
+        4514,
+        1290
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_22_LOD0",
+          "parent": "SM_S27_RockFormation_22_LOD0"
+        }
+      ],
+      "replacesSource": "S07_TALUS - Western rim"
+    },
+    {
+      "id": "RockFormation_23",
+      "nodes": [
+        "DETAIL_RockFormation_23_LOD0",
+        "DETAIL_RockFormation_23_LOD1",
+        "DETAIL_RockFormation_23_LOD2"
+      ],
+      "triangles": [
+        4300,
+        1806,
+        516
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_23_LOD0",
+          "parent": "SM_S27_RockFormation_23_LOD0"
+        }
+      ],
+      "replacesSource": "S07_TALUS - Northern rim"
+    },
+    {
+      "id": "RockFormation_24",
+      "nodes": [
+        "DETAIL_RockFormation_24_LOD0",
+        "DETAIL_RockFormation_24_LOD1",
+        "DETAIL_RockFormation_24_LOD2"
+      ],
+      "triangles": [
+        10752,
+        4514,
+        1290
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_24_LOD0",
+          "parent": "SM_S27_RockFormation_24_LOD0"
+        }
+      ],
+      "replacesSource": "S07_TALUS - Eastern rim"
+    },
+    {
+      "id": "RockFormation_25",
+      "nodes": [
+        "DETAIL_RockFormation_25_LOD0",
+        "DETAIL_RockFormation_25_LOD1",
+        "DETAIL_RockFormation_25_LOD2"
+      ],
+      "triangles": [
+        6450,
+        2708,
+        774
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_25_LOD0",
+          "parent": "SM_S27_RockFormation_25_LOD0"
+        }
+      ],
+      "replacesSource": "S07_TALUS - Southern rim"
+    },
+    {
+      "id": "RockFormation_26",
+      "nodes": [
+        "DETAIL_RockFormation_26_LOD0",
+        "DETAIL_RockFormation_26_LOD1",
+        "DETAIL_RockFormation_26_LOD2"
+      ],
+      "triangles": [
+        7526,
+        3160,
+        902
+      ],
+      "distances": [
+        100,
+        260
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_26_LOD0",
+          "parent": "SM_S27_RockFormation_26_LOD0"
+        }
+      ],
+      "replacesSource": "S07_TALUS - Eastern rim.001"
+    },
+    {
+      "id": "RockFormation_27",
+      "nodes": [
+        "DETAIL_RockFormation_27_LOD0",
+        "DETAIL_RockFormation_27_LOD1",
+        "DETAIL_RockFormation_27_LOD2"
+      ],
+      "triangles": [
+        3378,
+        1418,
+        404
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_27_LOD0",
+          "parent": "SM_S27_RockFormation_27_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_01_S07"
+    },
+    {
+      "id": "RockFormation_28",
+      "nodes": [
+        "DETAIL_RockFormation_28_LOD0",
+        "DETAIL_RockFormation_28_LOD1",
+        "DETAIL_RockFormation_28_LOD2"
+      ],
+      "triangles": [
+        3378,
+        1418,
+        404
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_28_LOD0",
+          "parent": "SM_S27_RockFormation_28_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_02_S07"
+    },
+    {
+      "id": "RockFormation_29",
+      "nodes": [
+        "DETAIL_RockFormation_29_LOD0",
+        "DETAIL_RockFormation_29_LOD1",
+        "DETAIL_RockFormation_29_LOD2"
+      ],
+      "triangles": [
+        3378,
+        1418,
+        404
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_29_LOD0",
+          "parent": "SM_S27_RockFormation_29_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_03_S07"
+    },
+    {
+      "id": "RockFormation_30",
+      "nodes": [
+        "DETAIL_RockFormation_30_LOD0",
+        "DETAIL_RockFormation_30_LOD1",
+        "DETAIL_RockFormation_30_LOD2"
+      ],
+      "triangles": [
+        3378,
+        1418,
+        404
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_30_LOD0",
+          "parent": "SM_S27_RockFormation_30_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_04_S07"
+    },
+    {
+      "id": "RockFormation_31",
+      "nodes": [
+        "DETAIL_RockFormation_31_LOD0",
+        "DETAIL_RockFormation_31_LOD1",
+        "DETAIL_RockFormation_31_LOD2"
+      ],
+      "triangles": [
+        3378,
+        1418,
+        404
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_31_LOD0",
+          "parent": "SM_S27_RockFormation_31_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_05_S07"
+    },
+    {
+      "id": "RockFormation_32",
+      "nodes": [
+        "DETAIL_RockFormation_32_LOD0",
+        "DETAIL_RockFormation_32_LOD1",
+        "DETAIL_RockFormation_32_LOD2"
+      ],
+      "triangles": [
+        2702,
+        1134,
+        324
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_32_LOD0",
+          "parent": "SM_S27_RockFormation_32_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_Flank_01_S07"
+    },
+    {
+      "id": "RockFormation_33",
+      "nodes": [
+        "DETAIL_RockFormation_33_LOD0",
+        "DETAIL_RockFormation_33_LOD1",
+        "DETAIL_RockFormation_33_LOD2"
+      ],
+      "triangles": [
+        2702,
+        1134,
+        324
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_33_LOD0",
+          "parent": "SM_S27_RockFormation_33_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_Flank_02_S07"
+    },
+    {
+      "id": "RockFormation_34",
+      "nodes": [
+        "DETAIL_RockFormation_34_LOD0",
+        "DETAIL_RockFormation_34_LOD1",
+        "DETAIL_RockFormation_34_LOD2"
+      ],
+      "triangles": [
+        2702,
+        1134,
+        324
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_34_LOD0",
+          "parent": "SM_S27_RockFormation_34_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_Flank_03_S07"
+    },
+    {
+      "id": "RockFormation_35",
+      "nodes": [
+        "DETAIL_RockFormation_35_LOD0",
+        "DETAIL_RockFormation_35_LOD1",
+        "DETAIL_RockFormation_35_LOD2"
+      ],
+      "triangles": [
+        3378,
+        1418,
+        404
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_35_LOD0",
+          "parent": "SM_S27_RockFormation_35_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_07_S07.001"
+    },
+    {
+      "id": "RockFormation_36",
+      "nodes": [
+        "DETAIL_RockFormation_36_LOD0",
+        "DETAIL_RockFormation_36_LOD1",
+        "DETAIL_RockFormation_36_LOD2"
+      ],
+      "triangles": [
+        3378,
+        1418,
+        404
+      ],
+      "distances": [
+        45,
+        130
+      ],
+      "cullDistance": null,
+      "role": "mesa",
+      "placements": [
+        {
+          "matrix": [
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "source": "SM_S27_RockFormation_36_LOD0",
+          "parent": "SM_S27_RockFormation_36_LOD0"
+        }
+      ],
+      "replacesSource": "SM_Env_DirtPillar_05_S07.001"
+    }
+  ],
+  "replacements": [],
+  "hysteresis": 0.12,
+  "instanceCount": 333,
+  "vegetationCount": 277,
+  "collisionPolicy": "Existing static GLB remains the collision source. Detail meshes are visual replacements.",
+  "trainPolicy": "Existing train GLB unchanged."
+}

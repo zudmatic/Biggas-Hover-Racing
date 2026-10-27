@@ -1,0 +1,119 @@
+{
+  "date": "2026-10-27",
+  "sourceStage": 27,
+  "viewport": [
+    1280,
+    800
+  ],
+  "quality": "high, DPR 1, 4x MSAA",
+  "hardware": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "adapter": {
+      "vendor": "apple",
+      "architecture": "metal-3",
+      "device": "",
+      "description": ""
+    }
+  },
+  "samples": [
+    {
+      "backend": "webgpu",
+      "pose": "station",
+      "mode": "full",
+      "fps": 120.002651996103,
+      "p95Ms": 9.099999904632568,
+      "detailTriangles": 693240,
+      "meanRenderedTriangles": 598518,
+      "meanDrawCalls": 358
+    },
+    {
+      "backend": "webgpu",
+      "pose": "station",
+      "mode": "adaptive",
+      "fps": 119.96800854249638,
+      "p95Ms": 8.799999952316284,
+      "detailTriangles": 206328,
+      "meanRenderedTriangles": 395686,
+      "meanDrawCalls": 353
+    },
+    {
+      "backend": "webgpu",
+      "pose": "river",
+      "mode": "full",
+      "fps": 119.99469635942482,
+      "p95Ms": 9.200000047683716,
+      "detailTriangles": 693240,
+      "meanRenderedTriangles": 351459,
+      "meanDrawCalls": 196
+    },
+    {
+      "backend": "webgpu",
+      "pose": "river",
+      "mode": "adaptive",
+      "fps": 119.92314318274589,
+      "p95Ms": 9,
+      "detailTriangles": 192588,
+      "meanRenderedTriangles": 303419,
+      "meanDrawCalls": 190
+    },
+    {
+      "backend": "webgpu",
+      "pose": "driving",
+      "mode": "adaptive",
+      "fps": 107.81426129865442,
+      "p95Ms": 9,
+      "frames": 593,
+      "errors": []
+    },
+    {
+      "backend": "webgl2",
+      "pose": "station",
+      "mode": "full",
+      "fps": 36.98984834125934,
+      "p95Ms": 9.299999952316284,
+      "detailTriangles": 693240,
+      "meanRenderedTriangles": 598518,
+      "meanDrawCalls": 358
+    },
+    {
+      "backend": "webgl2",
+      "pose": "station",
+      "mode": "adaptive",
+      "fps": 119.99469637839127,
+      "p95Ms": 9.199999809265137,
+      "detailTriangles": 206328,
+      "meanRenderedTriangles": 395686,
+      "meanDrawCalls": 353
+    },
+    {
+      "backend": "webgl2",
+      "pose": "river",
+      "mode": "full",
+      "fps": 49.943434229975864,
+      "p95Ms": 8.900000095367432,
+      "detailTriangles": 693240,
+      "meanRenderedTriangles": 351459,
+      "meanDrawCalls": 196
+    },
+    {
+      "backend": "webgl2",
+      "pose": "river",
+      "mode": "adaptive",
+      "fps": 67.24374930222297,
+      "p95Ms": 9,
+      "detailTriangles": 192588,
+      "meanRenderedTriangles": 303419,
+      "meanDrawCalls": 190
+    },
+    {
+      "backend": "webgl2",
+      "pose": "driving",
+      "mode": "adaptive",
+      "fps": 78.71233683384041,
+      "p95Ms": 9.399999856948853,
+      "frames": 401,
+      "errors": []
+    }
+  ],
+  "limitations": "Short native Chromium samples; desktop only. Stationary WebGPU was display-limited near 120 FPS. WebGL2 cold-use stalls affect means. Not a broad hardware benchmark."
+}

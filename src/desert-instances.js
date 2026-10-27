@@ -18,6 +18,7 @@ export function partitionDesertInstances(root,{cellSize=200,maxInstances=128}={}
       const count=Math.min(maxInstances,indices.length-start);
       const batch=new THREE.InstancedMesh(source.geometry,source.material,count);
       batch.name=`${source.name}_${key}_${start}`;
+      batch.userData={...source.userData};
       batch.matrix.copy(source.matrix);batch.matrixAutoUpdate=false;
       for(let i=0;i<count;i++){
         source.getMatrixAt(indices[start+i],local);batch.setMatrixAt(i,local);

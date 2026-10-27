@@ -20,7 +20,8 @@ export function createCircuitSky(scene,{mobile=false,map='ruins'}={}){
     const lobes=[[-.52,0,-.08],[-.28,.12,.08],[0,.25,0],[.26,.13,-.06],[.49,0,.1],[-.12,-.02,.24],[.2,-.03,-.25]];
     return {x:Math.cos(angle)*radius,z:Math.sin(angle)*radius,y:layer===0?175+random()*65:280+random()*170,width,angle:random()*Math.PI,speed:.65+random()*.6,puffs:lobes.map(([x,y,z])=>({x,y,z,sx:.32+random()*.13,sy:.2+random()*.1,sz:.29+random()*.13}))};
   });
-  const transform=new THREE.Object3D(),sunDirection=new THREE.Vector3(-.55,.42,.72).normalize();let previousTick=-1,previousBlend=-1,blend=0;
+  if(map==='desert-valley')clouds.visible=false;
+  const transform=new THREE.Object3D(),sunDirection=(map==='desert-valley'?new THREE.Vector3(-110,180,70):new THREE.Vector3(-.55,.42,.72)).normalize();let previousTick=-1,previousBlend=-1,blend=0;
   const sun=new THREE.Mesh(new THREE.SphereGeometry(38,20,12),new THREE.MeshBasicMaterial({color:0xffe4a2,fog:false,depthWrite:false}));sun.name='Sol y luna';sun.renderOrder=-900;root.add(sun);
   const starsGeometry=new THREE.BufferGeometry(),starPositions=[];
   for(let i=0;i<(mobile?90:180);i++){const angle=random()*Math.PI*2,y=.13+random()*.85,r=Math.sqrt(1-y*y);starPositions.push(Math.cos(angle)*r*3900,y*3900,Math.sin(angle)*r*3900);}
@@ -36,7 +37,7 @@ export function createCircuitSky(scene,{mobile=false,map='ruins'}={}){
       domeGeometry.attributes.color.needsUpdate=true;cloudMaterial.color.set(0xffffff).lerp(tint,blend);sun.material.color.copy(sunDay).lerp(moon,blend);stars.material.opacity=blend*.85;
     }
     const t=reducedMotion?0:time,tick=Math.floor(t*12);
-    if(tick!==previousTick){
+    if(clouds.visible&&tick!==previousTick){
       previousTick=tick;
       clusters.forEach((cluster,i)=>cluster.puffs.forEach((puff,j)=>{
         // Bounded, slow drift keeps cloud coverage stable over long sessions.

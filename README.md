@@ -1,6 +1,6 @@
 # Biggas Hover Racing
 
-Juego de carreras hover en 3D con Zud, Zudmatic, Ajo, Bluleet y Lomi, las naves 033, Oliva 037, Nómada 038, Bulldog 039, Bluleet Hover Kart y Lomi 040, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
+Juego de carreras hover en 3D con Zud, Zudmatic, Ajo, Bluleet y Lomi, las naves 033, Oliva 037, Nómada 038, Bulldog 039, Bluleet Hover Kart y Lomi 040, y los circuitos Ruinas 034, Nexus 035, Mario Raceway (N64) y Desert Valley. Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
 
 ## Desarrollo
 
@@ -8,9 +8,23 @@ Desert Valley está disponible en `http://localhost:5173/?selection=map&map=dese
 La escena actual mide 875 × 875 m; la vuelta principal mide 2.293,53 m y la
 vuelta por el atajo 2.177,01 m. Carga `desert-valley-static-game.glb` y adapta
 `driving-guides.json` al contrato de conducción. Conserva los assets anteriores,
-el asfalto/arena horneado, los colores de vértice y las 747 instancias del export
-actual, repartidas en celdas de 200 m y lotes de hasta 128. Las seis rampas son
+el asfalto/arena horneado y los colores de vértice. Los detalles usan 333
+instancias con tres LODs (277 plantas, 18 rocas pequeñas y 38 formaciones), más
+526 instancias de vías originales. Los lotes tienen hasta 128 objetos. Las seis rampas son
 superficies conducibles; la inclinación de la nave sigue su pendiente.
+
+El desierto usa por defecto materiales iluminados, sol, color grading y agua
+turquesa. El estilo papel se puede activar desde Opciones. Las 38 formaciones
+rocosas comparten erosión geométrica y material con diffuse/normal; las plantas
+comparten un atlas y geometrías por variante. Los LODs dependen de la distancia
+a la nave, con histéresis y descarte de vegetación lejana. Las colisiones siguen
+usando la geometría original. Los modelos se descargan una vez; esta versión
+cambia su detalle visible, sin streaming de archivos por distancia.
+
+El paquete de detalles pesa 6,70 MB (36,87 MB antes de comprimir), con Draco y
+WebP. El mapa base ya comprimido pesa 4,85 MB y el tren conserva exactamente
+su archivo. Los conteos y distancias están en
+[`public/models/desert-valley/README.md`](public/models/desert-valley/README.md).
 
 La largada está sobre la calzada frente a la estación de servicio, mirando hacia
 la bifurcación del camino con obstáculos. La ruta comienza allí; los checkpoints
@@ -60,8 +74,8 @@ Ajustes centrales: `DESERT_START` en `src/desert-route.js`, `DESERT_JUMPS` en
 `src/water/desert-surface.js` y `HOVER_WATER_FX` en `src/water/hover-effects.js`.
 Los respaldos de trabajo se conservan sólo en el checkout local y no se incluyen
 en el repositorio. El usuario aprobó la largada, los saltos y la iteración de
-efectos de agua durante su revisión manual; esta pasada no tuvo tests, build,
-lint, typecheck ni pruebas de gameplay ejecutadas por el agente.
+efectos de agua durante su revisión manual. El pase de detalle/LOD agrega
+pruebas automatizadas y un benchmark reproducible del navegador.
 
 La locomotora y los 40 vagones de `freight-train-40-game.glb` recorren `railway.json`
 por separado, con 40 enganches móviles y colisiones que consideran la altura.
@@ -77,11 +91,13 @@ Usan el contexto de audio desbloqueado por gesto, el mute general y el volumen
 de efectos. Pausa/reinicio/salida detienen sus fuentes. Midnight Noir continúa
 como música del mapa. Procedencia: `public/audio/train/README.md`.
 
-Conteos de los GLB por sus accessors: escena 116.384 triángulos con instancias;
-vehículos del tren 44.940 más 480 de enganches dinámicos. No se ejecutaron
-tests, build, lint, typecheck ni el juego para esta integración, por pedido.
+El conjunto de detalles suma 693.240 triángulos en LOD0, 336.869 en LOD1 y
+120.259 en LOD2, antes de descarte. Son conteos de detalles, no del cuadro
+completo. El tren conserva 44.940 triángulos más 480 de enganches dinámicos.
 En desarrollo, `&testSpawn=river` o `&testSpawn=bridge` permiten probar el río o el salto
-directamente. `&renderer=webgl2` prueba el fallback y `&comic=0` muestra los colores base.
+directamente. `&renderer=webgl2` prueba el fallback; `&comic=1` permite comparar el look papel.
+`node scripts/benchmark-desert.mjs` mide ambos backends con GPU nativa;
+`&lod=full` fuerza LOD0 sólo en desarrollo para la comparación.
 
 ```sh
 npm ci
