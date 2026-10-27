@@ -9,6 +9,7 @@ function directoryRedirect(req, res, next) {
 }
 
 export default defineConfig({
+  optimizeDeps:{include:['three/addons/loaders/DRACOLoader.js','three/addons/libs/meshopt_decoder.module.js']},
   plugins: [{ name: 'directory-redirect', configureServer: server => { server.middlewares.use(directoryRedirect); }, configurePreviewServer: server => { server.middlewares.use(directoryRedirect); } }],
   build: {
     rollupOptions: {

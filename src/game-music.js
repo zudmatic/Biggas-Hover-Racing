@@ -1,4 +1,5 @@
 export const SOUNDTRACKS={
+  desert:{title:'MIDNIGHT NOIR',src:`${import.meta.env.BASE_URL}audio/midnight-noir.mp3`},
   menu:{title:'RALLY HOUSE',youtubeId:'CbtVUfRPE-Q',url:'https://www.youtube.com/watch?v=CbtVUfRPE-Q',src:`${import.meta.env.BASE_URL}audio/biggas-menu.mp3`},
   race:{title:'MARLBORO CLUB',youtubeId:'__btnUgnhGw',url:'https://www.youtube.com/watch?v=__btnUgnhGw',src:`${import.meta.env.BASE_URL}audio/biggas-race.mp3`},
 };
@@ -10,7 +11,7 @@ export function createGameMusic({tracks=SOUNDTRACKS,createAudio=()=>new Audio()}
   const volumeKey='biggas-hover-racing-music-volume';
   let volume=.32;
   try{const saved=localStorage.getItem(volumeKey);if(saved!==null&&saved.trim()!==''&&Number.isFinite(Number(saved)))volume=Math.min(1,Math.max(0,Number(saved)));}catch{}
-  let phase='loading',track=null,enabled=true,unlocked=false,disposed=false,generation=0,status='idle',currentPlayer=null;
+  let phase='loading',track=null,raceTrack='race',enabled=true,unlocked=false,disposed=false,generation=0,status='idle',currentPlayer=null;
   const events=new AbortController();
   const publish=value=>{status=value;listeners.forEach(listener=>listener({track,status,enabled,volume}));};
   function pauseAll(){currentPlayer=null;for(const player of players.values())player.pause();}
@@ -41,6 +42,7 @@ export function createGameMusic({tracks=SOUNDTRACKS,createAudio=()=>new Audio()}
     subscribe(listener){listeners.add(listener);listener(this.state);return ()=>listeners.delete(listener);},
     unlock(){if(disposed)return;unlocked=true;synchronize();},
     setEnabled(value){enabled=!!value;synchronize();},
+    setRaceTrack(value){raceTrack=tracks[value]?value:'race';this.setPhase(phase);},
     setVolume(value){
       if(disposed||!Number.isFinite(value))return;
       volume=Math.min(1,Math.max(0,value));
@@ -50,7 +52,7 @@ export function createGameMusic({tracks=SOUNDTRACKS,createAudio=()=>new Audio()}
     },
     setPhase(value){
       phase=value;
-      const next=value==='lobby'?'menu':['flying','countdown','intro','finished'].includes(value)?'race':null;
+      const next=value==='lobby'?'menu':['flying','countdown','intro','finished'].includes(value)?raceTrack:null;
       if(next===track)return;track=next;synchronize();
     },
     dispose(){if(disposed)return;disposed=true;++generation;events.abort();pauseAll();for(const player of players.values()){player.removeAttribute('src');player.load();}players.clear();listeners.clear();},
