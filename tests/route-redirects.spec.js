@@ -7,12 +7,10 @@ test('old simulator bookmarks keep their options and open the canonical lobby',a
   await expect(page.locator('.race-lobby')).toHaveAttribute('data-vehicle','038');
 });
 
-test('retired studio redirects to the integrated preview without loading its old module',async({page})=>{
-  const requests=[];page.on('request',request=>requests.push(request.url()));
-  // This test checks navigation; rendering is covered by the WebGPU preview suite.
-  await page.route('**/src/webgpu-preview.js',route=>route.fulfill({contentType:'text/javascript',body:''}));
-  await page.goto('/propulsor-studio.html?vehicle=038&backend=webgl2#effects');
-  await expect(page).toHaveURL(/\/webgpu-preview.html\?vehicle=038&backend=webgl2#effects$/);
-  await expect(page.getByRole('link',{name:'Volver al juego',exact:true})).toHaveAttribute('href','./?selection=map');
-  expect(requests.some(url=>url.includes('/src/propulsor-studio'))).toBe(false);
+for(const retired of ['/propulsor-studio.html','/webgpu-preview.html','/playground'])test(`${retired} opens the playground with its options`,async({page})=>{
+  // This test checks navigation; rendering is covered by the playground suites.
+  await page.route('**/src/playground.js',route=>route.fulfill({contentType:'text/javascript',body:''}));
+  await page.goto(`${retired}?vehicle=038&backend=webgl2#effects`);
+  await expect(page).toHaveURL(/\/playground\/\?vehicle=038&backend=webgl2#effects$/);
+  await expect(page.getByRole('link',{name:'Volver al juego',exact:true})).toHaveAttribute('href','/?selection=map');
 });

@@ -98,6 +98,7 @@ async function main(){
     Mapa:{type:'select',options:Object.values(CIRCUIT_MAPS).map(m=>m.name),default:circuitMap(mapId).name},
     Nave:{type:'select',options:Object.keys(SHIPS),default:shipConfig(vehicleId).id},
     'Cómic':query.get('look')!=='base',Trama:[1.03,0,2,.01],Puntos:true,Rayado:true,Contornos:true,'Color cómic':true,
+    'Espacio trama':{type:'select',options:['Objeto','Pantalla'],default:'Objeto'},
     Noche:false,Faros:false,Sombras:true,'Posición en pista':[0,0,100,1],
   },{id:'playground-scene',persist:false,defaultCollapsed:true});
   const boost=await createEngine(renderer,scene,ship,{camera,lens});
@@ -171,7 +172,12 @@ async function main(){
     if(direction!==undefined)stateKit.setValue('Sentido',direction==='derecha'?'Derecha':'Izquierda');
     if(drift!==undefined)stateKit.setValue('Deriva',drift);
   }
-  window.playground={views:Object.keys(VIEWS),states:Object.keys(STATES),setView,setState,setTurn,info,clearFx,
+  // Every panel by title, so scripts and tests can drive any dial even while its folder is collapsed.
+  const dials={'Cámara':viewKit,'Estado nave':stateKit,Tiempo:timeKit,Escena:sceneKit,Humo:smokeKit,'Placa turbo · laboratorio':padControls.kit,...(boost.kit?{'Propulsor · WebGPU':boost.kit}:{})};
+  const panel=name=>{if(!dials[name])throw new Error(`Panel desconocido: ${name}`);return dials[name];};
+  window.playground={views:Object.keys(VIEWS),states:Object.keys(STATES),panels:Object.keys(dials),setView,setState,setTurn,info,clearFx,
+    set:(name,path,value)=>panel(name).setValue(path,value),get:name=>({...panel(name).values}),
+    dropOil:()=>{if(stateKit.values['VFX activos'])oil.drop();},activatePad:()=>pads.activate(state),rearmPad:()=>{pads.reset();state.padBoostRemaining=0;},focusPad,
     pause:(on=true)=>timeKit.setValue('Pausa',on),step:(count=1)=>{timeKit.setValue('Pausa',true);pendingSteps+=count;}};
 
   const unsubscribers=[
@@ -183,7 +189,7 @@ async function main(){
   unsubscribers.push(sceneKit.subscribe(v=>{
     const map=Object.values(CIRCUIT_MAPS).find(m=>m.name===v.Mapa).id;
     if(map!==mapId||v.Nave!==vehicleId){const url=new URL(location.href);url.searchParams.set('map',map);url.searchParams.set('vehicle',v.Nave);location.assign(url);return;}
-    comicMaterials.setEnabled(v['Cómic']);comicStyle.strength.value=v.Trama;comicStyle.hatch.value=Number(v.Rayado);comicStyle.dots.value=Number(v.Puntos);
+    comicMaterials.setEnabled(v['Cómic']);comicStyle.strength.value=v.Trama;comicStyle.hatch.value=Number(v.Rayado);comicStyle.dots.value=Number(v.Puntos);comicStyle.screenSpace.value=Number(v['Espacio trama']==='Pantalla');document.body.dataset.comic=String(v['Cómic']);
     comicPost.outline.value=Number(v.Contornos);comicPost.grading.value=Number(v['Color cómic']);
     lighting.setNight(v.Noche);lighting.setHeadlights(v.Faros);ship.setHeadlights(v.Faros);renderer.shadowMap.enabled=v.Sombras;
     if(lastRoute!==v['Posición en pista']){clearFx();lastRoute=v['Posición en pista'];route=world.landscape.length*lastRoute/100;place();lastPosition.copy(ship.root.position);if(viewId()==='libre')frameShip();}
@@ -222,6 +228,8 @@ async function main(){
   if(query.get('view'))setView(query.get('view'));
   lighting.update(state,0,{dt:1,reducedMotion:true});scene.updateMatrixWorld(true);
   await renderer.compileAsync(scene,camera);
+  if(query.get('effect')==='pad')focusPad();
+  document.body.dataset.materialStats=JSON.stringify(baseline.stats);
   document.body.dataset.ready='true';
   status.textContent=`${backend} · ${ship.config.name} · ${circuitMap(mapId).name}`;
   renderer.setAnimationLoop(async now=>{
@@ -270,6 +278,8 @@ async function main(){
       comicPost.comic.value=Number(sceneKit.values['Cómic']);
       const started=performance.now();await comicPost.render();frameMs+=performance.now()-started;frames++;
       document.body.dataset.frame=String(Number(document.body.dataset.frame??0)+1);
+      document.body.dataset.vfx=JSON.stringify({enabled:v['VFX activos'],mode:currentMode,...boost.stats,smoke:smoke.stats.air,marks:smoke.stats.marks,oil:oil.sim.patches.length,time});
+      document.body.dataset.boostPad=JSON.stringify({remaining:pads.sim.entries[0].remaining,activations:pads.sim.entries[0].activations,turbo:state.padBoostRemaining});
       if(now-lastHud>250){
         fps=frames*1000/(now-lastHud||1);const ms=frameMs/Math.max(1,frames);frames=0;frameMs=0;lastHud=now;
         const render=renderer.info.render,i=info();

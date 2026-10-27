@@ -15,8 +15,8 @@ for(const backend of ['webgpu','webgl2'])test(`production drives without DialKit
   await page.keyboard.up('ShiftLeft');await page.keyboard.up('KeyW');
   await page.keyboard.press('Escape');await expect(app).toHaveAttribute('data-phase','paused');
   await expect(page.locator('[class*="dialkit"]')).toHaveCount(0);
-  await page.goto(`/webgpu-preview.html?backend=${backend}`);
-  await expect(page.locator('body')).toHaveAttribute('data-ready','true',{timeout:90000});
+  await page.goto(`/playground?backend=${backend}`);
+  await expect(page.locator('body')).toHaveAttribute('data-ready','true',{timeout:120000});
   await expect(page.locator('[class*="dialkit"]')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

@@ -47,5 +47,5 @@ export function createBoostPadControls(pads,state,focus){
     fieldSpreadX:v['Apertura lateral'],fieldSpreadZ:v['Apertura longitudinal'],fieldTurbulence:v['Turbulencia campo'],fieldNoiseScale:v['Escala ruido campo'],fieldNoiseSpeed:v['Velocidad ruido campo'],
     fieldDither:v['Trama campo'],fieldDitherAmount:v['Intensidad trama campo'],fieldDitherSize:v['Tamaño trama campo'],
     distortion:v['Distorsión campo'],distortionStrength:v['Intensidad distorsión']}));
-  return {update(){if(kit.values['Repetir automáticamente'])pads.activate(state);},dispose(){unsubscribe();kit.destroy();}};
+  return {kit,update(){if(kit.values['Repetir automáticamente'])pads.activate(state);},dispose(){unsubscribe();kit.destroy();}};
 }

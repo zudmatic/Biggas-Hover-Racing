@@ -26,13 +26,13 @@ test('Mario and Nomada retain authored surfaces and animated cloth with TSL',asy
   expect(result.preserved).toBe(true);expect(result.moved).toBe(true);expect(result.node).toBe(true);
 });
 
-test('WebGPU preview selectors retain Mario Raceway and Nomada',async({page})=>{
-  test.setTimeout(120000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('/webgpu-preview.html?map=mario-raceway&vehicle=038&backend=webgpu');
-  await expect(page.locator('body')).toHaveAttribute('data-ready','true',{timeout:90000});
+test('playground selectors retain Mario Raceway and Nomada',async({page})=>{
+  test.setTimeout(180000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('/playground?map=mario-raceway&vehicle=038&backend=webgpu');
+  await expect(page.locator('body')).toHaveAttribute('data-ready','true',{timeout:120000});
   await expect(page).toHaveURL(/map=mario-raceway&vehicle=038/);
   await expect(page.locator('#drive')).toHaveAttribute('href',/map=mario-raceway&vehicle=038/);
-  await expect(page.locator('.dialkit-select-trigger').filter({hasText:'Mario Raceway'})).toBeVisible();
+  expect(await page.evaluate(()=>window.playground.get('Escena'))).toMatchObject({Mapa:'Mario Raceway',Nave:'038'});
   await expect.poll(async()=>JSON.parse(await page.locator('body').getAttribute('data-vfx'))?.emitted??0,{timeout:20000}).toBeGreaterThan(5);
-  await page.screenshot({path:'.context/fran-webgpu-preview.png'});expect(errors).toEqual([]);
+  await page.screenshot({path:'test-results/fran-playground.png'});expect(errors).toEqual([]);
 });

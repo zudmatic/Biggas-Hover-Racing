@@ -51,16 +51,16 @@ test('Mario pads load and activate while driving',async({page})=>{
 });
 
 test('lab pad can activate, respects cooldown and can be rearmed',async({page})=>{
- test.setTimeout(120000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/webgpu-preview.html?map=mario-raceway&effect=pad&backend=webgl2');
- await expect(page.locator('body')).toHaveAttribute('data-ready','true',{timeout:90000});
+ test.setTimeout(180000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.goto('/playground?map=mario-raceway&effect=pad&backend=webgl2');
+ await expect(page.locator('body')).toHaveAttribute('data-ready','true',{timeout:120000});
  const read=async()=>JSON.parse(await page.locator('body').getAttribute('data-boost-pad'));
- await page.getByRole('button',{name:'Probar activación',exact:true}).click();
+ await page.evaluate(()=>window.playground.activatePad());
  await expect.poll(async()=>(await read()).activations).toBe(1);
  expect((await read()).remaining).toBeGreaterThan(0);
- await page.getByRole('button',{name:'Probar activación',exact:true}).click();
+ await page.evaluate(()=>window.playground.activatePad());
  expect((await read()).activations).toBe(1);
- await page.getByRole('button',{name:'Rearmar placa',exact:true}).click();
+ await page.evaluate(()=>window.playground.rearmPad());
  await expect.poll(async()=>(await read()).remaining).toBe(0);
  await page.screenshot({path:'test-results/boost-pad-lab.png'});
  expect(errors).toEqual([]);

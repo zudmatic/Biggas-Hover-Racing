@@ -12,9 +12,9 @@ npm run dev
 - Inicio y selección de partida: `http://localhost:5173/`
 - Hangar: `http://localhost:5173/spaceship.html`
 - Estudio de Bluleet y su hover kart: `http://localhost:5173/chubee-studio.html`
-- Pruebas integradas de efectos: `http://localhost:5173/webgpu-preview.html`
+- Playground de depuración: `http://localhost:5173/playground`
 - Laboratorio independiente de efectos y cámaras: `http://localhost:43181/` (requiere su propio servidor).
-- Compatibilidad: `simulator.html` redirige al inicio y `propulsor-studio.html` al preview; ambos conservan parámetros y fragmento.
+- Compatibilidad: `simulator.html` redirige al inicio; `webgpu-preview.html` y `propulsor-studio.html` redirigen al playground. Todos conservan parámetros y fragmento.
 
 En la landing, **Jugar** abre la selección de personaje, nave, circuito y modo. El enlace **Hangar** permite inspeccionar las naves y sus componentes. Desde el hangar se puede volver al inicio o abrir la selección de partida con la nave elegida.
 
@@ -126,7 +126,7 @@ Más información: [acabado cómic](docs/comic-print.md), [superficies del pilot
 
 ## Validación WebGPU / TSL
 
-`webgpu-preview.html` es la vista aislada de migración. La etapa 1 conserva mapa,
+`/playground` es la vista aislada de depuración. La etapa 1 conserva mapa,
 nave, texturas y luces con materiales base; la etapa 2 añade el acabado cómic en
 TSL: posterización, puntos, rayado, contornos por profundidad y acabado de color.
 La etapa 3 incorpora propulsor, motor incandescente, partículas, calor, humo,
@@ -134,20 +134,23 @@ marcas de frenado y aceite. La etapa 4 incorporó la conducción y la etapa 5
 el ajuste de rendimiento. Ahora WebGPU es el render predeterminado de todas
 las vistas activas del juego, con fallback WebGL2 sobre la misma base TSL.
 
-- `webgpu-preview.html`: WebGPU con cómic; fallback automático si no hay WebGPU.
-- `webgpu-preview.html?backend=webgl`: referencia GLSL original con el mismo encuadre.
-- `webgpu-preview.html?backend=webgl2`: fuerza el fallback del renderer nuevo.
-- `look=base`, `map=nexus` y `vehicle=033` permiten cambiar la comparación inicial.
+- `/playground`: WebGPU con cómic; fallback automático si no hay WebGPU.
+- `/playground?backend=webgl2`: fuerza el fallback del renderer nuevo.
+- `look=base`, `vfx=off`, `map=nexus`, `vehicle=033`, `view=tobera`, `state=turbo` y
+  `effect=pad` permiten cambiar el arranque.
 
-DialKit permite alternar cómic, puntos, rayado, contornos, color, trama en objeto
-u pantalla, día/noche, faros, sombras y recorrido. `Recorrer` desplaza la nave por
-la pista para revisar el render; todavía no es una prueba de conducción.
+El playground suma vistas de cámara fijas (teclas 1–7), estados de nave (parada,
+acelerando, turbo, contra muro, frenando, derrape, girando, manejar y soltar),
+pausa, avance por cuadro, cámara lenta y un HUD de métricas. En `Manejar` la nave
+usa la física del juego con W/S, A/D, Shift, Space, E y R. Todos los paneles de
+DialKit arrancan cerrados; `window.playground` permite manejar cualquier control
+(`set(panel, control, valor)`), cambiar vista o estado y leer `info()` desde scripts.
 
 Esta etapa valida el acabado diurno de cómic sobre las luces del circuito,
 incluida su transición nocturna. No migra todavía modos monocromo/normal,
 rebotes de luz de otras escenas ni la transición de papel del hangar.
-Las pruebas `webgpu-preview.spec.js` y `webgpu-comic.spec.js` comprueban ambos
-mapas/naves, cambios de controles, redimensionado y la paleta frente a GLSL.
+Las pruebas `playground-render.spec.js` y `playground-comic.spec.js` comprueban ambos
+mapas/naves, cambios de controles y redimensionado.
 
 
 En etapa 3, `VFX · pruebas` permite activar Turbo (azul), Aceleración (rojo),
@@ -232,7 +235,7 @@ permite probar juntos el mapa y la nave nuevos. `renderer=webgl2` usa el fallbac
 la bandera animada, las colisiones, los checkpoints y los récords de Fran.
 El reactor único usa los efectos TSL, calor y turbo azul del simulador.
 
-El preview (`webgpu-preview.html?map=mario-raceway&vehicle=038`) toma sus opciones
+El playground (`/playground?map=mario-raceway&vehicle=038`) toma sus opciones
 del catálogo compartido. El estudio de `experiments/vfx-lab` ofrece también
 Nómada en DialKit, con la orientación, reactor y bandera del mismo catálogo.
 La bandera mantiene la deformación de geometría compartida con WebGL: sus
@@ -261,9 +264,9 @@ cuadro pendiente antes de liberar sus recursos. La bandera y el piloto de la
 nave se actualizan también durante la conducción.
 
 El laboratorio de `experiments/vfx-lab` ya utiliza WebGPU. Las rutas antiguas
-`simulator.html` y `propulsor-studio.html` redirigen a las páginas activas.
-El modo `webgpu-preview.html?backend=webgl` queda únicamente como referencia
-visual GLSL de diagnóstico; no interviene en el flujo normal del juego.
+`simulator.html`, `webgpu-preview.html` y `propulsor-studio.html` redirigen a las
+páginas activas. La referencia GLSL original (`backend=webgl`) se retiró junto con
+el preview.
 
 La física y las cámaras conservan su simulación compartida en CPU. El cambio
 unifica el render, no altera sus reglas. El fallback WebGL2 utiliza los mismos
