@@ -1,4 +1,5 @@
 import {
+  attribute,
   cameraPosition,
   color,
   float,
@@ -33,7 +34,8 @@ export function createWater(
   contact: THREE.Texture,
   contactInfo: WaterContact,
   mesh: THREE.Mesh,
-  bedPattern: THREE.Texture
+  bedPattern: THREE.Texture,
+  options: { geometry?: THREE.BufferGeometry; maxWaveHeight?: number } = {}
 ) {
   pattern.colorSpace = THREE.NoColorSpace
   pattern.wrapS = pattern.wrapT = THREE.RepeatWrapping
@@ -51,7 +53,8 @@ export function createWater(
   contact.generateMipmaps = false
   contact.minFilter = contact.magFilter = THREE.LinearFilter
 
-  // Keep the authored adaptive grid; do not replace it with a dense uniform plane.
+  // The optional river grid is bounded, clipped to wet cells and kept local to
+  // this mesh. The source quad stays in the original GLB.
   mesh.updateWorldMatrix(true, false)
   const bounds = new THREE.Box3().setFromObject(mesh)
   const size = bounds.getSize(new THREE.Vector3())
@@ -60,12 +63,13 @@ export function createWater(
   const localUp = new THREE.Vector3(0, 1, 0).applyMatrix3(
     new THREE.Matrix3().setFromMatrix4(inverseWorld)
   )
-  const geometry = mesh.geometry.clone()
+  const geometry = options.geometry ?? mesh.geometry.clone()
+  const displacementPadding = (options.maxWaveHeight ?? 0.2) * localUp.length()
   geometry.computeBoundingBox()
   geometry.computeBoundingSphere()
-  geometry.boundingBox?.expandByScalar(0.2 * localUp.length())
+  geometry.boundingBox?.expandByScalar(displacementPadding)
   if (geometry.boundingSphere)
-    geometry.boundingSphere.radius += 0.2 * localUp.length()
+    geometry.boundingSphere.radius += displacementPadding
 
   const phase = uniform(0)
   const scale = uniform(1)
@@ -87,6 +91,7 @@ export function createWater(
   // light the surface, so the shape and shading travel together.
   const baseWorld = modelWorldMatrix.mul(vec4(positionGeometry, 1)).xyz
   const [first, second] = WATER_WAVES
+  const shoreWeight = options.geometry ? attribute('waterShore', 'float') : float(1)
   const waveA = baseWorld.xz
     .dot(vec2(first.x, first.z))
     .sub(phase.mul(first.speed))
@@ -100,7 +105,7 @@ export function createWater(
   const waveSlope = vec2(first.x, first.z)
     .mul(waveA.cos().mul(first.weight))
     .add(vec2(second.x, second.z).mul(waveB.cos().mul(second.weight)))
-    .mul(waveHeight)
+    .mul(waveHeight).mul(shoreWeight)
 
   // Reuse the sun's shadow node, rather than allocating another shadow map.
   // r184 supports this hook; the installed r182 typings don't declare it yet.
@@ -161,8 +166,8 @@ export function createWater(
   ).toVar()
   const patches = a.a.mul(0.5).add(b.a.mul(0.5))
   const body = mix(
-    color("#044755"),
-    color("#148b7d"),
+    color("#104e58"),
+    color("#267c79"),
     patches.smoothstep(0.25, 0.72)
   )
   const transmission = waterDepth.mul(-0.38).exp().mul(clarity)
@@ -173,13 +178,13 @@ export function createWater(
     body,
     color("#c5dfb6"),
     ribbons.mul(caustics).mul(transmission.mul(0.4).add(0.5)).clamp()
-  ).mul(1.5)
+  ).mul(1.15)
 
   const distance = cameraPosition.xz.sub(positionWorld.xz).length()
   const farMix = distance
     .smoothstep(blueDistance.mul(0.45), blueDistance)
     .mul(distantBlue)
-  const deepColor = mix(color("#075273"), color("#107991"), patches).mul(1.25)
+  const deepColor = mix(color("#174c65"), color("#287487"), patches).mul(1.05)
   const waterColor = mix(nearColor, deepColor, farMix.mul(0.94))
 
   // Only the surface layer drives the highlights; changing bed depth cannot
@@ -240,7 +245,7 @@ export function createWater(
   const foamMask = edge.mul(fragments).max(wash).mul(foam).clamp()
   const groundedColor = mix(waterColor, color("#075648"), contactShade)
   // A restrained grazing-angle tint separates the surface from the bed.
-  const sheen = rippleNormal.dot(view).max(0).oneMinus().pow(4).mul(0.09)
+  const sheen = rippleNormal.dot(view).max(0).oneMinus().pow(4).mul(0.22)
   const surface = mix(groundedColor, color("#6cabb4"), sheen)
     .mul(surfaceLight)
     .mul(shade)
@@ -254,7 +259,7 @@ export function createWater(
   })
   material.lights = false
   material.positionNode = positionGeometry.add(
-    uniform(localUp).mul(swell.mul(waveHeight))
+    uniform(localUp).mul(swell.mul(waveHeight).mul(shoreWeight))
   )
   material.colorNode = mix(
     surface,

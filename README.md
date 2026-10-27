@@ -12,9 +12,56 @@ el asfalto/arena horneado, los colores de vértice y las 747 instancias del expo
 actual, repartidas en celdas de 200 m y lotes de hasta 128. Las seis rampas son
 superficies conducibles; la inclinación de la nave sigue su pendiente.
 
-El agua conserva el quad de dos triángulos con altura de ola cero. El preset
-`DESERT_WATER_PRESET` modera flujo, brillos y ondulación óptica; la espuma usa un
+La largada está sobre la calzada frente a la estación de servicio, mirando hacia
+la bifurcación del camino con obstáculos. La ruta comienza allí; los checkpoints
+siguen ese orden y están en tramos comunes para permitir tanto el atajo como el
+desvío de asfalto. Cruzar la largada por primera vez no completa una vuelta.
+
+Los saltos usan ajustes exclusivos de Desert Valley: gravedad de 19 m/s² al
+subir y 30 m/s² al caer, impulso vertical limitado a 14 m/s y un rebote de
+aterrizaje amortiguado durante 0,42 s. El resto de circuitos conserva su manejo.
+La altura necesaria para superar cada vagón queda pendiente de la prueba manual.
+
+El GLB conserva su quad de dos triángulos. En runtime se genera una malla para
+olas largas de hasta 0,38 m, descartando celdas secas y reduciendo el movimiento
+junto a la costa. La física y el shader comparten el campo de olas; caminos,
+puente y rampas conservan prioridad como superficie de conducción. El preset
+reduce el patrón repetitivo y los brillos sobre el río grande. La espuma usa un
 mapa de distancias 512² generado una vez desde las intersecciones de esta costa.
+
+Al sobrevolar el agua aparecen manchas de espuma irregular, gotas con caída y
+pequeños abanicos de salpicadura lateral. Reutilizan el dither del propulsor y
+las siluetas procedurales del derrape, con tonos claros sin emisión luminosa.
+Los anillos de la primera versión se reemplazaron por estos efectos. Dependen
+de velocidad y altura, dejan de emitir a 3,2 m por defecto y usan una máscara
+conservadora para excluir tierra/caminos. Son tres pools reutilizables: hasta
+688 triángulos de efectos en escritorio y 352 en móvil. Se congelan en pausa, se limpian al
+recuperar/reiniciar y se omiten con movimiento reducido. La malla del agua tiene
+un techo de 32.768 triángulos en escritorio y 12.800 en móvil antes de descartar
+celdas secas; el conteo efectivo se expone en `data-water-triangles` y los efectos
+en `data-water-effect-triangles` del elemento `.flight-app`.
+
+En el panel DialKit existente, **Agua · espuma y salpicones** permite ajustar
+intensidad/densidad, ancho/persistencia de espuma, tamaño/altura/alcance lateral
+de las gotas, distancia al agua y respuesta a velocidad. Las velocidades están
+en m/s, las alturas en metros y la persistencia en segundos. `Trama` controla
+el dither (0 lo elimina). `Tamaño lento`/`Tamaño rápido` van de 0,1 a 0,6 por
+defecto; `Altura salpicón` conserva la altura lenta de 1,1 m y `Altura máxima`
+sube a 2,6 m. Interpolan suavemente desde `Velocidad mínima` (3 m/s por defecto)
+hasta el límite real de turbo, 72 m/s (259,2 km/h), sin depender del botón turbo.
+La respuesta de densidad conserva sus controles y no multiplica el tamaño.
+Los ajustes se guardan en este navegador durante
+desarrollo; producción usa los valores del código. La base está en
+`src/water/hover-effects.js` y el material en `src/water/hover-material.js`.
+
+Ajustes centrales: `DESERT_START` en `src/desert-route.js`, `DESERT_JUMPS` en
+`src/desert-handling.js`, `DESERT_WATER_PRESET` en `src/water/preset.ts`,
+`WATER_WAVES` en `src/water/waves.ts`, `RIVER_SURFACE` en
+`src/water/desert-surface.js` y `HOVER_WATER_FX` en `src/water/hover-effects.js`.
+Los respaldos de trabajo se conservan sólo en el checkout local y no se incluyen
+en el repositorio. El usuario aprobó la largada, los saltos y la iteración de
+efectos de agua durante su revisión manual; esta pasada no tuvo tests, build,
+lint, typecheck ni pruebas de gameplay ejecutadas por el agente.
 
 La locomotora y los 40 vagones de `freight-train-40-game.glb` recorren `railway.json`
 por separado, con 40 enganches móviles y colisiones que consideran la altura.

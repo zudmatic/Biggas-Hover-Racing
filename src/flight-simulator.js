@@ -144,7 +144,7 @@ export async function createFlightSimulator({entryTransition}={}){
   }
   function pause(){if(phase==='flying')setPhase('paused');else if(phase==='paused'){raceAudio.unlock();setPhase('flying');}}
   function recover(manual=false){
-    world.fx.reset();gpuGraphics?.reset();
+    world.fx.reset();world.resetWaterFx?.();gpuGraphics?.reset();
     oil?.cancelPour();raceAudio.cue('recover');const checkpoint=recoverHover(landscape,gateIndex,world.surfaceHeight);
     Object.assign(state,createHoverState(landscape),checkpoint,{speed:0,pitch:0,roll:0,throttle:0,boosting:false,cooldown:1.2});
     notice(manual?'Nave recuperada':'Fuera de pista · nave recuperada');
@@ -224,6 +224,7 @@ export async function createFlightSimulator({entryTransition}={}){
     world=next;landscape=next.landscape;scene.add(world.root);lighting.setTrack(landscape);world.textures.applyRoot(lighting.root);
     await world.initWater?.(lighting.sun);
     app.dataset.water=world.water?'animated':'none';app.dataset.vegetationInstances=String(world.instanceCount??0);
+    if(world.waterStats){app.dataset.waterTriangles=String(world.waterStats.surfaceTriangles);app.dataset.waterEffectTriangles=String(world.waterStats.effectTriangles);}
     fxControls=createFlightFxControls(world.fx,message=>{notice(message);if(phase==='flying')canvas.focus({preventScroll:true});});
     setText($('#flight-seed'),`${Math.round(landscape.length)} M · HOVER`);buildMap();resetFlight();updateCamera(1,true);
   }

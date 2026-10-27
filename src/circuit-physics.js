@@ -48,7 +48,7 @@ export function createCircuitLandscape(route,gameplay){
   const extent=Math.max(...samples.map(s=>Math.max(Math.abs(s.position[0]),Math.abs(s.position[2]))))+28;
   return {type:'circuit',seed:gameplay.road_width_m===18?35:34,samples,length,gates,spawn,yaw:Math.atan2(grid.forward_gltf[0],grid.forward_gltf[2]),roadAt,atDistance,mapHalf:extent,height:(x,z)=>roadAt(x,z).y};
 }
-export function createHoverState(landscape){return {...landscape.spawn,yaw:landscape.yaw,pitch:0,roll:0,pitchRate:0,rollRate:0,speed:0,throttle:0,energy:1,padBoostRemaining:0,boosting:false,boostLocked:false,cooldown:0,hoverTime:0,wallHit:false,vx:0,vz:0,yawRate:0,hover:HOVER_HEIGHT,hoverVelocity:0,airborne:false,slip:0,impact:0,impactSerial:0,acceleration:0,braking:false,drifting:false,driftBlend:0,offTrackTime:0,recoverNeeded:false,oilFactor:1,oilContact:false};}
+export function createHoverState(landscape){return {...landscape.spawn,yaw:landscape.yaw,pitch:0,roll:0,pitchRate:0,rollRate:0,speed:0,throttle:0,energy:1,padBoostRemaining:0,boosting:false,boostLocked:false,cooldown:0,hoverTime:0,wallHit:false,vx:0,vz:0,yawRate:0,hover:HOVER_HEIGHT,hoverVelocity:0,airborne:false,landingTime:0,slip:0,impact:0,impactSerial:0,acceleration:0,braking:false,drifting:false,driftBlend:0,offTrackTime:0,recoverNeeded:false,oilFactor:1,oilContact:false};}
 export function recoverHover(landscape,gateIndex,surfaceHeight){
   if(gateIndex===0){
     const state=createHoverState(landscape);
@@ -111,16 +111,26 @@ export function advanceHover(state,input,dt,landscape,surfaceHeight=landscape.he
   const surface=surfaceHeight(state.x,state.z)??road.y;
   const surfaceVelocity=(surface-(previous.y-state.hover))/dt;
   const hoverTarget=HOVER_HEIGHT+(input.reducedMotion?0:Math.sin(state.hoverTime*2.4)*.035)+(state.boosting?.08:0);
-  if(landscape.allowJumps&&(state.airborne||(previous.y-state.hover-surface>.8&&state.speed>3))){
+  const jump=landscape.jumpSettings;
+  state.landingTime=Math.max(0,(state.landingTime??0)-dt);
+  if(landscape.allowJumps&&(state.airborne||(previous.y-state.hover-surface>(jump?.takeoffDropM??.8)&&state.speed>(jump?.minimumSpeedMps??3)))){
     // Preserve takeoff momentum at the broken bridge instead of snapping to
     // the river ten metres below. Only the desert enables airborne traversal.
-    if(!state.airborne)state.hoverVelocity=Math.max(0,state.hoverVelocity);
-    state.airborne=true;state.hoverVelocity-=9.81*dt;state.y+=state.hoverVelocity*dt;
-    if(state.y<=surface+hoverTarget){state.y=surface+hoverTarget;state.hoverVelocity=0;state.airborne=false;}
+    if(!state.airborne)state.hoverVelocity=clamp(state.hoverVelocity,0,jump?.maxRiseSpeedMps??Infinity);
+    const gravity=jump?(state.hoverVelocity>0?jump.gravityUp:jump.gravityDown):9.81;
+    state.airborne=true;state.hoverVelocity=Math.max(-(jump?.terminalFallMps??Infinity),state.hoverVelocity-gravity*dt);state.y+=state.hoverVelocity*dt;
+    if(state.y<=surface+hoverTarget){
+      const impactSpeed=Math.max(0,-state.hoverVelocity);
+      state.airborne=false;
+      state.landingTime=jump?jump.bounceDuration:0;
+      state.y=surface+hoverTarget-(jump?Math.min(jump.landingCompressionM,impactSpeed*.008):0);
+      state.hoverVelocity=jump&&impactSpeed>2?clamp(impactSpeed*jump.landingRestitution,jump.minimumBounceMps,jump.maximumBounceMps):0;
+    }
     state.hover=state.y-surface;
   }else{
   const predictedHover=state.y+state.hoverVelocity*dt-surface;
-  state.hoverVelocity+=((hoverTarget-predictedHover)*HOVER_HANDLING.liftStiffness-(state.hoverVelocity-surfaceVelocity)*HOVER_HANDLING.liftDamping)*dt;
+  const landing=jump&&state.landingTime>0;
+  state.hoverVelocity+=((hoverTarget-predictedHover)*(landing?jump.landingSpring:HOVER_HANDLING.liftStiffness)-(state.hoverVelocity-surfaceVelocity)*(landing?jump.landingDamping:HOVER_HANDLING.liftDamping))*dt;
   state.y+=state.hoverVelocity*dt;
   state.hover=clamp(state.y-surface,MIN_HOVER_HEIGHT,MAX_HOVER_HEIGHT);
   // Do not accumulate an outward velocity at the safety limits.

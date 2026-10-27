@@ -30,13 +30,13 @@ export function createSurfaceIndex(meshes){
   };
 }
 
-export function createCityCollision(root,{isFloor=mesh=>/COL_TRACK|COL_STREET_CURB|COL_CITY_SIDEWALK|COL_ENV_TERRAIN_(CITY|DISTANT)/.test(mesh.name),isSolid=()=>true,exploration=false}={}){
+export function createCityCollision(root,{isFloor=mesh=>/COL_TRACK|COL_STREET_CURB|COL_CITY_SIDEWALK|COL_ENV_TERRAIN_(CITY|DISTANT)/.test(mesh.name),isSolid=()=>true,exploration=false,surfaceHeightOverride=null}={}){
   const floor=[],solids=new THREE.Group();root.updateMatrixWorld(true);
   root.traverse(mesh=>{if(!mesh.isMesh)return;
     if(isFloor(mesh))floor.push(mesh);
     else if(isSolid(mesh)){const proxy=new THREE.Mesh(mesh.geometry,mesh.material);proxy.matrix.copy(mesh.matrixWorld);proxy.matrixAutoUpdate=false;solids.add(proxy);}
   });
-  const surfaceHeight=createSurfaceIndex(floor),octree=new Octree().fromGraphNode(solids),hull=new Capsule(),normal=new THREE.Vector3();
+  const surfaceHeight=surfaceHeightOverride??createSurfaceIndex(floor),octree=new Octree().fromGraphNode(solids),hull=new Capsule(),normal=new THREE.Vector3();
   function step(state,dt,landscape,previous){
     // Three vertical capsules approximate the hull. Fixed 60 Hz steps travel at
     // most 1.2 m, less than the capsule diameter, preventing thin-wall tunnelling.

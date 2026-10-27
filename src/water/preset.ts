@@ -28,18 +28,18 @@ export function applyWaterfrontPreset(water: ReturnType<typeof createWater>) {
 
 /** A calmer, wider river. Keep the original waterfront preset available. */
 export const DESERT_WATER_PRESET = {
-  speed: 1.65,
-  scale: 1.35,
-  caustics: 0.58,
-  glints: 0.8,
-  ripples: 0.92,
-  distantBlue: 0.88,
-  blueDistance: 105,
-  foam: 0.55,
-  foamWidth: 0.8,
-  waveHeight: 0,
-  waterDepth: 1.5,
-  clarity: 0.32,
+  speed: 1.25,
+  scale: 0.55,
+  caustics: 0.24,
+  glints: 0.55,
+  ripples: 0.55,
+  distantBlue: 0.72,
+  blueDistance: 180,
+  foam: 0.65,
+  foamWidth: 1.2,
+  waveHeight: 0.38,
+  waterDepth: 2.8,
+  clarity: 0.16,
   sunStrength: 1,
 } as const
 
