@@ -121,3 +121,34 @@ test('Bulldog side flames keep their spacing through a turn and never cross',()=
     }
   }
 });
+
+test('wall impact: the flame never folds back over the nozzle',()=>{
+  // 40 m/s along +z, then the wall stops the ship dead at t=1.9, kicks its yaw and bounces it back at 4 m/s.
+  const nozzles=[[-.88,.66,-2.8,.15],[0,1.23,-3.14,.44],[.88,.66,-2.8,.15]];
+  for(const settle of [1/60,3/60,6/60]){
+    const impact=2-settle;
+    const {strips}=flightRows(nozzles,(t,ship)=>{
+      if(t<=impact){ship.position.set(0,0,40*t);ship.rotation.y=0;}
+      else{ship.position.set(0,0,40*impact-4*(t-impact));ship.rotation.y=.25;}
+    });
+    for(const rows of strips){
+      let farthest=0;
+      for(const p of rows){const d=p.distanceTo(rows[0]);expect(d).toBeGreaterThanOrEqual(farthest-1e-3);farthest=Math.max(farthest,d);}
+    }
+  }
+});
+
+test('glancing wall hit: pushed out sideways, the flame keeps its length and shape',()=>{
+  // 40 m/s along +z; at the hit the wall shoves the hull .4 m sideways and reflects it to (8, 30) m/s, nose kicked .2 rad.
+  for(const since of [1/60,3/60,8/60]){
+    const impact=2-since;
+    const {strips}=flightRows([[-.88,.66,-2.8,.15],[0,1.23,-3.14,.44],[.88,.66,-2.8,.15]],(t,ship)=>{
+      if(t<=impact){ship.position.set(0,0,40*t);ship.rotation.y=0;}
+      else{const after=t-impact;ship.position.set(.4+8*after,0,40*impact+30*after);ship.rotation.y=.2;}
+    });
+    for(const rows of strips){
+      expect(arc(rows)).toBeGreaterThan(.8*4.6*.75);
+      let farthest=0;for(const p of rows){const d=p.distanceTo(rows[0]);expect(d).toBeGreaterThanOrEqual(farthest-1e-3);farthest=Math.max(farthest,d);}
+    }
+  }
+});

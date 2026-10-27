@@ -3,14 +3,15 @@ import * as THREE from 'three/webgpu';
 // Retain the emitter pose: old flame sections must not rotate with the ship.
 // Each nozzle gets one ribbon that turns around the flame axis to face the camera, so it never goes edge-on
 // (crossed fixed sheets collapse into hard-edged wedges when seen from behind, as in the racing camera).
-// Every ribbon row is gas emitted `age` seconds ago: it leaves the nozzle with the nozzle's own velocity
+// Every ribbon row is gas emitted `age` seconds ago: it carries the nozzle's average velocity since then
 // (Herencia) plus the exhaust speed along the nozzle axis (Escape), and air drag (Arrastre, seconds) slows it.
+// Averaging (not the velocity at emission) means a wall stop can't fling old gas past the nozzle.
 // Near the mouth the flame therefore follows the nozzle axis even while drifting; only the tail falls behind
 // along the path and lags the hull's rotation, like water from a swinging hose.
 export function createFlameTrail(scene,material,nozzles=[[-.68,.62,-2.14,.24],[.68,.62,-2.14,.24]]){
   const history=[],strips=[],segments=48,raw=96,step=1/60;
   const position=new THREE.Vector3(),rotation=new THREE.Quaternion(),scale=new THREE.Vector3();
-  const local=new THREE.Vector3(),earlier=new THREE.Vector3(),velocity=new THREE.Vector3(),exhaust=new THREE.Vector3();
+  const local=new THREE.Vector3(),nozzleNow=new THREE.Vector3(),velocity=new THREE.Vector3(),exhaust=new THREE.Vector3();
   const center=new THREE.Vector3(),axis=new THREE.Vector3(),tangent=new THREE.Vector3();
   const cameraPosition=new THREE.Vector3(),toCamera=new THREE.Vector3();
   const path=Array.from({length:raw+1},()=>({point:new THREE.Vector3(),right:new THREE.Vector3(),along:0}));
@@ -47,7 +48,6 @@ export function createFlameTrail(scene,material,nozzles=[[-.68,.62,-2.14,.24],[.
       const latest=history.at(-1),modelScale=Math.max(latest.scale.x,latest.scale.y,latest.scale.z);
       const pulse=1+settings.Pulsación*Math.sin(time*31),idleWidth=THREE.MathUtils.lerp(.6,1,THREE.MathUtils.smoothstep(power,.13,.45));
       const escape=Math.max(.5,settings.Escape??24),drag=Math.max(.02,settings.Arrastre??.3),inherit=settings.Herencia??1;
-      const oldest=history[0].time;
       for(const {mesh,nozzle,index} of strips){
         mesh.visible=settings.Activa&&power>.005;
         if(!mesh.visible)continue;
@@ -58,6 +58,7 @@ export function createFlameTrail(scene,material,nozzles=[[-.68,.62,-2.14,.24],[.
         // The visible flame (~68% of the ribbon) is capped to the mouth for the first 5%, then opens up.
         const halfWidth=.5*settings.Ancho*modelScale*(nozzle[3]/.24)*idleWidth,squeeze=Math.min(1,.9*mouthRadius*modelScale/(.68*halfWidth));
         // Gas positions over a growing age window until the path is long enough (drag caps how far gas travels).
+        pose(time);nozzleNow.set(nozzle[0],nozzle[1],nozzle[2]-start).multiply(scale).applyQuaternion(rotation).add(position);
         let span=1.5*length/escape,total=0;
         for(let attempt=0;attempt<5;attempt++){
           total=0;
@@ -66,11 +67,11 @@ export function createFlameTrail(scene,material,nozzles=[[-.68,.62,-2.14,.24],[.
             pose(time-age);local.set(nozzle[0],nozzle[1],nozzle[2]-start).multiply(scale);
             entry.point.copy(local).applyQuaternion(rotation).add(position);entry.right.set(1,0,0).applyQuaternion(rotation);
             exhaust.set(0,0,-1).applyQuaternion(rotation);
-            // Nozzle velocity from the pose one step earlier (zero before the history starts).
-            if(time-age-step>=oldest){pose(time-age-step);earlier.copy(local).applyQuaternion(rotation).add(position);velocity.subVectors(entry.point,earlier).divideScalar(step);}
-            else velocity.set(0,0,0);
+            velocity.subVectors(nozzleNow,entry.point).divideScalar(Math.max(age,step));
             const travel=drag*(1-Math.exp(-age/drag));
             entry.point.addScaledVector(velocity,inherit*travel).addScaledVector(exhaust,escape*travel);entry.point.y+=.5*lift*age*age;
+            // Never fold back toward the root (hard yaw kicks on impact): hold the point until gas moves outward again.
+            if(j&&entry.point.distanceToSquared(path[0].point)<path[j-1].point.distanceToSquared(path[0].point))entry.point.copy(path[j-1].point);
             if(j)total+=entry.point.distanceTo(path[j-1].point);entry.along=total;
           }
           if(total>=length||span>=3)break;
