@@ -1,6 +1,7 @@
 import {CIRCUIT_MAPS,circuitMap} from './circuit-maps.js';
 import {SHIPS,shipConfig} from './ship-catalog.js';
-import {createBoost} from './vfx/boost.js';
+import {createEngine} from './flight-webgpu.js';
+import {createLensUniforms} from './vfx/singularity-lens.js';
 import {createSmokeMaterial} from './vfx/smoke-material.js';
 import {createOilPreview} from './vfx/oil.js';
 import {loadFlightFx} from './flight-fx.js';
@@ -71,7 +72,7 @@ async function main(){
   const [world,ship]=results.map(r=>r.value);scene.add(world.root,ship.root);ship.root.scale.setScalar(SCALE);
   const lighting=createCircuitLighting(scene,{headlightMounts:ship.config.headlights});lighting.setTrack(world.landscape);world.textures.applyRoot(lighting.root);
   const baseline=createBaseMaterials(scene),state={...createHoverState(world.landscape),modelScale:SCALE};
-  const comicStyle=createComicStyle(),comicMaterials=createComicMaterials(scene,comicStyle),comicPost=createComicPost(renderer,scene,camera);
+  const comicStyle=createComicStyle(),comicMaterials=createComicMaterials(scene,comicStyle),lens=ship.config.engine==='singularity'?createLensUniforms():null,comicPost=createComicPost(renderer,scene,camera,{lens});
   const nozzles=ship.config.exhausts,mainNozzle=nozzles.reduce((best,n)=>n[3]>best[3]?n:best,nozzles[0]);
   let route=0,time=0,previous=performance.now(),busy=false,pendingSteps=0,frames=0,fps=0,frameMs=0,lastHud=0;
   const lastPosition=new THREE.Vector3(),delta=new THREE.Vector3(),target=new THREE.Vector3();
@@ -99,7 +100,7 @@ async function main(){
     'Cómic':query.get('look')!=='base',Trama:[1.03,0,2,.01],Puntos:true,Rayado:true,Contornos:true,'Color cómic':true,
     Noche:false,Faros:false,Sombras:true,'Posición en pista':[0,0,100,1],
   },{id:'playground-scene',persist:false,defaultCollapsed:true});
-  const boost=await createBoost(renderer,scene,ship);
+  const boost=await createEngine(renderer,scene,ship,{camera,lens});
   const smoke=await loadFlightFx(scene,{surfaceHeight:world.surfaceHeight,materialFactory:createSmokeMaterial});
   const oil=createOilPreview(scene,world);
   const pads=await createFlightBoostPads({scene,landscape:world.landscape,surfaceHeight:world.surfaceHeight,distances:[12]});
@@ -262,8 +263,8 @@ async function main(){
       if(dt>0&&v['Activar placas'])padControls.update();
       pads.update(dt,false);
       const padTurbo=state.padBoostRemaining>0;state.boosting=state.boosting||padTurbo;
-      await boost.update(dt,padTurbo?'Turbo':currentMode,v['VFX activos'],padTurbo);smoke.update(dt,{state,camera,scale:SCALE,reduced:!v['VFX activos']});oil.update(dt,state);
-      ship.pilot.update(time,true);if(orbit.enabled)orbit.update();lighting.update(state,time,{dt});boost.updateHeat(comicPost.heat);
+      await boost.update(dt,padTurbo?'Turbo':currentMode,v['VFX activos'],padTurbo,state);smoke.update(dt,{state,camera,scale:SCALE,reduced:!v['VFX activos']});oil.update(dt,state);
+      ship.pilot.update(time,true);if(orbit.enabled)orbit.update();lighting.update(state,time,{dt});boost.updatePost(comicPost);
       comicPost.heat.updatePadFields(pads.heatFields??[]);
       comicStyle.pixelRatio.value=renderer.getPixelRatio();renderer.getDrawingBufferSize(comicStyle.resolution.value);comicMaterials.sync();
       comicPost.comic.value=Number(sceneKit.values['Cómic']);

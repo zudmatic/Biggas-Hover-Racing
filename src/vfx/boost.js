@@ -89,7 +89,7 @@ export async function createBoost(renderer,scene,ship){
         if(dt>0)await systems[j].system.update(dt);
       }
     },
-    updateHeat(heat){const v=kit.values;heat.setNozzles(nozzles);heat.update(ship.root,time*3,power,v.Calor?v['Intensidad calor']:0,.9,8,1.2);},
+    updatePost({heat}){const v=kit.values;heat.setNozzles(nozzles);heat.update(ship.root,time*3,power,v.Calor?v['Intensidad calor']:0,.9,8,1.2);},
     dispose(){unsubscribe();kit.destroy();systems.forEach(s=>s.dispose());lineGeometry.dispose();trail.dispose();engine.dispose();flame.material.dispose();},
   };
 }

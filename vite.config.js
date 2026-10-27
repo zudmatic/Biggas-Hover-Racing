@@ -12,7 +12,7 @@ export default defineConfig({
   plugins: [{ name: 'directory-redirect', configureServer: server => { server.middlewares.use(directoryRedirect); }, configurePreviewServer: server => { server.middlewares.use(directoryRedirect); } }],
   build: {
     rollupOptions: {
-      input: { main: 'index.html', spaceship: 'spaceship.html', simulator: 'simulator.html', propulsor: 'propulsor-studio.html', webgpu: 'webgpu-preview.html', playground: 'playground/index.html' },
+      input: { main: 'index.html', spaceship: 'spaceship.html', simulator: 'simulator.html', propulsor: 'propulsor-studio.html', webgpu: 'webgpu-preview.html', chubee: 'chubee-studio.html', playground: 'playground/index.html' },
       output: { manualChunks: { three: ['three'] } },
     },
   },
