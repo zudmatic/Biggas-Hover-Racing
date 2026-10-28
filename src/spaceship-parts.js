@@ -1,4 +1,4 @@
-// Names and dimensions come from the supplied 033 GLB and its authoring manifest.
+// Shared hangar systems; each ship overrides its names, anchors and views.
 // Coordinates are authoring units, not meters. +Y up, +Z forward.
 export const SHIP_PARTS = [
   {id:'cockpit', name:'Cabina monoplaza', tag:'01', anchor:[0,1.8,.15], offset:[0,.75,0],
@@ -18,18 +18,6 @@ export const SHIP_PARTS = [
   {id:'lights', name:'Frente e iluminación', tag:'08', anchor:[0,1,2.1], offset:[0,.05,.9],
     view:[2,2.5,7.5]},
 ];
-
-export function classifyShipPart(name, inCanopy=false) {
-  const n=name.replaceAll('_',' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
-  if(inCanopy || /piloto|cabina|asiento|cojin|control|pedal|arnes|consola|interfaz|borda interior/.test(n))return 'cockpit';
-  if(/propulsor|tobera|aleta caliente|sombra bajo aleta|anillo interior/.test(n))return 'engines';
-  if(/mastil|vela/.test(n))return 'mast';
-  if(/radiador|disipadora|branquia/.test(n))return 'cooling';
-  if(/patin|apoyo trasero|suspension|amortiguador|piston|horquilla/.test(n))return 'landing';
-  if(/asa |barandilla|defensa|nervio naranja/.test(n))return 'guards';
-  if(/faro|toma frontal|boca oscura/.test(n))return 'lights';
-  return 'hull';
-}
 
 export const FLIGHT_DURATION=18;
 export function flightPose(time) {

@@ -2,7 +2,7 @@ import {test,expect} from '@playwright/test';
 const toggle=(page,name,on)=>page.locator('.dialkit-labeled-control').filter({has:page.locator('.dialkit-labeled-control-label',{hasText:new RegExp(`^${name}$`,'i')})}).getByRole('radio',{name:on?'On':'Off',exact:true}).click();
 const select=async(page,name,value)=>{await page.locator('.dialkit-select-trigger').filter({has:page.locator('.dialkit-select-label',{hasText:new RegExp(`^${name}$`,'i')})}).click();await page.getByRole('option',{name:new RegExp(`^${value}$`,'i')}).click();};
 const stats=page=>page.locator('body').getAttribute('data-vfx').then(JSON.parse);
-for(const backend of ['webgpu','webgl2'])for(const [map,vehicle] of [['ruins','037'],['nexus','033']]){
+for(const backend of ['webgpu','webgl2'])for(const [map,vehicle] of [['ruins','037'],['nexus','037']]){
   test(`VFX ${backend} ${map} ${vehicle}`,async({page})=>{
     test.setTimeout(240000);page.setDefaultTimeout(20000);const errors=[];
     page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});

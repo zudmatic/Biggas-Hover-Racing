@@ -1,0 +1,31 @@
+ZUDONETA 037 · MODELO v07 · UNIONES INTEGRADAS
+
+Revisión del archivo 037_Nave_Oliva_v06.blend suministrado por el usuario.
+GLB v07 SHA-256: b12599767137e88d34a08a62b13700df2a03735f869d12679f4605ccf95fb3c5
+655 primitivas renderizables, 82.946 triángulos, 45 imágenes integradas.
+Proa +Z, arriba +Y. Conserva el identificador 037, encaje del piloto,
+parabrisas móvil, tres rotores, salidas de propulsión y cinco pinturas.
+
+Cambios geométricos:
+- Los chasis, blindajes y lomos de cada pod forman un único volumen cerrado.
+- Morro y placa superior fusionados, con la cara inferior asentada en el casco.
+- Paneles laterales con bordes compatibles, junta retranqueada de 0,028 u,
+  sellos perimetrales y bancadas conectadas al cuerpo del pod.
+- Montantes del alerón fusionados, extremos recortados bajo el ala, zócalos,
+  cartelas, abrazaderas de empalme, sillas de apoyo y pernos.
+- Manguitos abiertos entre las carcasas de admisión/escape y el cuerpo.
+- Cajas posteriores asentadas sobre la pendiente del blindaje, con bases,
+  juntas y fijaciones; ya no quedan simplemente apoyadas en el aire.
+
+Los cinco conjuntos estructurales fusionados se verifican como un solo
+componente cerrado cada uno, sin aristas no manifold. Todas las primitivas
+exportadas conservan UVs. Los materiales originales y las 45 imágenes del
+GLB v06 se mantienen; las fijaciones nuevas tienen acabados mecánicos propios.
+Las cuatro variantes adicionales siguen aplicándose en src/ship-livery.js.
+
+Reproducir con Blender 4.3.2 (no requiere complementos):
+blender -b --python-exit-code 1 --python scripts/refine-zudoneta.py -- /ruta/037_Nave_Oliva_v06.blend /ruta/salida
+Genera el GLB, un .blend editable con texturas empaquetadas y el informe QA.
+El GLB descargable del hangar corresponde a esta revisión v07.
+
+Miniaturas: node scripts/render-ship-previews.mjs 037 http://127.0.0.1:5187/

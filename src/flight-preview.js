@@ -3,13 +3,14 @@ import {createZudModel} from './zud-model.js';
 import {equipZudWardrobe} from './zud-wardrobe.js';
 import {zudHat} from './hat-catalog.js';
 import {createFlightShip} from './flight-ship.js';
-import {shipConfig} from './ship-catalog.js';
+import {shipLivery} from './ship-livery.js';
+import {DEFAULT_SHIP,shipConfig} from './ship-catalog.js';
 import {pilotConfig,pilotPalette} from './pilot-catalog.js';
 import {createGameRenderer} from './game-renderer.js';
 import {createComicView} from './comic-view.js';
 
 // One small scene for the front end; disposed before loading a circuit.
-export async function createFlightPreview(canvas,{reducedMotion,signal,initialKind='pilot',paper=true,vehicle='033',pilot='zud',palette='Original',hat='beanie',onStatus=()=>{}}){
+export async function createFlightPreview(canvas,{reducedMotion,signal,initialKind='pilot',paper=true,vehicle=DEFAULT_SHIP,pilot='zud',palette='Original',hat='beanie',livery='original',onStatus=()=>{}}){
   if(signal.aborted)return null;
   const renderer=await createGameRenderer(canvas,{alpha:true});
   if(signal.aborted){renderer.dispose();return null;}
@@ -33,7 +34,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   const shadow=new THREE.Mesh(new THREE.CircleGeometry(1.9,48),new THREE.MeshBasicMaterial({color:0x171717,transparent:true,opacity:.22,depthWrite:false}));
   shadow.rotation.x=-Math.PI/2;shadow.position.y=-.04;shadow.scale.y=.76;pedestal.add(shadow);
   const zud=equipZudWardrobe(createZudModel({detail:'medium',curve:0,comic:false}));zud.laptop.visible=false;
-  const actors={},floor={},ships=new Map(),pilots=new Map([['zud',zud]]),pending=new Map();let selectedVehicle=shipConfig(vehicle).id,selectedPilot=pilotConfig(pilot).id,selectedPalette=pilotPalette(palette).name,selectedHat=zudHat(hat).id;const vehicleKey=()=>`vehicle:${selectedVehicle}:${selectedPilot}`;const activeId=()=>kind==='pilot'?`pilot:${selectedPilot}`:vehicleKey();let disposed=false,kind=initialKind,yaw=0,drag=null,time=0,last=performance.now(),dirty=true;
+  const actors={},floor={},ships=new Map(),pilots=new Map([['zud',zud]]),pending=new Map();let selectedVehicle=shipConfig(vehicle).id,selectedPilot=pilotConfig(pilot).id,selectedPalette=pilotPalette(palette).name,selectedHat=zudHat(hat).id;let selectedLivery=shipLivery(livery).id;const vehicleKey=()=>`vehicle:${selectedVehicle}:${selectedPilot}`;const activeId=()=>kind==='pilot'?`pilot:${selectedPilot}`:vehicleKey();let disposed=false,kind=initialKind,yaw=0,drag=null,time=0,last=performance.now(),dirty=true;
   function addActor(id,root){
     const bounds=new THREE.Box3().setFromObject(root),center=bounds.getCenter(new THREE.Vector3());
     root.position.x-=center.x;root.position.z-=center.z;root.position.y-=bounds.min.y;
@@ -52,7 +53,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   const resize=new ResizeObserver(size);resize.observe(canvas);
   const hatFailures=new WeakSet();
   function activeActor(){return kind==='pilot'?pilots.get(selectedPilot):ships.get(vehicleKey())?.pilot.actor;}
-  const actorKey=()=>`${activeId()}:${selectedHat}:${selectedPalette}:${paperEnabled}`;
+  const actorKey=()=>`${activeId()}:${selectedHat}:${selectedPalette}:${selectedLivery}:${paperEnabled}`;
   function ready(){return assetsReady()&&renderedKey===actorKey();}
   function assetsReady(){return !!actors[activeId()]&&(selectedPilot!=='zud'||activeActor()?.root.userData.hat===selectedHat);}
   function reportStatus(){
@@ -74,7 +75,7 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
       camera.position.set(0,center.y+.5,distance);camera.lookAt(0,center.y,0);
     }
   }
-  function setKind(next){kind=next==='pilot'?'pilot':'vehicle';yaw=kind==='pilot'?-.14:.52;for(const [id,root] of Object.entries(actors))root.visible=id===activeId();canvas.dataset.kind=kind;canvas.dataset.vehicle=selectedVehicle;canvas.dataset.pilot=selectedPilot;canvas.dataset.palette=selectedPalette;canvas.dataset.hat=selectedHat;frameCamera();pedestal.scale.setScalar(kind==='pilot'?.83:1.24);dirty=true;size();reportStatus();}
+  function setKind(next){kind=next==='pilot'?'pilot':'vehicle';yaw=kind==='pilot'?-.14:.52;for(const [id,root] of Object.entries(actors))root.visible=id===activeId();canvas.dataset.kind=kind;canvas.dataset.vehicle=selectedVehicle;canvas.dataset.pilot=selectedPilot;canvas.dataset.palette=selectedPalette;canvas.dataset.hat=selectedHat;canvas.dataset.livery=selectedVehicle==='037'?selectedLivery:'original';frameCamera();pedestal.scale.setScalar(kind==='pilot'?.83:1.24);dirty=true;size();reportStatus();}
   canvas.addEventListener('pointerdown',event=>{if(drag!==null)return;drag={id:event.pointerId,x:event.clientX};canvas.setPointerCapture(event.pointerId);},{signal});
   canvas.addEventListener('pointermove',event=>{if(event.pointerId!==drag?.id)return;yaw+=(event.clientX-drag.x)*.009;drag.x=event.clientX;dirty=true;},{signal});
   const release=event=>{if(event.pointerId===drag?.id)drag=null;};
@@ -103,13 +104,13 @@ export async function createFlightPreview(canvas,{reducedMotion,signal,initialKi
   async function loadVehicle(){
     const requested=vehicleKey(),id=selectedVehicle,pilot=selectedPilot;
     if(ships.has(requested))return;
-    if(!pending.has(requested))pending.set(requested,createFlightShip(id,{pilot,palette:selectedPalette,hat:selectedHat,exhaust:false}).then(ship=>{
+    if(!pending.has(requested))pending.set(requested,createFlightShip(id,{pilot,palette:selectedPalette,hat:selectedHat,livery:selectedLivery,exhaust:false}).then(ship=>{
       if(disposed||signal.aborted){ship.dispose();return;}
-      ship.pilot.actor.setPalette?.(selectedPalette);ships.set(requested,ship);ship.update(0,0,false,true);addActor(requested,ship.root);applyHat(ship.pilot.actor);setKind(kind);
+      ship.pilot.actor.setPalette?.(selectedPalette);ship.setLivery(selectedLivery);ships.set(requested,ship);ship.update(0,0,false,true);addActor(requested,ship.root);applyHat(ship.pilot.actor);setKind(kind);
     }).catch(()=>{pending.delete(requested);if(!disposed&&requested===activeId())onStatus('fallback');}));
     await pending.get(requested);
   }
-  function setVehicle(id){selectedVehicle=shipConfig(id).id;setKind(kind);return loadVehicle();}
+  function setVehicle(id,livery=selectedLivery){selectedVehicle=shipConfig(id).id;selectedLivery=shipLivery(livery).id;ships.forEach(ship=>ship.setLivery(selectedLivery));setKind(kind);return loadVehicle();}
   function setPilot(id,palette=selectedPalette,hat=selectedHat){
     selectedPilot=pilotConfig(id).id;selectedPalette=pilotPalette(palette).name;selectedHat=zudHat(hat).id;
     applyHat(zud);ships.forEach(ship=>applyHat(ship.pilot.actor));

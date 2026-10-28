@@ -3,6 +3,7 @@ import {createFlightFovControls} from './flight-camera-fov-controls.js';
 import {smoothCameraFov} from './flight-camera-fov.js';
 import {createFlightRenderPose} from './flight-render-pose.js';
 import {createFlightCameraKlipp} from './flight-camera-klipp.js';
+import {shipLiveryChoice} from './ship-livery.js';
 import {pilotChoice,pilotConfig,pilotQuery} from './pilot-catalog.js';
 import * as THREE from 'three';
 import {circuitMap} from './circuit-maps.js';
@@ -26,7 +27,7 @@ import {EYE_CLOSED} from './ship-eyes.js';
 
 export async function createFlightSimulator({entryTransition}={}){
   const base=import.meta.env.BASE_URL,query=new URLSearchParams(location.search),reduced=matchMedia('(prefers-reduced-motion: reduce)');
-  const mapConfig=circuitMap(query.get('map')),selectedShip=shipConfig(query.get('vehicle')),choice=pilotChoice(query),selectedPilot=pilotConfig(choice.pilot),pilotParams=pilotQuery(choice);
+  const mapConfig=circuitMap(query.get('map')),selectedShip=shipConfig(query.get('vehicle')),choice={...pilotChoice(query),livery:shipLiveryChoice(query)},selectedPilot=pilotConfig(choice.pilot),pilotParams=`${pilotQuery(choice)}&livery=${choice.livery}`;
   const naturalDesert=mapConfig.id==='desert-valley',initialComic=query.has('comic')?query.get('comic')!=='0':!naturalDesert;
   const artReview=import.meta.env.DEV&&naturalDesert&&query.has('artView');
   gameMusic.setRaceTrack(mapConfig.id==='desert-valley'?'desert':'race');
@@ -98,7 +99,7 @@ export async function createFlightSimulator({entryTransition}={}){
   const fovControls=createFlightFovControls();
   const klippCamera=createFlightCameraKlipp(camera,{enabled:query.get('camera')!=='actual',element:canvas,canOrbit:()=>phase==='flying'||phase==='paused'});
   const renderPose=createFlightRenderPose();
-  app.dataset.map=mapConfig.id;app.dataset.pilot=choice.pilot;app.dataset.palette=choice.palette;app.dataset.hat=choice.hat;app.dataset.vehicle=selectedShip.id;
+  app.dataset.map=mapConfig.id;app.dataset.pilot=choice.pilot;app.dataset.palette=choice.palette;app.dataset.hat=choice.hat;app.dataset.vehicle=selectedShip.id;app.dataset.livery=selectedShip.id==='037'?choice.livery:'original';
   function clearInput(){keys.clear();touch.turn=0;touch.accelerate=touch.brake=touch.boost=touch.drift=false;stickPointer=null;$('.flight-stick span').style.transform='none';document.querySelectorAll('[data-hold]').forEach(button=>button.setAttribute('aria-pressed','false'));}
   function setPhase(next){
     scaleControl.setVisible(next==='flying'||next==='paused');

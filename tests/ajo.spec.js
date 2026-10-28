@@ -24,7 +24,7 @@ for(const backend of ['webgpu','webgl2'])test(`Ajo can select every ship, fly an
   await expect(lobby).toHaveAttribute('data-preview','ready',{timeout:60000});await expect(canvas).toHaveAttribute('data-pilot','ajo');
   await page.screenshot({path:`.context/ajo-selection-${backend}.png`});
   await page.getByRole('button',{name:'Confirmar Ajo',exact:true}).click();
-  for(const id of ['037','038','033']){
+  for(const id of ['037','038']){
     await page.locator(`[data-vehicle-choice="${id}"]`).click();await expect(canvas).toHaveAttribute('data-vehicle',id);
     await expect(canvas).toHaveAttribute('data-ready','true',{timeout:60000});await expect(canvas).toHaveAttribute('data-pilot','ajo');
   }
@@ -38,8 +38,8 @@ for(const backend of ['webgpu','webgl2'])test(`Ajo can select every ship, fly an
   await expect(app).toHaveAttribute('data-phase','flying');await page.keyboard.press('Escape');await page.locator('.flight-team-link').click();await expect(lobby).toHaveAttribute('data-pilot','ajo');
   await page.getByRole('link',{name:'Hangar',exact:true}).click();
   const stage=page.locator('.ship-viewport');
-  for(const id of ['033','037','038']){
-    if(id!=='033')await page.locator(`.ship-picker a[href*="vehicle=${id}"]`).click();
+  for(const id of ['037','038']){
+    await page.locator(`.ship-picker a[href*="vehicle=${id}"]`).click();
     await expect(stage).toHaveAttribute('data-ready','true',{timeout:60000});await page.getByLabel('Ajo al mando',{exact:true}).check();await expect(stage).toHaveAttribute('data-pilot','true');
   }
   await page.screenshot({path:`.context/ajo-hangar-${backend}.png`});await page.getByRole('link',{name:'Simulador de vuelo'}).click();
@@ -65,7 +65,7 @@ test('Ajo retains independent rigs, animation and textures; driving poses stay s
     const referenceBounds=new THREE.Box3().setFromObject(standingReference.model,true),referenceHead=new THREE.Box3().setFromObject(standingReference.meshes.find(mesh=>mesh.name.includes('Helmet_')),true);
     const standingSizeRatio=bodyBounds.getSize(new THREE.Vector3()).y/(referenceHead.max.y-referenceBounds.min.y);standingReference.dispose();b.dispose();
     const fits=[];
-    for(const id of ['033','037','038']){
+    for(const id of ['037','038']){
       const ship=await createFlightShip(id,{pilot:'ajo',exhaust:false}),actor=ship.pilot.actor;
       ship.root.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(actor.model,true);
       const head=new THREE.Box3().setFromObject(actor.meshes.find(mesh=>mesh.name.includes('Cat_Head')),true);

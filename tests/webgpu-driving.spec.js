@@ -1,7 +1,7 @@
 import {test,expect} from '@playwright/test';
 import {openFlightOptions,withFlightOptions} from './helpers/flight.js';
 
-for(const [backend,map,vehicle] of [['webgpu','ruins','037'],['webgl2','nexus','033'],['webgpu','mario-raceway','038'],['webgl2','mario-raceway','038']]){
+for(const [backend,map,vehicle] of [['webgpu','ruins','037'],['webgl2','nexus','037'],['webgpu','mario-raceway','038'],['webgl2','mario-raceway','038']]){
  test(`driving ${backend} ${map}`,async({page})=>{
   test.setTimeout(240000);const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.goto(`/simulator.html?selection=map${backend==='webgl2'?'&renderer=webgl2':''}&map=${map}&vehicle=${vehicle}&camera=klipp&pilot=${backend==='webgl2'&&vehicle==='038'?'zudmatic':'zud'}`);
@@ -33,7 +33,7 @@ for(const [backend,map,vehicle] of [['webgpu','ruins','037'],['webgl2','nexus','
 
 test('WebGPU legacy race links launch free driving, pause and restart',async({page})=>{
  test.setTimeout(180000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto('/simulator.html?selection=map&renderer=webgpu&map=nexus&vehicle=033&mode=race');
+ await page.goto('/simulator.html?selection=map&renderer=webgpu&map=nexus&vehicle=037&mode=race');
  await page.getByRole('button',{name:'Volar',exact:true}).click();const app=page.locator('.flight-app');
  await expect(app).toHaveAttribute('data-ready','true',{timeout:120000});await expect(app).toHaveAttribute('data-phase','flying');
  await page.keyboard.press('Escape');await expect(app).toHaveAttribute('data-phase','paused');

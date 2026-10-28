@@ -1,5 +1,5 @@
 import {test,expect} from '@playwright/test';
-for(const backend of ['webgpu','webgl','webgl2'])for(const [map,vehicle] of [['ruins','037'],['nexus','033']]){
+for(const backend of ['webgpu','webgl','webgl2'])for(const [map,vehicle] of [['ruins','037'],['nexus','037']]){
  test(`base render ${backend} ${map} ${vehicle}`,async({page})=>{
   test.setTimeout(90000);const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.setViewportSize({width:1200,height:800});

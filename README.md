@@ -1,6 +1,6 @@
 # Biggas Hover Racing
 
-Juego de carreras hover en 3D con Zud, Zudmatic, Ajo, Bluleet y Lomi, las naves 033, Oliva 037, Nómada 038, Bulldog 039, Bluleet Hover Kart y Lomi 040, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
+Juego de carreras hover en 3D con Zud, Zudmatic, Ajo, Bluleet y Lomi, las naves Zudoneta, Nómada 038, Bulldog 039, Bluleet Hover Kart y Lomi 040, y los circuitos Ruinas 034, Nexus 035 y Mario Raceway (N64). Zudoneta usa el modelo v07 con carrocería integrada, apoyos de alerón y juntas mecánicas y ofrece la pintura original más Cobalto, Carmesí, Turquesa y Violeta; la elección se conserva entre hangar, selección y carrera. Incluye selección de equipo, hangar interactivo, acabado cómic/papel, turbo, derrape, iluminación dinámica y música integrada.
 
 ## Desarrollo
 
@@ -112,13 +112,13 @@ npm run dev
 
 En la landing, **Jugar** abre la selección de personaje, nave, circuito y modo. El enlace **Hangar** permite inspeccionar las naves y sus componentes. Desde el hangar se puede volver al inicio o abrir la selección de partida con la nave elegida.
 
-Las rutas del juego aceptan `?vehicle=033|037|038|039|bluleet|040`, `?map=ruins|nexus|mario-raceway` y `?comic=0|1`. El hangar acepta las mismas naves. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic|ajo|bluleet|lomi` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
+Las rutas del juego aceptan `?vehicle=037|038|039|bluleet|040`, `?map=ruins|nexus|mario-raceway` y `?comic=0|1`. El hangar acepta las mismas naves. Zudoneta (037) es la nave predeterminada; los enlaces antiguos de la 033 abren Zudoneta. El enlace anterior `/?view=spaceship` sigue abriendo el hangar. Ambas vistas aceptan `pilot=zud|zudmatic|ajo|bluleet|lomi` y `palette=Original|Matcha|Lavanda|Coral|Bosque` y `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`.
 
 **Bluleet** incluye el personaje original con ojos en espiral, acabado de tinta y contorno amarillo/rojo, junto con su hover kart texturizado. Se puede elegir en el menú, inspeccionar en el hangar y conducir en los circuitos. El kart selecciona a Bluleet por defecto cuando no se indica otro piloto; la tinta del personaje permanece activa con `comic=0`. El estudio permite ajustar la pose y el acabado por separado; el juego comparte la pose sentada y el agarre del volante. La integración conserva los GLB originales y calcula la pose sobre el esqueleto al cargar.
 
 **Zud** permite elegir el gorro original o los sombreros Samurai Kasa, Cloud Chef y Crescent Wizard. Los tres GLB y sus ajustes de encaje se recuperaron del historial anterior a `b0233e0`. La selección se conserva al cambiar de nave, entrar en pista y visitar el hangar.
 
-**Zudmatic** usa el GLB con rig y animaciones del paquete `Personaje-rig-shader-animaciones-5-paletas`. Sus cinco paletas se eligen en la selección de personaje; Bosque conserva los colores particulares de sus piezas. La vista previa reproduce Reposo y las naves 033 y 037 usan una pose sentada con escala uniforme de `0.31`, pelvis anclada al asiento y el desplazamiento de cabina de cada vehículo. La elección acompaña al jugador en la pista, el hangar y el regreso a la selección.
+**Zudmatic** usa el GLB con rig y animaciones del paquete `Personaje-rig-shader-animaciones-5-paletas`. Sus cinco paletas se eligen en la selección de personaje; Bosque conserva los colores particulares de sus piezas. La vista previa reproduce Reposo y la Zudoneta usa una pose sentada con escala uniforme de `0.31`, pelvis anclada al asiento y el desplazamiento de cabina de cada vehículo. La elección acompaña al jugador en la pista, el hangar y el regreso a la selección.
 
 **Lomi** comparte el esqueleto de Ajo; ambos se sientan con `src/mannequin-pilot.js`.
 
@@ -139,7 +139,7 @@ La suspensión flota sobre cambios de pendiente y el casco se asienta gradualmen
 al acelerar, frenar y contravolantear. Espacio mantiene un frenado firme; E amplía
 el derrape. Ver [referencia, ajustes y pruebas de conducción](docs/hover-handling.md).
 
-**Propulsor · WebGPU** en DialKit ajusta la llama, el motor incandescente, los fragmentos, las brasas, las chispas lineales y el tramado. Turbo usa la paleta azul; la aceleración normal usa rojo. La estela sigue el movimiento y la escala de la nave. La 033 emite desde dos toberas, Oliva desde tres y Nómada desde una. Los ajustes se guardan en el navegador.
+**Propulsor · WebGPU** en DialKit ajusta la llama, el motor incandescente, los fragmentos, las brasas, las chispas lineales y el tramado. Turbo usa la paleta azul; la aceleración normal usa rojo. La estela sigue el movimiento y la escala de la nave. Zudoneta emite desde tres toberas y Nómada desde una. Los ajustes se guardan en el navegador.
 
 Para comparar el nuevo humo, abrí **Humo · comparación** en DialKit: **A · Fragmentos procedurales**, **B · Humo híbrido** (predeterminado) o **C · Mixto**. Los valores iniciales son tamaño 1,3, duración 1,5, color `#bababa`, densidad 1, trama 1,5 y emisión desde cuatro ruedas desactivada. Podés cambiar el color y el tramado en vivo; los ajustes se guardan en el navegador. Acelerá con W y combiná E con A/D para derrapar: en recta no aparece humo de derrape. Cada variante introduce formas, giros y tiempos distintos por partícula. El selector devuelve el foco al juego y limpia el humo anterior.
 
@@ -231,7 +231,7 @@ las vistas activas del juego, con fallback WebGL2 sobre la misma base TSL.
 - `webgpu-preview.html`: WebGPU con cómic; fallback automático si no hay WebGPU.
 - `webgpu-preview.html?backend=webgl`: referencia GLSL original con el mismo encuadre.
 - `webgpu-preview.html?backend=webgl2`: fuerza el fallback del renderer nuevo.
-- `look=base`, `map=nexus` y `vehicle=033` permiten cambiar la comparación inicial.
+- `look=base`, `map=nexus` y `vehicle=037` permiten cambiar la comparación inicial.
 
 DialKit permite alternar cómic, puntos, rayado, contornos, color, trama en objeto
 u pantalla, día/noche, faros, sombras y recorrido. `Recorrer` desplaza la nave por

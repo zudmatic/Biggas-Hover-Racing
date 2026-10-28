@@ -82,8 +82,8 @@ test('Lomi hangar shows ten meshes in five groups with no canopy controls',async
 test('Lomi 040 is the last vehicle in the lobby and flies Mario Raceway on the singularity engine',async({page})=>{
   test.setTimeout(150000);await page.setViewportSize({width:1100,height:800});await page.emulateMedia({reducedMotion:'reduce'});const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.goto('/?pilot=zudmatic&map=mario-raceway&mode=free');await page.getByRole('button',{name:'Jugar',exact:true}).click();await page.getByRole('button',{name:'Confirmar Zudmatic',exact:true}).click();
-  await page.locator('[data-vehicle-choice="033"]').focus();await page.keyboard.press('End');const lobby=page.locator('.race-lobby'),canvas=page.locator('.lobby-preview-canvas');
-  await expect(lobby).toHaveAttribute('data-vehicle','040');await expect(page.locator('[data-screen="2"] .lobby-section-title>span')).toHaveText('06 / 09');await expect(canvas).toHaveAttribute('data-ready','true',{timeout:60000});await expect(canvas).toHaveAttribute('data-vehicle','040');
+  await page.locator('[data-vehicle-choice="037"]').focus();await page.keyboard.press('End');const lobby=page.locator('.race-lobby'),canvas=page.locator('.lobby-preview-canvas');
+  await expect(lobby).toHaveAttribute('data-vehicle','040');await expect(page.locator('[data-screen="2"] .lobby-section-title>span')).toHaveText('05 / 09');await expect(canvas).toHaveAttribute('data-ready','true',{timeout:60000});await expect(canvas).toHaveAttribute('data-vehicle','040');
   const img=page.locator('[data-vehicle-choice="040"] img');await expect(img).toHaveAttribute('src',/040-paper.png$/);await expect.poll(()=>img.evaluate(i=>i.complete&&i.naturalWidth>0)).toBe(true);
   await page.screenshot({path:'.context/lomi-selection.png'});await page.getByRole('button',{name:'Confirmar nave',exact:true}).click();await page.getByRole('button',{name:'Volar',exact:true}).click();
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:120000});await expect(app).toHaveAttribute('data-vehicle','040');await expect(app).toHaveAttribute('data-phase','flying',{timeout:15000});
@@ -107,4 +107,19 @@ test('Lomi 040 flies Mario Raceway on the WebGL2 backend',async({page})=>{
   for(const key of ['KeyW','ShiftLeft'])await page.keyboard.up(key);
   const before=Number(await app.getAttribute('data-frame'));await expect.poll(async()=>Number(await app.getAttribute('data-frame')),{timeout:15000}).toBeGreaterThan(before+5);
   await page.screenshot({path:'.context/lomi-flight-webgl2.png'});expect(errors).toEqual([]);
+});
+
+test('Lomi hangar drives the racing singularities during flight and respects reduced motion',async({page})=>{
+  test.setTimeout(90000);
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+  await page.goto('/spaceship.html?vehicle=040&renderer=webgl2');const stage=page.locator('.ship-viewport');
+  await expect(stage).toHaveAttribute('data-ready','true',{timeout:60000});await expect(stage).toHaveAttribute('data-engine','singularity');
+  await page.getByRole('button',{name:'Atrás',exact:true}).click();await page.getByLabel('Tiempo de la animación').fill('8');
+  await expect.poll(async()=>Number(await stage.getAttribute('data-engine-power'))).toBeGreaterThan(0);
+  const power=await stage.getAttribute('data-engine-power'),frame=Number(await stage.getAttribute('data-frame'));
+  await expect.poll(async()=>Number(await stage.getAttribute('data-frame'))).toBeGreaterThan(frame+2);await expect(stage).toHaveAttribute('data-engine-power',power);
+  await page.getByRole('button',{name:'Iniciar vuelo',exact:true}).click();await expect.poll(async()=>Number(await stage.getAttribute('data-engine-power'))).toBeGreaterThan(Number(power));
+  await page.getByRole('button',{name:'Pausar vuelo',exact:true}).click();await page.screenshot({path:'.context/hangar-lomi-propulsion.png'});
+  await page.emulateMedia({reducedMotion:'reduce'});await expect(stage).toHaveAttribute('data-engine-power','0.000');
+  await page.getByRole('button',{name:'Restablecer vista y nave'}).click();await expect(stage).toHaveAttribute('data-engine-power','0.000');expect(errors).toEqual([]);
 });

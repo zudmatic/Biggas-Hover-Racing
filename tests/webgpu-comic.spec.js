@@ -7,7 +7,7 @@ async function frames(page){
   const before=Number(await page.locator('body').getAttribute('data-frame'));
   await expect.poll(async()=>Number(await page.locator('body').getAttribute('data-frame')),{timeout:90000}).toBeGreaterThan(before+3);
 }
-for(const backend of ['webgpu','webgl2'])for(const [map,vehicle] of [['ruins','037'],['nexus','033']]){
+for(const backend of ['webgpu','webgl2'])for(const [map,vehicle] of [['ruins','037'],['nexus','037']]){
   test(`comic ${backend} ${map} ${vehicle}`,async({page})=>{
     test.setTimeout(240000);
     const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});

@@ -17,21 +17,21 @@ test('Zudmatic previews all five palettes, supports keyboard selection and retai
   }
   await page.screenshot({path:'.context/zudmatic-selection.png'});
   await page.getByRole('button',{name:'Confirmar Zudmatic',exact:true}).click();
-  for(const vehicle of ['037','033']){await page.locator(`[data-vehicle-choice="${vehicle}"]`).click();await expect(canvas).toHaveAttribute('data-ready','true',{timeout:60000});await expect(canvas).toHaveAttribute('data-pilot','zudmatic');await expect(canvas).toHaveAttribute('data-palette','Bosque');}
+  for(const vehicle of ['038','037']){await page.locator(`[data-vehicle-choice="${vehicle}"]`).click();await expect(canvas).toHaveAttribute('data-ready','true',{timeout:60000});await expect(canvas).toHaveAttribute('data-pilot','zudmatic');await expect(canvas).toHaveAttribute('data-palette','Bosque');}
   await page.getByRole('button',{name:'Confirmar nave',exact:true}).click();await expect(page.locator('.lobby-team')).toContainText('ZUDMATIC');await page.getByRole('button',{name:'Volar',exact:true}).click();
   const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});await expect(app).toHaveAttribute('data-pilot','zudmatic');await expect(app).toHaveAttribute('data-palette','Bosque');expect(new URL(page.url()).searchParams.get('palette')).toBe('Bosque');
   await page.keyboard.press('Escape');await page.locator('.flight-team-link').click();await expect(lobby).toHaveAttribute('data-pilot','zudmatic');await expect(lobby).toHaveAttribute('data-palette','Bosque');
   await page.getByRole('link',{name:'Hangar',exact:true}).click();await expect(page.locator('.ship-viewport')).toHaveAttribute('data-ready','true',{timeout:60000});await page.getByLabel('Zudmatic al mando',{exact:true}).check();await expect(page.locator('.ship-viewport')).toHaveAttribute('data-pilot','true');
-  await page.getByRole('link',{name:'Oliva 037',exact:true}).click();await expect(page.locator('.ship-viewport')).toHaveAttribute('data-ready','true',{timeout:60000});await page.getByLabel('Zudmatic al mando',{exact:true}).check();
+  await page.getByRole('link',{name:'Zudoneta',exact:true}).click();await expect(page.locator('.ship-viewport')).toHaveAttribute('data-ready','true',{timeout:60000});await page.getByLabel('Zudmatic al mando',{exact:true}).check();
   await page.getByRole('link',{name:'Simulador de vuelo'}).click();await expect(lobby).toHaveAttribute('data-vehicle','037');await expect(lobby).toHaveAttribute('data-pilot','zudmatic');await expect(lobby).toHaveAttribute('data-palette','Bosque');expect(errors).toEqual([]);
 });
 
-test('palettes preserve part overrides, actors are independent and seated rigs fit both cockpits while turning',async({page})=>{
+test('palettes preserve part overrides, actors are independent and seated rigs fit the Zudoneta cockpit while turning',async({page})=>{
   test.setTimeout(60000);await page.goto('/');
   const result=await page.evaluate(async()=>{
     const THREE=await import('/node_modules/three/build/three.module.js');const {createFlightShip}=await import('/src/flight-ship.js');const {ZUDMATIC_PALETTES}=await import('/src/pilot-catalog.js');
     const results=[];
-    for(const id of ['033','037']){
+    for(const id of ['037']){
       const ship=await createFlightShip(id,{pilot:'zudmatic',palette:'Original'}),actor=ship.pilot.actor;
       const checks=ZUDMATIC_PALETTES.map(p=>{actor.setPalette(p.name);return actor.meshes.every(m=>m.material.color.getHexString()===(p.parts?.[m.userData.partId]??p.colors[m.userData.colorKey]).slice(1));});
       ship.root.updateMatrixWorld(true);const box=new THREE.Box3().setFromObject(actor.root),pelvis=actor.bones.pelvis.getWorldPosition(new THREE.Vector3());

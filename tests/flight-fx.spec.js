@@ -38,7 +38,7 @@ test('marks follow ramps, skip holes and never bridge a teleport',()=>{
   const hole=setup({surfaceHeight:()=>null});for(let i=0;i<40;i++){hole.s.z+=.4;hole.fx.update(1/60,{state:hole.s});}expect(hole.fx.stats.marks).toBe(0);hole.fx.dispose();
 });
 
-for(const [map,vehicle] of [['ruins','033'],['nexus','037']])test(`drift and braking render on ${map} with ${vehicle} and reset on recovery`,async({page})=>{
+for(const [map,vehicle] of [['ruins','037'],['nexus','037']])test(`drift and braking render on ${map} with ${vehicle} and reset on recovery`,async({page})=>{
   test.setTimeout(120000);const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
   await page.goto(`/simulator.html?vehicle=${vehicle}&map=${map}`);await launchFromLobby(page,{map});const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:60000});
   await page.keyboard.down('KeyW');await expect.poll(async()=>Number(await app.getAttribute('data-speed')),{timeout:15000}).toBeGreaterThan(18);await page.keyboard.up('KeyW');

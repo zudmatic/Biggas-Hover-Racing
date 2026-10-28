@@ -94,5 +94,12 @@ export function createComicMaterials(root,style){
   });
   }
   refresh();
-  return {refresh,setEnabled(on){for(const b of bindings)b.mesh.material=on?b.printed:b.source;},sync(){for(const [src,m] of cache)m.emissiveIntensity=src.emissiveIntensity??1;},dispose(){for(const b of bindings)b.mesh.material=b.source;for(const m of cache.values())m.dispose();}};
+  return {refresh,setEnabled(on){for(const b of bindings)b.mesh.material=on?b.printed:b.source;},sync(){
+    for(const [src,m] of cache){
+      // Paint variants replace the albedo map after the first render. Keep the
+      // cached paper material on that map instead of tinting the original paint.
+      if(m.map!==src.map){m.map=src.map;m.needsUpdate=true;}
+      m.emissiveIntensity=src.emissiveIntensity??1;
+    }
+  },dispose(){for(const b of bindings)b.mesh.material=b.source;for(const m of cache.values())m.dispose();}};
 }

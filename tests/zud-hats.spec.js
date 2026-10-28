@@ -41,7 +41,7 @@ test('restored hats attach to both seated pilots, hide the beanie, and release t
   const result=await page.evaluate(async()=>{
     const THREE=await import('/node_modules/three/build/three.module.js');const {createSelectablePilot}=await import('/src/selectable-pilot.js');const {SHIPS}=await import('/src/ship-catalog.js');
     const results=[];
-    for(const id of ['033','037']){
+    for(const id of ['038','037']){
       const driver=await createSelectablePilot({hat:'beanie',offset:SHIPS[id].pilotOffset}),actor=driver.actor;
       for(const hat of ['samurai_kasa','cloud_chef','crescent_wizard']){
         await actor.setHat(hat);const anchor=actor.root.getObjectByName('Sombreros de Zud');driver.root.updateMatrixWorld(true);
@@ -63,11 +63,11 @@ test('chosen hat travels through both ships, flight, the hangar and the return t
   test.setTimeout(120000);await page.setViewportSize({width:960,height:640});await page.emulateMedia({reducedMotion:'reduce'});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/?hat=crescent_wizard');
   for(const name of ['Jugar','Confirmar Zud'])await page.getByRole('button',{name,exact:true}).click();
-  const canvas=page.locator('.lobby-preview-canvas');for(const vehicle of ['033','037']){await page.locator(`[data-vehicle-choice="${vehicle}"]`).click();await expect(canvas).toHaveAttribute('data-ready','true',{timeout:30000});await expect(canvas).toHaveAttribute('data-hat','crescent_wizard');}
+  const canvas=page.locator('.lobby-preview-canvas');for(const vehicle of ['038','037']){await page.locator(`[data-vehicle-choice="${vehicle}"]`).click();await expect(canvas).toHaveAttribute('data-ready','true',{timeout:30000});await expect(canvas).toHaveAttribute('data-hat','crescent_wizard');}
   await page.getByRole('button',{name:'Confirmar nave',exact:true}).click();await page.getByRole('button',{name:'Volar',exact:true}).click();
   await expect(page.locator('.flight-app')).toHaveAttribute('data-ready','true',{timeout:60000});await expect(page.locator('.flight-app')).toHaveAttribute('data-hat','crescent_wizard');
   await page.keyboard.press('Escape');await page.locator('.flight-team-link').click();await expect(page.locator('.race-lobby')).toHaveAttribute('data-hat','crescent_wizard');
   await page.getByRole('link',{name:'Hangar',exact:true}).click();await expect(page.locator('.ship-viewport')).toHaveAttribute('data-ready','true',{timeout:30000});await expect(page.locator('.ship-viewport')).toHaveAttribute('data-hat','crescent_wizard');await page.getByLabel('Zud al mando',{exact:true}).check();
-  await page.getByRole('link',{name:'Nave 033',exact:true}).click();await expect(page.locator('.ship-viewport')).toHaveAttribute('data-ready','true',{timeout:30000});await expect(page.locator('.ship-viewport')).toHaveAttribute('data-hat','crescent_wizard');
+  await page.getByRole('link',{name:'Nómada 038',exact:true}).click();await expect(page.locator('.ship-viewport')).toHaveAttribute('data-ready','true',{timeout:30000});await expect(page.locator('.ship-viewport')).toHaveAttribute('data-hat','crescent_wizard');
   await page.getByRole('link',{name:'Simulador de vuelo'}).click();await expect(page.locator('.race-lobby')).toHaveAttribute('data-hat','crescent_wizard');expect(errors).toEqual([]);
 });

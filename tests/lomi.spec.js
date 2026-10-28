@@ -24,7 +24,7 @@ for(const backend of ['webgpu','webgl2'])test(`Lomi can select every ship, fly a
   await page.locator('[data-pilot-choice=ajo]').click();await page.locator('[data-pilot-choice=lomi]').click();
   await expect(lobby).toHaveAttribute('data-preview','ready',{timeout:60000});await expect(canvas).toHaveAttribute('data-pilot','lomi');
   await page.getByRole('button',{name:'Confirmar Lomi',exact:true}).click();
-  for(const id of ['037','038','039','033']){
+  for(const id of ['037','038','039']){
     await page.locator(`[data-vehicle-choice="${id}"]`).click();await expect(canvas).toHaveAttribute('data-vehicle',id);
     await expect(canvas).toHaveAttribute('data-ready','true',{timeout:60000});await expect(canvas).toHaveAttribute('data-pilot','lomi');
   }
@@ -38,8 +38,8 @@ for(const backend of ['webgpu','webgl2'])test(`Lomi can select every ship, fly a
   await expect(app).toHaveAttribute('data-phase','flying');await page.keyboard.press('Escape');await page.locator('.flight-team-link').click();await expect(lobby).toHaveAttribute('data-pilot','lomi');
   await page.getByRole('link',{name:'Hangar',exact:true}).click();
   const stage=page.locator('.ship-viewport');
-  for(const id of ['033','037','038','039']){
-    if(id!=='033')await page.locator(`.ship-picker a[href*="vehicle=${id}"]`).click();
+  for(const id of ['037','038','039']){
+    await page.locator(`.ship-picker a[href*="vehicle=${id}"]`).click();
     await expect(stage).toHaveAttribute('data-ready','true',{timeout:60000});await page.getByLabel('Lomi al mando',{exact:true}).check();await expect(stage).toHaveAttribute('data-pilot','true');
   }
   await page.getByRole('link',{name:'Simulador de vuelo'}).click();
@@ -65,7 +65,7 @@ test('Lomi retains independent rigs and textures, stands still with lowered arms
     const standingReference=await createZudmaticModel();b.root.updateMatrixWorld(true);standingReference.root.updateMatrixWorld(true);
     const standingSizeRatio=new THREE.Box3().setFromObject(b.model,true).getSize(new THREE.Vector3()).y/new THREE.Box3().setFromObject(standingReference.model,true).getSize(new THREE.Vector3()).y;standingReference.dispose();b.dispose();
     const fits=[];
-    for(const id of ['033','037','038','039']){
+    for(const id of ['037','038','039']){
       const bike=id==='038',ship=await createFlightShip(id,{pilot:'lomi',exhaust:false}),actor=ship.pilot.actor,reference=await createFlightShip(id,{pilot:'ajo',exhaust:false});
       ship.root.updateMatrixWorld(true);reference.root.updateMatrixWorld(true);
       const above=pilot=>new THREE.Box3().setFromObject(pilot.model,true).max.y-pilot.bones.pelvis.getWorldPosition(new THREE.Vector3()).y;

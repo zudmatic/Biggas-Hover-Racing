@@ -1,24 +1,26 @@
 import * as THREE from 'three';
+import {createShipLivery} from './ship-livery.js';
 import {createLocalExhaust} from './vfx/local-exhaust.js';
 import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {mergeGeometries} from 'three/addons/utils/BufferGeometryUtils.js';
 import {createShipCloth} from './ship-cloth.js';
 import {createShipEyes} from './ship-eyes.js';
 import {createShipPilot} from './ship-pilot.js';
-import {shipConfig,shipUrl,shipCanopy,prepareShipModel} from './ship-catalog.js';
+import {DEFAULT_SHIP,shipConfig,shipUrl,shipCanopy,prepareShipModel} from './ship-catalog.js';
 import {createLomiPlasma} from './vfx/lomi-plasma.js';
 import {loadEnergyTextures} from './vfx/lomi-energy.js';
 
-export async function createFlightShip(id='033',choice={}){
+export async function createFlightShip(id=DEFAULT_SHIP,choice={}){
   const config=shipConfig(id);
   const gltf=await new GLTFLoader().loadAsync(shipUrl(config.id)),source=gltf.scene;
   prepareShipModel(source,config);
+  const livery=createShipLivery(source,config,choice.livery);
   const pilot=await createShipPilot(source,gltf.animations,config,{...choice,pilot:choice.pilot??config.defaultPilot});
   // Rigged parts (eye pivots, morphing lids and tongue) stay live; the rest is baked into batches.
   const live=[];if(config.liveNodes)source.traverse(node=>{if(config.liveNodes.test(node.name))live.push(node);});
   const liveParts=new Set();for(const node of live)node.traverse(part=>liveParts.add(part));
   const canopy=shipCanopy(source,config),excluded=new Set();if(config.removeCanopyInFlight)canopy?.traverse(o=>excluded.add(o));
-  const batches=new Map(),clothBatches=new Map(),cloth=[],headlamps=new Map(),root=new THREE.Group();root.name=`${config.title} · vuelo`;root.userData.vehicle=config.id;
+  const batches=new Map(),clothBatches=new Map(),cloth=[],headlamps=new Map(),root=new THREE.Group();root.name=`${config.title} · vuelo`;root.userData.vehicle=config.id;root.userData.livery=source.userData.livery;
   source.traverse(mesh=>{
     if(!mesh.isMesh||excluded.has(mesh)||liveParts.has(mesh))return;
     let geometry=mesh.geometry.clone().applyMatrix4(mesh.matrixWorld);
@@ -49,7 +51,8 @@ export async function createFlightShip(id='033',choice={}){
   // TSL plasma; the WebGL thumbnail script opts out.
   const anchors=live.filter(node=>!node.isMesh&&node.userData.shader==='lomi_ship_thrust');
   const plasma=config.engine==='singularity'&&choice.plasma!==false?createLomiPlasma(root,{crystals:live.filter(node=>node.userData.shader==='lomi_ship_crystal'),exhausts:anchors,nozzles:live.filter(node=>node.isMesh&&node.userData.shader==='lomi_ship_thrust'),scale:config.modelScale??1,textures:await loadEnergyTextures()}):null;
-  return {root,pilot,config,exhaust,eyes,anchors,plasma,dispose(){
+  return {root,pilot,config,exhaust,eyes,anchors,plasma,setLivery(id){root.userData.livery=livery.setLivery(id);},dispose(){
+    livery.dispose();
     exhaust.dispose();eyes?.dispose();plasma?.dispose();
     pilot.dispose();const geometries=new Set(),materials=new Set(),textures=new Set();
     for(const tree of [source,root])tree.traverse(mesh=>{if(!mesh.isMesh)return;geometries.add(mesh.geometry);for(const material of [].concat(mesh.material)){materials.add(material);for(const value of Object.values(material))if(value?.isTexture)textures.add(value);}});

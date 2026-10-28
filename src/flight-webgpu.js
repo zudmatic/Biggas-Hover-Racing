@@ -7,8 +7,7 @@ import {createComicStyle,createComicMaterials} from './comic-tsl-material.js';
 import {createComicPost} from './comic-tsl-post.js';
 import {createDesertPost} from './desert-post.js';
 import {createDesertLook} from './desert-look.js';
-import {createBoost} from './vfx/boost.js';
-import {createSingularityEngine} from './vfx/singularity-engine.js';
+import {createEngine} from './vfx/ship-engine.js';
 import {createLensUniforms} from './vfx/singularity-lens.js';
 import {createSmokeMaterial} from './vfx/smoke-material.js';
 import {createOilMaterial} from './vfx/oil.js';
@@ -18,9 +17,7 @@ export const oilMaterialFactory=()=>createOilMaterial(attribute('color','vec4').
 export async function createRenderer(canvas,forceWebGL){
   return createGameRenderer(canvas,{forceWebGL});
 }
-// Exhaust engines share one contract: stats, clear, setQuality, update, updatePost, dispose.
-const ENGINES={flame:createBoost,singularity:createSingularityEngine};
-export const createEngine=(renderer,scene,ship,options)=>ENGINES[ship.config.engine??'flame'](renderer,scene,ship,options);
+export {createEngine};
 
 // Rendering adapter only: the simulator owns physics, race timing and cameras.
 export async function createFlightWebGPU(renderer,scene,camera,vehicle,oil,{naturalDesert=false,boostPads=null}={}){

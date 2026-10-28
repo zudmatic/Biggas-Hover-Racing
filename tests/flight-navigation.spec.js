@@ -7,7 +7,7 @@ test('character preview stays on Zud while the preview and vehicle load',async({
   let releasePreview,releaseShip;
   const previewGate=new Promise(resolve=>releasePreview=resolve),shipGate=new Promise(resolve=>releaseShip=resolve);
   await page.route('**/src/flight-preview.js',async route=>{await previewGate;await route.continue();});
-  await page.route('**/models/spaceship/zud-033.glb',async route=>{await shipGate;await route.continue();});
+  await page.route('**/models/spaceship/zudoneta-037-v07.glb',async route=>{await shipGate;await route.continue();});
   await page.goto('/');
   const lobby=page.locator('.race-lobby'),canvas=page.locator('.lobby-preview-canvas'),fallback=page.locator('.lobby-preview-fallback');
   // The placeholder must already be Zud before the first selection is opened.
@@ -29,7 +29,7 @@ test('character preview stays on Zud while the preview and vehicle load',async({
     await expect(lobby).toHaveAttribute('data-preview','ready');
     await expect(canvas).toHaveAttribute('data-kind','pilot');
     const pilot=await canvas.screenshot();expect(pilot.equals(firstFrame)).toBe(true);
-    const loaded=page.waitForResponse('**/models/spaceship/zud-033.glb');releaseShip();await loaded;
+    const loaded=page.waitForResponse('**/models/spaceship/zudoneta-037-v07.glb');releaseShip();await loaded;
     // Visit the loaded vehicle, then return to the character to check the rendered result.
     await page.getByRole('button',{name:'Confirmar Zud',exact:true}).click();
     await expect(lobby).toHaveAttribute('data-preview','ready',{timeout:30000});

@@ -9,7 +9,7 @@ test('lid weights follow the four-pose trajectory from the rig contract, and gaz
   // A right turn (positive input) has a negative yaw rate: look right (+1).
   expect(gazeTarget({yawRate:-2})).toBe(1);expect(gazeTarget({yawRate:.7})).toBeCloseTo(-.5);expect(gazeTarget(undefined)+0).toBe(0);
   expect(GAZE_LIMIT).toBeCloseTo(3*Math.PI/180);expect(EYE_CLOSED).toBe(0);
-  expect(shipConfig('039').eyes).toBeDefined();for(const id of ['033','037','038'])expect(shipConfig(id).eyes).toBeUndefined();
+  expect(shipConfig('039').eyes).toBeDefined();for(const id of ['037','038'])expect(shipConfig(id).eyes).toBeUndefined();
 });
 
 test('the Bulldog flight model drives its rig: gaze, idle blinks and the authored collision reaction',async({page})=>{
@@ -29,7 +29,7 @@ test('the Bulldog flight model drives its rig: gaze, idle blinks and the authore
     run(2.2);samples.after=[eyes.closure,eyes.tongue];
     run(.1,{impact:1.6,impactSerial:2});samples.scrape=eyes.tongue;
     eyes.hold(0);samples.held=eyes.closure;eyes.hold(null);
-    const others=[];for(const id of ['033','038']){const other=await createFlightShip(id,{exhaust:false});others.push(other.eyes);other.dispose();}
+    const others=[];for(const id of ['037','038']){const other=await createFlightShip(id,{exhaust:false});others.push(other.eyes);other.dispose();}
     ship.dispose();return {...samples,others};
   });
   expect(r.live).toEqual([true,true,true,true,true,true]);

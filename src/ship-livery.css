@@ -1,0 +1,15 @@
+.ship-liveries{border:0;padding:0;margin:0 0 20px;min-width:0;pointer-events:auto}
+.ship-liveries legend{font-size:10px;font-weight:900;letter-spacing:1px;margin-bottom:10px}
+.ship-livery-name{font-weight:500;letter-spacing:0;margin-left:8px}
+.ship-liveries>div{display:flex;flex-wrap:wrap;gap:8px}
+.ship-liveries button{display:grid;place-items:center;width:44px;height:44px;padding:4px;border:2px solid #111;border-radius:50%;background:#fff;cursor:pointer}
+.ship-liveries button span{width:100%;height:100%;border-radius:50%;background:conic-gradient(var(--paint-main) 0 50%,var(--paint-base) 50% 85%,var(--paint-accent) 85%)}
+.ship-liveries button[aria-pressed=true]{box-shadow:0 0 0 3px #ffd730}
+.ship-liveries button:focus-visible{outline:3px solid #008dca;outline-offset:5px}
+.ship-panel .ship-liveries{padding:0 0 18px;margin:0 0 18px;border-bottom:1px solid #ccc}
+.ship-panel .ship-liveries button{width:40px;height:40px}
+.ship-panel .ship-liveries legend{float:left;width:100%;margin-top:0}
+.ship-panel .ship-liveries>div{clear:both}
+.race-lobby[data-vehicle='037'] [data-screen='2'] .lobby-profile-brand{display:none}
+@media(max-width:760px){.ship-liveries button{width:36px;height:36px}.ship-livery-name{display:block;margin:4px 0 0}.race-lobby[data-vehicle='037'] [data-screen='2'] .lobby-profile{width:45%}}
+@media(max-height:520px) and (orientation:landscape){.ship-liveries{margin-bottom:6px}.ship-liveries button{width:30px;height:30px}.ship-liveries legend{margin-bottom:6px}.race-lobby[data-vehicle='037'] .lobby-specs{display:none}}
