@@ -21,6 +21,7 @@ import {
   type Scene,
 } from 'three';
 import type {Disposable} from '@/core/disposable';
+import {CIRCUIT_SPEED} from '@/sim/hover-physics';
 import {DesertSky} from './desert-sky';
 import {createStarField, createSunDisc, seededRandom, type Sky, type SkyUpdateOptions} from './sky';
 
@@ -271,11 +272,11 @@ export function speedCameraProfile<L extends CameraLens = CameraLens>(
   state: SpeedCameraState,
   {reducedMotion = false, cameraMode = 0, lens = {} as L}: SpeedCameraOptions<L> = {},
 ): SpeedCameraProfile<L> {
-  const speed = clamp(state.speed / 72, 0, 1);
+  const speed = clamp(state.speed / CIRCUIT_SPEED, 0, 1);
   const rush = reducedMotion ? 0 : MathUtils.smoothstep(state.speed, 8, 60);
-  const response = reducedMotion ? 0 : speed * speed * (lens.speed ?? 12) + (state.boosting ? (lens.boost ?? 14) : 0);
+  const response = reducedMotion ? 0 : speed * speed * (lens.speed ?? 8) + (state.boosting ? (lens.boost ?? 7) : 0);
   return {
-    fov: Math.min(110, (lens.base ?? 62) + response * (cameraMode === 1 ? 0.7 : 1)),
+    fov: Math.min(110, (lens.base ?? 65) + response * (cameraMode === 1 ? 0.7 : 1)),
     lens,
     distance: cameraMode === 1 ? 24 : cameraMode === 2 ? -1.7 : 10 - rush * 1.2,
     height: cameraMode === 1 ? 12 : cameraMode === 2 ? 2.4 : 5.5 - rush * 0.65,

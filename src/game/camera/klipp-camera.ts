@@ -4,6 +4,7 @@ import {createDialKit} from '@/core/debug/dials';
 import {DisposableGroup, type Disposable} from '@/core/disposable';
 import type {HoverState} from '@/sim/hover-state';
 import {smoothCameraFov, type LensResponse} from './camera-fov';
+import {CameraMotion, CAMERA_MOTION} from './camera-motion';
 
 /** What the camera needs from the track to stay above ground and outside walls. */
 export interface CameraCollider {
@@ -39,11 +40,19 @@ function createCameraDials(enabled: boolean) {
       Sistema: {type: 'select', options: ['Actual', 'Klipp'], default: enabled ? 'Klipp' : 'Actual'},
       'Retorno detrás': [1.2, 0.1, 2, 0.05],
       'Espera mouse': [0.7, 0, 2, 0.1],
-      Distancia: [8.5, 6, 30, 0.5],
+      Distancia: [CAMERA_MOTION.distance, 6, 30, 0.5],
       Altura: [4, 2, 15, 0.25],
       Lateral: [0, -5, 5, 0.1],
+      'Distancia por velocidad': [CAMERA_MOTION.speedDistance, 0, 6, 0.25],
+      'Distancia extra turbo': [CAMERA_MOTION.boostDistance, 0, 3, 0.25],
+      'Acercamiento al frenar': [CAMERA_MOTION.brakeDistance, 0, 2, 0.1],
+      'Suavizado distancia': [CAMERA_MOTION.distanceSmooth, 0.05, 1, 0.025],
+      'Entrada frenada': [CAMERA_MOTION.brakeAttack, 0.025, 0.5, 0.005],
+      'Salida frenada': [CAMERA_MOTION.brakeRelease, 0.05, 1, 0.025],
+      'Límite giro': [15, 0, 25, 1],
+      'Seguir derrape': [CAMERA_MOTION.driftFollow, 0, 0.5, 0.05],
       'Suavizado posición': [0.1, 0, 1, 0.025],
-      'Suavizado giro': [0.05, 0, 1, 0.025],
+      'Suavizado giro': [CAMERA_MOTION.turnSmooth, 0, 1, 0.01],
       'Suavizado mirada': [0, 0, 1, 0.025],
       Anticipación: [0, 0, 0.5, 0.025],
     },
@@ -62,6 +71,7 @@ export class KlippCamera implements Disposable {
   private readonly safePosition = new Vector3();
   private readonly rearPosition = new Vector3();
   private readonly events = new DisposableGroup();
+  private readonly motion = new CameraMotion();
   private readonly kit: ReturnType<typeof createCameraDials>;
   private klipp: KlippThree | null = null;
   private shot: VirtualCameraThree | null = null;
@@ -137,13 +147,18 @@ export class KlippCamera implements Disposable {
       this.reset();
       snap = true;
     }
+    const chase = this.motion.update(state, dt, {
+      snap, reduced, cameraMode, distance: v.Distancia,
+      speedDistance: v['Distancia por velocidad'], boostDistance: v['Distancia extra turbo'],
+      brakeDistance: v['Acercamiento al frenar'], distanceSmooth: v['Suavizado distancia'],
+      brakeAttack: v['Entrada frenada'], brakeRelease: v['Salida frenada'],
+      turnSmooth: v['Suavizado giro'], maxTurnAngle: v['Límite giro'] * Math.PI / 180,
+      driftFollow: v['Seguir derrape'],
+    });
+    this.heading = chase.heading;
     if (snap) {
-      this.heading = state.yaw;
       this.orbitYaw = this.orbitHeight = this.idle = 0;
     } else {
-      const delta = wrap(state.yaw - this.heading);
-      const smooth = v['Suavizado giro'];
-      this.heading = state.yaw - Math.max(-0.35, Math.min(0.35, delta * Math.exp(-dt / Math.max(0.001, smooth))));
       if (this.pointer === null) {
         this.idle += dt;
         if ((state.speed ?? 0) > 1 && this.idle >= v['Espera mouse']) {
@@ -158,7 +173,7 @@ export class KlippCamera implements Disposable {
     if (!klipp || !body || !aim) return;
     klipp.setSize(camera.aspect * 1000, 1000);
     const far = cameraMode === 1 ? 2 : 1;
-    body.offset = [v.Lateral, v.Altura * far, -v.Distancia * far];
+    body.offset = [v.Lateral, v.Altura * far, -chase.distance];
     body.damping = snap || reduced ? 0 : v['Suavizado posición'];
     body.rotationDamping = snap || reduced ? 0 : v['Suavizado giro'];
     aim.damping = snap || reduced ? 0 : v['Suavizado mirada'];
