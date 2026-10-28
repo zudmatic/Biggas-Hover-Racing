@@ -1,41 +1,42 @@
-import {SHIPS,prepareShipModel} from '../../src/ship-catalog.js';
-import {createShipCloth} from '../../src/ship-cloth.js';
+import {vehicles as vehicleDefinitions} from '../../src/content/vehicles/index';
+import {prepareVehicleModel} from '../../src/content/vehicles/vehicle-model';
+import {AssetLoader} from '../../src/core/assets/asset-loader';
+import {ShipCloth} from '../../src/content/vehicles/ship-cloth';
 import {createStudioCamera} from './studio-camera.js';
-import {createDither} from './dither.js';
-import {createEngineCore} from './engine-core.js';
-import {createFlameTrail} from './flame-trail.js';
+import {Dither} from './dither.js';
+import {EngineCore} from './engine-core.js';
+import {FlameTrail} from './flame-trail.js';
 import {createControls} from './controls.js';
-import {createFlightBoostPads} from '../../src/flight-boost-pads.js';
-import {createBoostPadControls} from '../../src/boost-pad-controls.js';
-import {createPadBoostPalette,smoothBoostPower} from '../../src/vfx/pad-boost-palette.js';
+import {BoostPads} from '../../src/game/boost-pads/boost-pads';
+import {BoostPadDials} from '../../src/game/boost-pads/boost-pad-dials';
+import {PadBoostPalette,smoothBoostPower} from '../../src/fx/exhaust/pad-boost-palette';
 import * as THREE from 'three/webgpu';
 import {mix,step,uniform,uv,float,sin,smoothstep,abs,vec4} from 'three/tsl';
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {createHeatHaze} from './heat-haze.js';
-import {VFXParticles,Appearance,Blending} from 'vanilla-vfx';
+import {VFXParticles,Appearance,Blending} from '../../src/fx/particles/vfx-particles';
 
 const $=s=>document.querySelector(s),status=$('#status');
 async function main(){
   const renderer=new THREE.WebGPURenderer({antialias:true,forceWebGL:new URLSearchParams(location.search).has('webgl')});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));$('main').append(renderer.domElement);await renderer.init();
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));$('main').append(renderer.domElement);await renderer.init();AssetLoader.shared.configure(renderer);
   const scene=new THREE.Scene();scene.background=new THREE.Color('#182b34');
   const camera=new THREE.PerspectiveCamera(45,1,.1,100);camera.position.set(7,4,-11);
   const orbit=new OrbitControls(camera,renderer.domElement);orbit.target.set(0,.6,-2);orbit.enableDamping=true;
   scene.add(new THREE.HemisphereLight(0xdff5ff,0x62432a,2));const light=new THREE.DirectionalLight(0xffe9ca,3);light.position.set(4,6,-5);scene.add(light);
   const grid=new THREE.GridHelper(30,30,0x6a8894,0x3c505b);grid.position.y=-.4;scene.add(grid);
-  const vehicles=Object.fromEntries(Object.values(SHIPS).map(config=>[config.id,{...config,nozzles:config.exhausts,cloth:[]}]));
+  const vehicles=Object.fromEntries(vehicleDefinitions.list().map(config=>[config.id,{...config,definitionCloth:config.cloth,nozzles:config.engine.exhausts,cloth:[]}]));
   await Promise.all(Object.values(vehicles).map(async v=>{
-    v.model=prepareShipModel((await new GLTFLoader().loadAsync('/models/spaceship/'+v.file)).scene,v);
-    v.model.traverse(mesh=>{if(mesh.isMesh&&v.clothName?.test(mesh.name))v.cloth.push(createShipCloth(mesh,mesh.matrixWorld));});
+    v.model=prepareVehicleModel((await AssetLoader.shared.gltf(v.model)).scene,v);
+    v.model.traverse(mesh=>{if(mesh.isMesh&&v.definitionCloth?.meshes.test(mesh.name))v.cloth.push(new ShipCloth(mesh,{toShip:mesh.matrixWorld}));});
   }));
-  const ship=new THREE.Group();scene.add(ship);ship.add(vehicles['033'].model);
-  let nozzles=vehicles['033'].nozzles;
+  const ship=new THREE.Group();scene.add(ship);ship.add(vehicles[vehicleDefinitions.resolve().id].model);
+  let nozzles=vehicles[vehicleDefinitions.resolve().id].nozzles;
 
   const ink=uniform(0),hot=uniform(new THREE.Color('#fff1bc')),fire=uniform(new THREE.Color('#ff6b16'));
   // Crossed, advected flame sheets keep combustion attached to each nozzle.
   const clock=uniform(0),roughness=uniform(2),frequency=uniform(1.2),flowSpeed=uniform(1),brightness=uniform(1.5),opacity=uniform(.7),taper=uniform(.65);
-  const fireDither=createDither();
+  const fireDither=new Dither();
   const flameMaterial=new THREE.MeshBasicNodeMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,blending:THREE.AdditiveBlending});
   // The translated plane starts at UV.y = 0 at the nozzle and ends at 1.
   const t=uv().y,x=uv().x.sub(.5).mul(2);
@@ -48,8 +49,8 @@ async function main(){
   const core=smoothstep(float(.7),float(.05),edge.add(t.mul(.7)));
   flameMaterial.colorNode=mix(fire,hot,core).mul(brightness);
   flameMaterial.opacityNode=fireDither.alpha(mask.mul(opacity));
-  let flameTrail=createFlameTrail(scene,flameMaterial,nozzles);
-  let engineCore=createEngineCore(ship,nozzles);
+  let flameTrail=new FlameTrail(scene,flameMaterial,nozzles);
+  let engineCore=new EngineCore(ship,nozzles);
   const rounded=uniform(1);
   const radial=uv().mul(2).sub(1).length();
   const roundMask=float(1).sub(smoothstep(float(.72),float(1),radial));
@@ -75,12 +76,12 @@ async function main(){
     if(action==='Restablecer')controls.reset();
   });
   const {kits}=controls;
-  const padPalette=createPadBoostPalette(),padEngineEdge=new THREE.Color(),padEngineCore=new THREE.Color();
+  const padPalette=new PadBoostPalette(),padEngineEdge=new THREE.Color(),padEngineCore=new THREE.Color();
   const studioCamera=createStudioCamera(camera,orbit,ship);
   const padState={x:5,y:0,z:0,speed:0,padBoostRemaining:0};
-  const pads=await createFlightBoostPads({scene,distances:[0],surfaceHeight:()=>-.4,
+  const pads=await BoostPads.load({scene,distances:[0],surfaceHeight:()=>-.4,
     landscape:{spawn:{x:5,z:0},roadAt:()=>({distance:0}),atDistance:()=>({x:5,z:0,y:-.4,nx:0,nz:1,grade:0})}});
-  const padControls=createBoostPadControls(pads,padState,()=>{
+  const padControls=new BoostPadDials(pads,padState,()=>{
     kits.camera.setValues({'Cámara':'Fija'});
     orbit.target.set(5,0,0);camera.position.set(12,8,-10);orbit.update();
   });
@@ -112,12 +113,12 @@ async function main(){
   }));
   let previousView,previousVehicle;
   unsubscribers.push(kits.studio.subscribe(v=>{
-    const id=v.Vehículo.slice(0,3);
+    const id=v.Vehículo.split(' · ')[0];
     if(id!==previousVehicle){
       flameTrail.dispose();engineCore.dispose();
       for(const vehicle of Object.values(vehicles))ship.remove(vehicle.model);
       nozzles=vehicles[id].nozzles;ship.add(vehicles[id].model);
-      flameTrail=createFlameTrail(scene,flameMaterial,nozzles);engineCore=createEngineCore(ship,nozzles);heat.setNozzles(nozzles);
+      flameTrail=new FlameTrail(scene,flameMaterial,nozzles);engineCore=new EngineCore(ship,nozzles);heat.setNozzles(nozzles);
       particles.clear();embers.clear();streaks.clear();accumulator=emberAccumulator=streakAccumulator=0;
       ship.updateMatrixWorld(true);flameTrail.record(time,ship);previousVehicle=id;document.body.dataset.ship=id;
     }
@@ -169,9 +170,10 @@ async function main(){
       document.body.dataset.boostSource=padState.padBoostRemaining>0?'placa':studio.Modo==='Turbo'?'nitro':'motor';
       document.body.dataset.camera=kits.camera.values['Cámara'];
       document.body.dataset.shipPosition=ship.position.toArray().join(',');
-      for(const cloth of vehicles[previousVehicle].cloth)cloth.update(time,power*52,studio.Modo==='Turbo',false);
-      engineCore.update(studio.Pausa?0:stepDt,time,power,{...kits.engine.values,'Color borde':padEngineEdge,'Color centro':padEngineCore});
-      flameTrail.update(time,flame,power,fragment.Velocidad,fragment.Elevación);
+      for(const cloth of vehicles[previousVehicle].cloth)cloth.animate(time,power*52,studio.Modo==='Turbo',false);
+      const engine=kits.engine.values;
+      engineCore.update(studio.Pausa?0:stepDt,time,power,{active:engine.Activo,depth:engine.Profundidad,intensity:engine.Intensidad,size:engine.Tamaño,cooling:engine.Enfriamiento,pulse:engine.Pulsación,nearLight:engine['Luz cercana'],edgeColor:padEngineEdge,centerColor:padEngineCore});
+      flameTrail.draw(time,flame,power);
       document.body.dataset.time=time.toFixed(3);
       heat.update(ship,time*haze['Velocidad ondas'],power,haze.Activa?haze.Intensidad:0,flame.Longitud*haze.Longitud/1.5,haze.Turbulencia,haze.Ancho);
       heat.updatePadField(pads.heatFields);

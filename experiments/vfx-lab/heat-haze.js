@@ -1,4 +1,4 @@
-import {createDither} from './dither.js';
+import {Dither} from './dither.js';
 import {comicFinish} from './toon-look.js';
 import * as THREE from 'three/webgpu';
 import {pass,screenUV,uniform,float,vec2,sin,mix,smoothstep} from 'three/tsl';
@@ -9,7 +9,7 @@ export function createHeatHaze(renderer,scene,camera){
   const source=scenePass.getTextureNode();
   const viewZ=scenePass.getViewZNode();
   const post=new THREE.PostProcessing(renderer);
-  const toon=uniform(1),dither=createDither();
+  const toon=uniform(1),dither=new Dither();
   const clock=uniform(0),strength=uniform(0),turbulence=uniform(2);
   const aspect=uniform(1),pixel=uniform(new THREE.Vector2());
   let nozzles=[[-.68,.62,-2.14,.24],[.68,.62,-2.14,.24]];
