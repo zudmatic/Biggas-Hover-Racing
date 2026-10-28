@@ -30,6 +30,12 @@ export abstract class Character implements Disposable {
   /** Advances idle or driving animation. `time` is in seconds. */
   abstract update(time: number, moving: boolean): void;
 
+  /** Present on characters with `customization.palettes`. */
+  setPalette?(name: string): void;
+
+  /** Present on characters with `customization.hats`; resolves once the hat is worn. */
+  setHat?(id: string): Promise<void>;
+
   dispose(): void {
     this.resources.dispose();
     this.root.removeFromParent();
@@ -43,9 +49,21 @@ export interface CharacterDefinition {
   readonly portrait: string;
   /** Lobby full-body card: public/images/flight/<preview>.png. */
   readonly preview: string;
+  /** False when the lobby cards have no -paper.png variants. */
+  readonly paperImages?: boolean;
   readonly customization: {readonly hats: boolean; readonly palettes: boolean};
   /** Procedural voice (@gitchad/babble) used by the voice system. */
   readonly voice?: BabbleOptions;
   /** Loads the model lazily; keep heavy imports inside. */
   create(options: CharacterOptions): Promise<Character>;
+}
+
+/** Seat names used by older vehicle data: the Nómada hoverbike and the Bluleet kart. */
+export type LegacySeatFit = 'cockpit' | 'nomada' | 'bluleet';
+
+/** Accepts both the SeatFit names and the legacy ones; anything else is a cockpit. */
+export function toSeatFit(fit: SeatFit | LegacySeatFit | null | undefined): SeatFit {
+  if (fit === 'saddle' || fit === 'nomada') return 'saddle';
+  if (fit === 'kart' || fit === 'bluleet') return 'kart';
+  return 'cockpit';
 }

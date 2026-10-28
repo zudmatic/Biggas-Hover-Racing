@@ -1,1 +1,1 @@
-export {createDither} from '../../src/render/shaders/dither';
+export {Dither} from '../../src/render/shaders/dither';

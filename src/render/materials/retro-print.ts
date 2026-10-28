@@ -1,9 +1,31 @@
-import * as THREE from 'three';
-import {retroStyle} from './retro-style';
+import {
+  CanvasTexture,
+  Color,
+  DepthTexture,
+  HalfFloatType,
+  LinearSRGBColorSpace,
+  MathUtils,
+  Mesh,
+  OrthographicCamera,
+  PlaneGeometry,
+  SRGBColorSpace,
+  Scene,
+  ShaderMaterial,
+  Vector2,
+  Vector4,
+  WebGLRenderTarget,
+  type Camera,
+  type ColorRepresentation,
+  type Object3D,
+  type PerspectiveCamera,
+  type WebGLRenderer,
+} from 'three';
+import type {Disposable} from '@/core/disposable';
+import {retroStyle, type RetroStyle} from './retro-style';
 import {PAPER_COLOR} from './paper';
 
 // The finishing pass for Retro Print 3D: the look itself lives in the model
-// and its shading (retro-material.js, surface-halftone.js). This pass develops
+// and its shading (retro-material.ts, surface-halftone.ts). This pass develops
 // the frame the way the reference was: filmic exposure, a warm glow off the
 // highlights, and white paper flaring softly into the silhouettes. With `comic`
 // (the opaque, full-frame use) it also prints on the paper, in this order:
@@ -20,7 +42,7 @@ import {PAPER_COLOR} from './paper';
 // run. Transparent comic previews share the object's print treatment, while
 // leaving the paper to the scene behind them.
 
-const fragmentShader=`
+const fragmentShader = `
 uniform sampler2D tScene;
 uniform sampler2D tBloom;
 uniform float bloomStrength;
@@ -216,89 +238,201 @@ void main() {
   gl_FragColor=transparentPaper>.5?vec4(clamp(color-paper*(1.-alpha),0.,alpha),alpha):vec4(color,1.);
 }`;
 
-// `comic` supports orthographic and perspective cameras, including transparent
-// gallery previews; the dream bubble keeps the plain developed frame.
-export function createPrintPass(renderer,{transparent=false,comic=!transparent,style=retroStyle}={}) {
-  const depthTexture=comic?new THREE.DepthTexture(1,1):null;
-  const target=new THREE.WebGLRenderTarget(1,1,{type:THREE.HalfFloatType,samples:4,colorSpace:THREE.LinearSRGBColorSpace,depthTexture});
-  const material=new THREE.ShaderMaterial({
-    uniforms:{tBloom:{value:null},bloomStrength:{value:0},glowSamples:{value:12},transparentPaper:{value:transparent?1:0},paper:{value:new THREE.Color(1,1,1)},tScene:{value:target.texture},tDepth:{value:depthTexture},
-      resolution:{value:new THREE.Vector2(1,1)},pixelRatio:{value:1},uPixelWorld:{value:1},uDepthRange:{value:1},uCameraNear:{value:.1},uPerspective:{value:0},...style.post},
-    defines:comic?{COMIC:1}:{},
-    vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
-    fragmentShader,depthTest:false,depthWrite:false,toneMapped:false,
-  });
-  const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),material);quad.frustumCulled=false;
-  const screen=new THREE.Scene();screen.add(quad);
-  const flat=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
-  const size=new THREE.Vector2(),view=new THREE.Vector4();
-  let paperHex=null;
-  const setPaper=color=>{
-    // Blank paper is drawn in this color, so the print sits on any page tone.
-    material.uniforms.paper.value.set(color).convertLinearToSRGB();paperHex=color;
-  };
-  setPaper(PAPER_COLOR);
-  return {
-    setPaper,material,
-    async prepare(scene,camera){
-      const previous=renderer.getRenderTarget();
-      // Compile the scene for the same linear HDR target used by render().
-      // The default framebuffer uses different color/tone-mapping defines.
-      try{renderer.setRenderTarget(target);await renderer.compileAsync(scene,camera);}finally{renderer.setRenderTarget(previous);}
-      await renderer.compileAsync(screen,flat);
-    },
-    render(scene,camera,{samples=4,glowSamples=12,viewport=false,afterScene=null}={}) {
-      // A gallery prints each view at its own pixel size, then composites it
-      // into the canvas's current viewport/scissor without clearing its peers.
-      if(viewport){renderer.getViewport(view);size.set(Math.floor(view.z*renderer.getPixelRatio()),Math.floor(view.w*renderer.getPixelRatio()));}
-      else renderer.getDrawingBufferSize(size);
-      if(!size.x||!size.y)return;
-      if(target.width!==size.x||target.height!==size.y)target.setSize(size.x,size.y);
-      if(target.samples!==samples){target.dispose();target.samples=samples;}
-      material.uniforms.resolution.value.copy(size);
-      material.uniforms.glowSamples.value=Math.max(1,Math.min(12,glowSamples));
-      material.uniforms.pixelRatio.value=renderer.getPixelRatio();
-      if(comic) {
-        // Perspective pixel size is measured at unit view depth, then scaled in GLSL.
-        material.uniforms.uPixelWorld.value=camera.isOrthographicCamera?(camera.top-camera.bottom)/camera.zoom/size.y:2*Math.tan(THREE.MathUtils.degToRad(camera.fov)*.5)/camera.zoom/size.y;
-        material.uniforms.uDepthRange.value=camera.far-camera.near;
-        material.uniforms.uCameraNear.value=camera.near;
-        material.uniforms.uPerspective.value=camera.isPerspectiveCamera?1:0;
-        if(style.params.paper!==paperHex)setPaper(style.params.paper);
-      }
-      const output=renderer.getRenderTarget(),clear=renderer.getClearAlpha();
-      renderer.setRenderTarget(target);renderer.setClearAlpha(0);renderer.clear();
-      renderer.render(scene,camera);
-      afterScene?.(target);
-      renderer.setRenderTarget(output);renderer.setClearAlpha(clear);
-      renderer.render(screen,flat);
-    },
-    dispose(){target.dispose();depthTexture?.dispose();material.dispose();quad.geometry.dispose();},
-  };
+export interface PrintPassOptions {
+  /** Transparent paper for UI previews (the dream bubble); implies no comic print. */
+  transparent?: boolean;
+  /** The opaque, full-frame print: outlines, misregistration, paper dots and grain. */
+  comic?: boolean;
+  style?: RetroStyle;
+}
+
+export interface PrintRenderOptions {
+  samples?: number;
+  glowSamples?: number;
+  /** Print into the renderer's current viewport (gallery views) instead of the full canvas. */
+  viewport?: boolean;
+  /** Called with the scene target before the print reads it. */
+  afterScene?: ((target: WebGLRenderTarget) => void) | null;
+}
+
+type PrintCamera = PerspectiveCamera | OrthographicCamera;
+
+const isOrthographic = (camera: PrintCamera): camera is OrthographicCamera => (camera as OrthographicCamera).isOrthographicCamera === true;
+
+/** World size of one pixel at unit view depth (perspective) or at any depth (orthographic). */
+function pixelWorld(camera: PrintCamera, height: number): number {
+  if (isOrthographic(camera)) return (camera.top - camera.bottom) / camera.zoom / height;
+  return (2 * Math.tan(MathUtils.degToRad(camera.fov) * 0.5)) / camera.zoom / height;
+}
+
+/**
+ * `comic` supports orthographic and perspective cameras, including transparent
+ * gallery previews; the dream bubble keeps the plain developed frame.
+ * WebGL only (ShaderMaterial and a WebGL render target).
+ */
+export class PrintPass implements Disposable {
+  readonly material: ShaderMaterial;
+
+  private readonly comic: boolean;
+  private readonly style: RetroStyle;
+  private readonly depthTexture: DepthTexture | null;
+  private readonly target: WebGLRenderTarget;
+  private readonly quad: Mesh<PlaneGeometry, ShaderMaterial>;
+  private readonly screen = new Scene();
+  private readonly flat = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  private readonly size = new Vector2();
+  private readonly view = new Vector4();
+  private paperHex: ColorRepresentation | null = null;
+
+  constructor(
+    private readonly renderer: WebGLRenderer,
+    {transparent = false, comic = !transparent, style = retroStyle}: PrintPassOptions = {},
+  ) {
+    this.comic = comic;
+    this.style = style;
+    this.depthTexture = comic ? new DepthTexture(1, 1) : null;
+    this.target = new WebGLRenderTarget(1, 1, {
+      type: HalfFloatType,
+      samples: 4,
+      colorSpace: LinearSRGBColorSpace,
+      depthTexture: this.depthTexture,
+    });
+    this.material = new ShaderMaterial({
+      uniforms: {
+        tBloom: {value: null},
+        bloomStrength: {value: 0},
+        glowSamples: {value: 12},
+        transparentPaper: {value: transparent ? 1 : 0},
+        paper: {value: new Color(1, 1, 1)},
+        tScene: {value: this.target.texture},
+        tDepth: {value: this.depthTexture},
+        resolution: {value: new Vector2(1, 1)},
+        pixelRatio: {value: 1},
+        uPixelWorld: {value: 1},
+        uDepthRange: {value: 1},
+        uCameraNear: {value: 0.1},
+        uPerspective: {value: 0},
+        ...style.post,
+      },
+      defines: comic ? {COMIC: 1} : {},
+      vertexShader: 'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
+      fragmentShader,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    });
+    this.quad = new Mesh(new PlaneGeometry(2, 2), this.material);
+    this.quad.frustumCulled = false;
+    this.screen.add(this.quad);
+    this.setPaper(PAPER_COLOR);
+  }
+
+  // Blank paper is drawn in this color, so the print sits on any page tone.
+  setPaper(color: ColorRepresentation): void {
+    (this.material.uniforms.paper.value as Color).set(color).convertLinearToSRGB();
+    this.paperHex = color;
+  }
+
+  async prepare(scene: Object3D, camera: Camera): Promise<void> {
+    const {renderer} = this;
+    const previous = renderer.getRenderTarget();
+    // Compile the scene for the same linear HDR target used by render().
+    // The default framebuffer uses different color/tone-mapping defines.
+    try {
+      renderer.setRenderTarget(this.target);
+      await renderer.compileAsync(scene, camera);
+    } finally {
+      renderer.setRenderTarget(previous);
+    }
+    await renderer.compileAsync(this.screen, this.flat);
+  }
+
+  render(
+    scene: Object3D,
+    camera: PrintCamera,
+    {samples = 4, glowSamples = 12, viewport = false, afterScene = null}: PrintRenderOptions = {},
+  ): void {
+    const {renderer, target, size, material} = this;
+    const uniforms = material.uniforms;
+    // A gallery prints each view at its own pixel size, then composites it
+    // into the canvas's current viewport/scissor without clearing its peers.
+    if (viewport) {
+      renderer.getViewport(this.view);
+      size.set(Math.floor(this.view.z * renderer.getPixelRatio()), Math.floor(this.view.w * renderer.getPixelRatio()));
+    } else renderer.getDrawingBufferSize(size);
+    if (!size.x || !size.y) return;
+    if (target.width !== size.x || target.height !== size.y) target.setSize(size.x, size.y);
+    if (target.samples !== samples) {
+      target.dispose();
+      target.samples = samples;
+    }
+    (uniforms.resolution.value as Vector2).copy(size);
+    uniforms.glowSamples.value = Math.max(1, Math.min(12, glowSamples));
+    uniforms.pixelRatio.value = renderer.getPixelRatio();
+    if (this.comic) {
+      // Perspective pixel size is measured at unit view depth, then scaled in GLSL.
+      uniforms.uPixelWorld.value = pixelWorld(camera, size.y);
+      uniforms.uDepthRange.value = camera.far - camera.near;
+      uniforms.uCameraNear.value = camera.near;
+      uniforms.uPerspective.value = !isOrthographic(camera) && camera.isPerspectiveCamera ? 1 : 0;
+      if (this.style.params.paper !== this.paperHex) this.setPaper(this.style.params.paper);
+    }
+    const output = renderer.getRenderTarget();
+    const clear = renderer.getClearAlpha();
+    renderer.setRenderTarget(target);
+    renderer.setClearAlpha(0);
+    renderer.clear();
+    renderer.render(scene, camera);
+    afterScene?.(target);
+    renderer.setRenderTarget(output);
+    renderer.setClearAlpha(clear);
+    renderer.render(this.screen, this.flat);
+  }
+
+  dispose(): void {
+    this.target.dispose();
+    this.depthTexture?.dispose();
+    this.material.dispose();
+    this.quad.geometry.dispose();
+  }
 }
 
 // The reference's floor shadow is colored and dusty: violet under the feet,
 // blue toward the fill side, a warm spill on the key side, all grainy.
-let shadowTexture;
-export function printShadowTexture() {
-  if(shadowTexture)return shadowTexture;
-  const canvas=document.createElement('canvas');canvas.width=256;canvas.height=148;
-  const context=canvas.getContext('2d');
-  const blob=(x,y,rx,ry,[r,g,b],alpha)=> {
-    context.save();context.translate(x,y);context.scale(rx,ry);
-    const gradient=context.createRadialGradient(0,0,0,0,0,1);
-    gradient.addColorStop(0,`rgba(${r},${g},${b},${alpha})`);gradient.addColorStop(.6,`rgba(${r},${g},${b},${alpha*.4})`);gradient.addColorStop(1,`rgba(${r},${g},${b},0)`);
-    context.fillStyle=gradient;context.beginPath();context.arc(0,0,1,0,Math.PI*2);context.fill();context.restore();
+let shadowTexture: CanvasTexture | undefined;
+
+export function printShadowTexture(): CanvasTexture {
+  if (shadowTexture) return shadowTexture;
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 148;
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('2D canvas unavailable');
+  const blob = (x: number, y: number, rx: number, ry: number, [r, g, b]: [number, number, number], alpha: number) => {
+    context.save();
+    context.translate(x, y);
+    context.scale(rx, ry);
+    const gradient = context.createRadialGradient(0, 0, 0, 0, 0, 1);
+    gradient.addColorStop(0, `rgba(${r},${g},${b},${alpha})`);
+    gradient.addColorStop(0.6, `rgba(${r},${g},${b},${alpha * 0.4})`);
+    gradient.addColorStop(1, `rgba(${r},${g},${b},0)`);
+    context.fillStyle = gradient;
+    context.beginPath();
+    context.arc(0, 0, 1, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
   };
-  blob(178,80,74,40,[255,190,84],.42);
-  blob(72,66,90,56,[76,108,232],.62);
-  blob(116,70,78,46,[164,70,184],.66);
-  blob(128,76,50,26,[66,32,84],.82);
+  blob(178, 80, 74, 40, [255, 190, 84], 0.42);
+  blob(72, 66, 90, 56, [76, 108, 232], 0.62);
+  blob(116, 70, 78, 46, [164, 70, 184], 0.66);
+  blob(128, 76, 50, 26, [66, 32, 84], 0.82);
   // Dust: break the gradients into grain, denser where the shadow is darker.
-  const image=context.getImageData(0,0,canvas.width,canvas.height);
-  let seed=11;const random=()=>((seed=Math.imul(seed^seed>>>15,2246822519)+0x9e3779b9|0)>>>0)/4294967296;
-  for(let i=3;i<image.data.length;i+=4)image.data[i]*=.35+random()*1.1;
-  context.putImageData(image,0,0);
-  shadowTexture=new THREE.CanvasTexture(canvas);shadowTexture.colorSpace=THREE.SRGBColorSpace;
+  const image = context.getImageData(0, 0, canvas.width, canvas.height);
+  let seed = 11;
+  const random = () => ((seed = (Math.imul(seed ^ (seed >>> 15), 2246822519) + 0x9e3779b9) | 0) >>> 0) / 4294967296;
+  for (let i = 3; i < image.data.length; i += 4) image.data[i] *= 0.35 + random() * 1.1;
+  context.putImageData(image, 0, 0);
+  shadowTexture = new CanvasTexture(canvas);
+  shadowTexture.colorSpace = SRGBColorSpace;
   return shadowTexture;
 }

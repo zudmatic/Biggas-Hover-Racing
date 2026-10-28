@@ -1,13 +1,16 @@
+import {UniformsLib} from 'three/src/renderers/shaders/UniformsLib.js';
+import {cloneUniforms} from 'three/src/renderers/shaders/UniformsUtils.js';
 // GLSL reference used only by the diagnostic comparison page.
-import * as THREE from 'three';
-const vertexShader=`
+import {Color, DoubleSide, ShaderMaterial, type Texture} from 'three';
+
+const vertexShader = `
   attribute vec3 fx; varying vec2 vUv; varying vec3 vFx;
   #include <fog_pars_vertex>
   void main(){vUv=uv;vFx=fx;vec4 mvPosition=modelViewMatrix*vec4(position,1.0);
     gl_Position=projectionMatrix*mvPosition;
     #include <fog_vertex>
   }`;
-const fragmentShader=`
+const fragmentShader = `
   uniform sampler2D atlas; uniform bool ground; uniform float style; varying vec2 vUv; varying vec3 vFx;
   uniform vec3 smokeColor; uniform float smokeDensity; uniform float screenGrain;
   #include <fog_pars_fragment>
@@ -55,4 +58,25 @@ const fragmentShader=`
     #include <colorspace_fragment>
   }`;
 
-export function createLegacySmokeMaterial(texture,ground){return new THREE.ShaderMaterial({uniforms:{...THREE.UniformsUtils.clone(THREE.UniformsLib.fog),atlas:{value:texture},ground:{value:ground},style:{value:0},smokeColor:{value:new THREE.Color('#bababa')},smokeDensity:{value:1},screenGrain:{value:1.5}},vertexShader,fragmentShader,fog:true,side:THREE.DoubleSide,depthWrite:true,polygonOffset:ground,polygonOffsetFactor:-2,polygonOffsetUnits:-2});}
+/** Smoke and ground-mark material of the original WebGL renderer (the `?backend=webgl` comparison). */
+export function createLegacySmokeMaterial(texture: Texture, ground: boolean): ShaderMaterial {
+  return new ShaderMaterial({
+    uniforms: {
+      ...cloneUniforms(UniformsLib.fog),
+      atlas: {value: texture},
+      ground: {value: ground},
+      style: {value: 0},
+      smokeColor: {value: new Color('#bababa')},
+      smokeDensity: {value: 1},
+      screenGrain: {value: 1.5},
+    },
+    vertexShader,
+    fragmentShader,
+    fog: true,
+    side: DoubleSide,
+    depthWrite: true,
+    polygonOffset: ground,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+}

@@ -3,6 +3,7 @@ import {DRACOLoader} from 'three/addons/loaders/DRACOLoader.js';
 import {KTX2Loader} from 'three/addons/loaders/KTX2Loader.js';
 import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';
 import type {WebGPURenderer} from 'three/webgpu';
+import type {WebGLRenderer} from 'three';
 
 export type {GLTF};
 export type ProgressCallback = (fraction: number) => void;
@@ -36,7 +37,7 @@ export class AssetLoader {
   private ktx2Ready = false;
 
   /** Must run once the renderer is initialised, before loading KTX2 textures. */
-  configure(renderer: WebGPURenderer): void {
+  configure(renderer: WebGPURenderer | WebGLRenderer): void {
     if (this.ktx2Ready) return;
     this.ktx2.detectSupport(renderer);
     this.ktx2Ready = true;
@@ -80,7 +81,10 @@ export class AssetLoader {
       request.catch(() => this.bytes.delete(url));
       this.bytes.set(url, request);
     } else if (onProgress) {
-      request.then(() => onProgress(1), () => {});
+      request.then(
+        () => onProgress(1),
+        () => {},
+      );
     }
     return request;
   }

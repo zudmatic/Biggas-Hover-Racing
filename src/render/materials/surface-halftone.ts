@@ -16,7 +16,7 @@
 // drawing buffer's own pixels, scaled by a CSS-px pitch computed on the CPU, so
 // dots keep one size under adaptive resolution. RETRO_OBJECT_SPACE keeps the ink
 // attached to the surface with a triplanar projection of the rest-pose position.
-export const surfaceHalftoneGLSL=`
+export const surfaceHalftoneGLSL = `
 varying vec3 vRetroPrintNormal;
 uniform float retroClassic,retroHalftoneStrength,retroStrength,retroPixelRatio,retroMirror,retroView,retroGrain,retroWhite,retroLite;
 uniform vec4 retroMono;

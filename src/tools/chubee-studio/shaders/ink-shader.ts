@@ -1,4 +1,3 @@
-
 export const inkShadingGLSL = `
 vec3 shadeFlatPrintInk(vec3 baseColor, vec3 point){
  vec3 cell=floor(point*220.);

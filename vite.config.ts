@@ -12,13 +12,26 @@ const directoryRedirect: Connect.NextHandleFunction = (req, res, next) => {
 };
 
 export default defineConfig({
-  resolve: {alias: {'@': fileURLToPath(new URL('./src', import.meta.url))}},
-  optimizeDeps: {include: ['three/addons/loaders/DRACOLoader.js', 'three/addons/loaders/KTX2Loader.js', 'three/addons/libs/meshopt_decoder.module.js']},
-  plugins: [{
-    name: 'directory-redirect',
-    configureServer: server => { server.middlewares.use(directoryRedirect); },
-    configurePreviewServer: server => { server.middlewares.use(directoryRedirect); },
-  }],
+  resolve: {
+    alias: [
+      {find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url))},
+      {find: /^three$/, replacement: 'three/webgpu'},
+    ],
+  },
+  optimizeDeps: {
+    include: ['three/addons/loaders/DRACOLoader.js', 'three/addons/loaders/KTX2Loader.js', 'three/addons/libs/meshopt_decoder.module.js'],
+  },
+  plugins: [
+    {
+      name: 'directory-redirect',
+      configureServer: (server) => {
+        server.middlewares.use(directoryRedirect);
+      },
+      configurePreviewServer: (server) => {
+        server.middlewares.use(directoryRedirect);
+      },
+    },
+  ],
   build: {
     target: 'es2022',
     rollupOptions: {

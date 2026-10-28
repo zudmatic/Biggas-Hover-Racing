@@ -1,289 +1,957 @@
-import {CIRCUIT_MAPS,circuitMap} from '../../content/tracks/catalog';
-import {SHIPS,shipConfig} from '../../content/vehicles/catalog';
-import {createEngine} from '../../render/flight-graphics';
-import {createLensUniforms} from '../../fx/singularity/singularity-lens';
-import {createSmokeMaterial} from '../../fx/drift/smoke-material';
-import {createOilPreview} from '../../fx/oil/oil-material';
-import {loadFlightFx} from '../../fx/drift/drift-fx';
-import {createComicStyle,createComicMaterials} from '../../render/materials/comic-materials';
-import {createComicPost} from '../../render/post/comic-post';
-import * as THREE from 'three';
+import {AssetLoader} from '@/core/assets/asset-loader';
+import {MathUtils, Quaternion, Vector3, type PerspectiveCamera, type Scene} from 'three';
 import {WebGPURenderer} from 'three/webgpu';
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
-import {createDialKit,createDialRoot} from '@/core/debug/dials';
+import type {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {createDialKit, createDialRoot, type DialKitController, type ResolvedValues} from '@/core/debug/dials';
 import 'dialkit/vanilla/styles.css';
-import {createCircuitWorld} from '../../content/tracks/circuit-world';
-import {createCircuitLighting} from '../../render/lighting/track-lighting';
-import {createFlightShip} from '../../content/vehicles/flight-ship';
-import {createBaseMaterials} from '../../render/materials/base-materials';
-import {createHoverState,advanceHover} from '../../sim/hover-physics';
-import {createFlightRenderPose} from '../../sim/render-interpolator';
-import {scaledHull} from '../../game/model-scale';
-import {createFlightBoostPads} from '../../game/boost-pads/boost-pads';
-import {createBoostPadControls} from '@/game/boost-pads/boost-pad-dials';
+import {tracks, type Track} from '@/content/tracks';
+import {vehicles} from '@/content/vehicles';
+import type {Vehicle} from '@/content/vehicles/vehicle';
+import {LensUniforms} from '@/fx/singularity/singularity-lens';
+import {isWebGPUBackend} from '@/render/game-renderer';
+import {ComicMaterials, createComicStyle, type ComicStyle} from '@/render/materials/comic-materials';
+import {ComicPipeline} from '@/render/post/comic-post';
+import {TrackLighting} from '@/render/lighting/track-lighting';
+import {BaseMaterials} from '@/render/materials/base-materials';
+import {HoverPhysics, createHoverState, type HoverInput, type HoverState, type Position3} from '@/sim/hover-physics';
+import {RenderInterpolator} from '@/sim/render-interpolator';
+import {scaledHull} from '@/game/model-scale';
+import {BoostPadDials} from '@/game/boost-pads/boost-pad-dials';
+import {
+  PREVIEW_SCALE as SCALE,
+  SMOKE_DIALS,
+  applySmokeDials,
+  configurePreviewRenderer,
+  createPreviewOrbit,
+  createPreviewScene,
+  fitToWindow,
+  framePadOrbit,
+  frameShipOrbit,
+  loadPreviewContent,
+  loadPreviewEffects,
+  messageOf,
+  requireElement,
+  scaleHull,
+  type PreviewEffects,
+} from '../shared/preview-kit';
 import './playground.css';
 
 // Debug playground: the preview scene plus reproducible camera views, ship states and time control,
 // all scriptable through window.playground so checks and screenshots don't depend on mouse drags.
-const SCALE=.75;
+
+type Vec3 = readonly [number, number, number];
+
+/** Free orbit, a fixed offset in the ship's frame, or a look at the main nozzle. */
+type ViewSpec =
+  | {label: string; camera?: undefined}
+  | {label: string; camera: Vec3; target: Vec3; nozzle?: undefined}
+  | {label: string; camera: Vec3; nozzle: true; target?: undefined};
+
 // Offsets are world units in the ship's frame (forward +z, flames leave toward -z).
-const VIEWS={
-  libre:{label:'Libre'},
-  carrera:{label:'Carrera',camera:[0,4,-8.5],target:[0,1,0]},
-  trasera:{label:'Trasera',camera:[0,1.3,-5.5],target:[0,.8,-1.8]},
-  tobera:{label:'Tobera',camera:[.9,.55,-2.4],nozzle:true},
-  costado:{label:'Costado',camera:[7,1.4,-1.2],target:[0,.8,-.8]},
-  arriba:{label:'Arriba',camera:[0,11,-.6],target:[0,0,0]},
-  frontal:{label:'Frontal',camera:[0,1.6,7.5],target:[0,.9,0]},
-};
+const VIEWS = {
+  libre: {label: 'Libre'},
+  carrera: {label: 'Carrera', camera: [0, 4, -8.5], target: [0, 1, 0]},
+  trasera: {label: 'Trasera', camera: [0, 1.3, -5.5], target: [0, 0.8, -1.8]},
+  tobera: {label: 'Tobera', camera: [0.9, 0.55, -2.4], nozzle: true},
+  costado: {label: 'Costado', camera: [7, 1.4, -1.2], target: [0, 0.8, -0.8]},
+  arriba: {label: 'Arriba', camera: [0, 11, -0.6], target: [0, 0, 0]},
+  frontal: {label: 'Frontal', camera: [0, 1.6, 7.5], target: [0, 0.9, 0]},
+} satisfies Record<string, ViewSpec>;
+type ViewId = keyof typeof VIEWS;
+
+interface StateSpec {
+  label: string;
+  /** Engine mode fed to the exhaust: 'Aceleración', 'Turbo', 'Reposo' or 'Soltar'. */
+  mode: string;
+  /** Factor of the "Velocidad" dial. */
+  speed: number;
+  manual?: boolean;
+  wall?: boolean;
+  braking?: boolean;
+  drift?: boolean;
+  turn?: boolean;
+}
+
 // Speed is a factor of the "Velocidad" dial; "wall" pins the ship and shakes it against the barrier;
 // "turn" leaves the track and circles at Radio giro, nose turned into the curve by Deriva degrees;
 // "manual" hands the ship to the game's own hover physics and the keyboard (W/S, A/D, Shift, Space, E, R).
-const STATES={
-  manejar:{label:'Manejar',mode:'Aceleración',speed:0,manual:true},
-  parada:{label:'Parada',mode:'Reposo',speed:0},
-  acelerando:{label:'Acelerando',mode:'Aceleración',speed:1},
-  turbo:{label:'Turbo',mode:'Turbo',speed:1.4},
-  'contra-muro':{label:'Contra muro',mode:'Reposo',speed:0,wall:true},
-  frenando:{label:'Frenando',mode:'Aceleración',speed:.5,braking:true},
-  derrape:{label:'Derrape',mode:'Aceleración',speed:1,drift:true},
-  girando:{label:'Girando',mode:'Aceleración',speed:1,turn:true},
-  soltar:{label:'Soltar',mode:'Soltar',speed:0},
-};
-const byLabel=(table,label)=>Object.keys(table).find(id=>table[id].label===label);
+const STATES = {
+  manejar: {label: 'Manejar', mode: 'Aceleración', speed: 0, manual: true},
+  parada: {label: 'Parada', mode: 'Reposo', speed: 0},
+  acelerando: {label: 'Acelerando', mode: 'Aceleración', speed: 1},
+  turbo: {label: 'Turbo', mode: 'Turbo', speed: 1.4},
+  'contra-muro': {label: 'Contra muro', mode: 'Reposo', speed: 0, wall: true},
+  frenando: {label: 'Frenando', mode: 'Aceleración', speed: 0.5, braking: true},
+  derrape: {label: 'Derrape', mode: 'Aceleración', speed: 1, drift: true},
+  girando: {label: 'Girando', mode: 'Aceleración', speed: 1, turn: true},
+  soltar: {label: 'Soltar', mode: 'Soltar', speed: 0},
+} satisfies Record<string, StateSpec>;
+type StateId = keyof typeof STATES;
 
-const query=new URLSearchParams(location.search),status=document.querySelector('#status'),hud=document.querySelector('#hud');
-async function main(){
-  const canvas=document.querySelector('canvas');
-  const renderer=new WebGPURenderer({canvas,antialias:true,forceWebGL:query.get('backend')==='webgl2'});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.setSize(innerWidth,innerHeight);
-  await renderer.init();
-  const backend=renderer.backend.isWebGPUBackend?'WebGPU':'WebGL2 · fallback';
-  renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;
-  renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.05;
-  document.body.dataset.backend=backend;
-  const mapId=query.get('map')??'ruins',vehicleId=query.get('vehicle')??'037';
-  const drive=new URL('/',location.href);drive.search=new URLSearchParams({selection:'map',renderer:query.get('backend')==='webgl2'?'webgl2':'webgpu',map:mapId,vehicle:vehicleId,camera:'klipp'});document.querySelector('#drive').href=drive.href;
-  const scene=new THREE.Scene();scene.background=new THREE.Color(0xb6c6bd);scene.fog=new THREE.Fog(0xb6c6bd,220,1100);
-  const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.15,7000);
-  const orbit=new OrbitControls(camera,canvas);orbit.enableDamping=true;orbit.maxDistance=1000;orbit.minDistance=1;
-  const results=await Promise.allSettled([createCircuitWorld({map:mapId,onProgress:p=>{status.textContent=`Cargando mapa · ${Math.round(p*100)}%`;}}),createFlightShip(vehicleId,{exhaust:false})]);
-  const failure=results.find(r=>r.status==='rejected');if(failure){for(const r of results)if(r.status==='fulfilled')r.value.dispose();renderer.dispose();throw failure.reason;}
-  const [world,ship]=results.map(r=>r.value);scene.add(world.root,ship.root);ship.root.scale.setScalar(SCALE);
-  const lighting=createCircuitLighting(scene,{headlightMounts:ship.config.headlights});lighting.setTrack(world.landscape);world.textures.applyRoot(lighting.root);
-  const baseline=createBaseMaterials(scene),state={...createHoverState(world.landscape),modelScale:SCALE};
-  const comicStyle=createComicStyle(),comicMaterials=createComicMaterials(scene,comicStyle),lens=ship.config.engine==='singularity'?createLensUniforms():null,comicPost=createComicPost(renderer,scene,camera,{lens});
-  const nozzles=ship.config.exhausts,mainNozzle=nozzles.reduce((best,n)=>n[3]>best[3]?n:best,nozzles[0]);
-  let route=0,time=0,previous=performance.now(),busy=false,pendingSteps=0,frames=0,fps=0,frameMs=0,lastHud=0;
-  const lastPosition=new THREE.Vector3(),delta=new THREE.Vector3(),target=new THREE.Vector3();
+const VIEW_IDS = Object.keys(VIEWS) as ViewId[];
+const STATE_IDS = Object.keys(STATES) as StateId[];
+const view = (id: ViewId): ViewSpec => VIEWS[id];
+const stateSpec = (id: StateId): StateSpec => STATES[id];
+const isViewId = (id: string | null | undefined): id is ViewId => id != null && Object.hasOwn(VIEWS, id);
+const isStateId = (id: string | null | undefined): id is StateId => id != null && Object.hasOwn(STATES, id);
+const viewByLabel = (label: string): ViewId | undefined => VIEW_IDS.find((id) => VIEWS[id].label === label);
+const stateByLabel = (label: string): StateId | undefined => STATE_IDS.find((id) => STATES[id].label === label);
+
+const DRIVE_KEYS = new Set([
+  'KeyW',
+  'KeyA',
+  'KeyS',
+  'KeyD',
+  'ArrowUp',
+  'ArrowDown',
+  'ArrowLeft',
+  'ArrowRight',
+  'ShiftLeft',
+  'ShiftRight',
+  'Space',
+  'KeyE',
+]);
+const STEP = 1 / 60;
+const HUD_INTERVAL_MS = 250;
+
+// --- Dial panels (ids and labels are what people saved tweaks under) ---------------------------
+
+function createCameraKit(query: URLSearchParams, onAction: () => void) {
+  const viewParam = query.get('view');
+  return createDialKit(
+    'Cámara',
+    {
+      Vista: {
+        type: 'select',
+        options: VIEW_IDS.map((id) => VIEWS[id].label),
+        default: isViewId(viewParam) ? VIEWS[viewParam].label : 'Libre',
+      },
+      FOV: [62, 30, 100, 1],
+      Encuadrar: {type: 'action', label: 'Encuadrar nave'},
+    },
+    {id: 'playground-camera', persist: false, onAction},
+  );
+}
+
+function createStateKit(query: URLSearchParams, onAction: (action: string) => void) {
+  const stateParam = query.get('state');
+  return createDialKit(
+    'Estado nave',
+    {
+      Estado: {
+        type: 'select',
+        options: STATE_IDS.map((id) => STATES[id].label),
+        default: isStateId(stateParam) ? STATES[stateParam].label : 'Acelerando',
+      },
+      Velocidad: [30, 0, 80, 1],
+      'Radio giro': [14, 4, 60, 1],
+      Sentido: {type: 'select', options: ['Izquierda', 'Derecha'], default: 'Izquierda'},
+      Deriva: [0, -30, 40, 1],
+      'Mover nave': true,
+      'Activar placas': false,
+      'VFX activos': query.get('vfx') !== 'off',
+      Aceite: {type: 'action', label: 'Soltar aceite'},
+      Limpiar: {type: 'action', label: 'Limpiar efectos'},
+    },
+    {id: 'playground-state', persist: false, onAction},
+  );
+}
+
+function createTimeKit(onAction: () => void) {
+  return createDialKit(
+    'Tiempo',
+    {
+      Pausa: false,
+      'Velocidad tiempo': [1, 0.05, 2, 0.05],
+      Avanzar: {type: 'action', label: 'Avanzar un cuadro'},
+    },
+    {id: 'playground-time', persist: false, onAction},
+  );
+}
+
+function createSceneKit(query: URLSearchParams, mapId: string, vehicleId: string) {
+  return createDialKit(
+    'Escena',
+    {
+      Mapa: {type: 'select', options: tracks.list().map((track) => track.name), default: tracks.resolve(mapId).name},
+      Nave: {type: 'select', options: vehicles.ids, default: vehicles.resolve(vehicleId).id},
+      Cómic: query.get('look') !== 'base',
+      Trama: [1.03, 0, 2, 0.01],
+      Puntos: true,
+      Rayado: true,
+      Contornos: true,
+      'Color cómic': true,
+      Noche: false,
+      Faros: false,
+      Sombras: true,
+      'Posición en pista': [0, 0, 100, 1],
+    },
+    {id: 'playground-scene', persist: false, defaultCollapsed: true},
+  );
+}
+
+const createSmokeKit = () => createDialKit('Humo', SMOKE_DIALS, {id: 'playground-smoke', persist: false, defaultCollapsed: true});
+
+type CameraKit = ReturnType<typeof createCameraKit>;
+type StateKit = ReturnType<typeof createStateKit>;
+type TimeKit = ReturnType<typeof createTimeKit>;
+type SceneKit = ReturnType<typeof createSceneKit>;
+type SmokeKit = ReturnType<typeof createSmokeKit>;
+type Values<K> = K extends DialKitController<infer T> ? ResolvedValues<T> : never;
+
+// --- Scripting API -------------------------------------------------------------------------------
+
+export interface PlaygroundInfo {
+  view: ViewId;
+  state: StateId;
+  mode: string;
+  speed: number;
+  time: number;
+  paused: boolean;
+  power: number;
+  palette: string;
+  /** Camera position in the ship's local frame. */
+  cameraLocal: {x: number; y: number; z: number};
+  camera: number[];
+  ship: {position: number[]; yaw: number; travel: number};
+  pendingSteps: number;
+  frame: number;
+  backend: string;
+}
+
+/** `window.playground`: views and states by id, time control and a state snapshot for scripted checks. */
+export interface PlaygroundApi {
+  views: string[];
+  states: string[];
+  setView(id: string): void;
+  setState(id: string): void;
+  setTurn(options?: {radius?: number; direction?: string; drift?: number}): void;
+  info(): PlaygroundInfo;
+  clearFx(): void;
+  pause(on?: boolean): void;
+  step(count?: number): void;
+}
+
+declare global {
+  interface Window {
+    playground?: PlaygroundApi;
+  }
+}
+
+// -------------------------------------------------------------------------------------------------
+
+interface PlaygroundParts {
+  renderer: WebGPURenderer;
+  backend: string;
+  scene: Scene;
+  camera: PerspectiveCamera;
+  orbit: OrbitControls;
+  world: Track;
+  ship: Vehicle;
+  lighting: TrackLighting;
+  baseline: BaseMaterials;
+  state: HoverState;
+  comicStyle: ComicStyle;
+  comicMaterials: ComicMaterials;
+  comicPost: ComicPipeline;
+  mapId: string;
+  dialRoot: {destroy(): void};
+  kits: {view: CameraKit; state: StateKit; time: TimeKit; scene: SceneKit; smoke: SmokeKit};
+  effects: PreviewEffects;
+  padControls: BoostPadDials;
+}
+
+/** Turning rig: travel heading advances at speed / radius around a centre anchored where the turn began. */
+interface TurnCircle {
+  anchored: boolean;
+  heading: number;
+  cx: number;
+  cz: number;
+  y: number;
+  radius: number;
+  direction: number;
+}
+
+/** The `/playground/` bench: one ship on a circuit with reproducible views, states and time control. */
+export class Playground {
+  private readonly renderer: WebGPURenderer;
+  private readonly backend: string;
+  private readonly scene: Scene;
+  private readonly camera: PerspectiveCamera;
+  private readonly orbit: OrbitControls;
+  private readonly world: Track;
+  private readonly ship: Vehicle;
+  private readonly lighting: TrackLighting;
+  private readonly baseline: BaseMaterials;
+  private readonly state: HoverState;
+  private readonly comicStyle: ComicStyle;
+  private readonly comicMaterials: ComicMaterials;
+  private readonly comicPost: ComicPipeline;
+  private readonly effects: PreviewEffects;
+  private readonly padControls: BoostPadDials;
+  private readonly dialRoot: {destroy(): void};
+  private readonly kits: PlaygroundParts['kits'];
+  private readonly mapId: string;
+  private readonly status: HTMLElement;
+  private readonly hud: HTMLElement;
+  /** Nozzle with the largest radius: the "Tobera" view looks into it. */
+  private readonly mainNozzle: readonly number[];
+  private readonly renderPose = new RenderInterpolator();
+  private readonly physics: HoverPhysics;
+  private readonly keys = new Set<string>();
+  private readonly driveInput: HoverInput = {reducedMotion: false, turn: 0, throttle: 0, boost: false, brake: false, drift: false};
+  private readonly previousPadPosition: Position3 = {x: 0, y: 0, z: 0};
+  private readonly circle: TurnCircle = {anchored: false, heading: 0, cx: 0, cz: 0, y: 0, radius: 0, direction: 0};
+  private readonly unsubscribers: (() => void)[] = [];
+
   // Follow-camera rig: track yaw arrives in per-segment steps, so the camera follows a smoothed copy of the
   // ship's rotation, and view changes glide in rig space instead of cutting.
-  const rig=new THREE.Quaternion(),inverseRig=new THREE.Quaternion(),cameraRig=new THREE.Vector3(),targetRig=new THREE.Vector3(),wantedCamera=new THREE.Vector3(),wantedTarget=new THREE.Vector3();
-  let rigReady=false,lastView=null;
+  private readonly rig = new Quaternion();
+  private readonly inverseRig = new Quaternion();
+  private readonly cameraRig = new Vector3();
+  private readonly targetRig = new Vector3();
+  private readonly wantedCamera = new Vector3();
+  private readonly wantedTarget = new Vector3();
+  private readonly target = new Vector3();
+  private readonly lastPosition = new Vector3();
+  private readonly delta = new Vector3();
+  private rigReady = false;
+  private lastView: ViewId | null = null;
 
-  const root=createDialRoot({target:document.querySelector('#dials'),mode:'inline',defaultOpen:true,theme:'dark'});
-  const viewKit=createDialKit('Cámara',{
-    Vista:{type:'select',options:Object.values(VIEWS).map(v=>v.label),default:VIEWS[query.get('view')]?.label??'Libre'},
-    FOV:[62,30,100,1],Encuadrar:{type:'action',label:'Encuadrar nave'},
-  },{id:'playground-camera',persist:false,onAction:()=>frameShip()});
-  const stateKit=createDialKit('Estado nave',{
-    Estado:{type:'select',options:Object.values(STATES).map(s=>s.label),default:STATES[query.get('state')]?.label??'Acelerando'},
-    Velocidad:[30,0,80,1],'Radio giro':[14,4,60,1],Sentido:{type:'select',options:['Izquierda','Derecha'],default:'Izquierda'},Deriva:[0,-30,40,1],'Mover nave':true,'Activar placas':false,'VFX activos':query.get('vfx')!=='off',
-    Aceite:{type:'action',label:'Soltar aceite'},Limpiar:{type:'action',label:'Limpiar efectos'},
-  },{id:'playground-state',persist:false,onAction:action=>{if(action==='Aceite')oil.drop();else if(action==='Limpiar')clearFx();}});
-  const timeKit=createDialKit('Tiempo',{
-    Pausa:false,'Velocidad tiempo':[1,.05,2,.05],Avanzar:{type:'action',label:'Avanzar un cuadro'},
-  },{id:'playground-time',persist:false,onAction:()=>{pendingSteps++;}});
-  const sceneKit=createDialKit('Escena',{
-    Mapa:{type:'select',options:Object.values(CIRCUIT_MAPS).map(m=>m.name),default:circuitMap(mapId).name},
-    Nave:{type:'select',options:Object.keys(SHIPS),default:shipConfig(vehicleId).id},
-    'Cómic':query.get('look')!=='base',Trama:[1.03,0,2,.01],Puntos:true,Rayado:true,Contornos:true,'Color cómic':true,
-    Noche:false,Faros:false,Sombras:true,'Posición en pista':[0,0,100,1],
-  },{id:'playground-scene',persist:false,defaultCollapsed:true});
-  const boost=await createEngine(renderer,scene,ship,{camera,lens});
-  const smoke=await loadFlightFx(scene,{surfaceHeight:world.surfaceHeight,materialFactory:createSmokeMaterial});
-  const oil=createOilPreview(scene,world);
-  const pads=await createFlightBoostPads({scene,landscape:world.landscape,surfaceHeight:world.surfaceHeight,distances:[12]});
-  const focusPad=()=>{const p=pads.sim.entries[0];setView('libre');orbit.target.set(p.x,p.y,p.z);camera.position.copy(orbit.target).add(new THREE.Vector3(7,7,-9).applyAxisAngle(THREE.Object3D.DEFAULT_UP,Math.atan2(p.nx,p.nz)));orbit.update();};
-  const padControls=createBoostPadControls(pads,state,focusPad);
-  const smokeKit=createDialKit('Humo',{
-    Tamaño:[1.3,.5,2.5,.05],Duración:[1.5,.5,3,.05],'Color humo':{type:'color',default:'#bababa'},Densidad:[1,.15,1,.05],Trama:[1.5,1,4,.1],'Cuatro ruedas':false,
-    Estilo:{type:'select',options:['Híbrido','Procedural','Mixto'],default:'Híbrido'},
-  },{id:'playground-smoke',persist:false,defaultCollapsed:true});
+  // Latest panel values, kept by subscriptions (reading `kit.values` builds a new object each time).
+  private viewValues: Values<CameraKit>;
+  private stateValues: Values<StateKit>;
+  private timeValues: Values<TimeKit>;
+  private sceneValues: Values<SceneKit>;
 
-  const viewId=()=>byLabel(VIEWS,viewKit.values.Vista),stateId=()=>byLabel(STATES,stateKit.values.Estado);
-  function clearFx(){boost.clear();smoke.reset();oil.clear();}
-  // Turning rig: travel heading advances at speed / radius around a centre anchored where the turn began.
-  const circle={heading:0,cx:0,cz:0,y:0,key:''};
-  function anchorCircle(){
-    const v=stateKit.values,direction=v.Sentido==='Izquierda'?1:-1,radius=v['Radio giro'];
-    circle.heading=circle.key?circle.heading:state.yaw;circle.key=`${radius}|${direction}`;
-    circle.cx=state.x+direction*radius*Math.cos(circle.heading);circle.cz=state.z-direction*radius*Math.sin(circle.heading);circle.y=state.y;
+  private route = 0;
+  private lastRoute = 0;
+  private time = 0;
+  private previous = performance.now();
+  private busy = false;
+  private pendingSteps = 0;
+  private frames = 0;
+  private frameMs = 0;
+  private lastHud = 0;
+  private manualAccumulator = 0;
+  private activeState: StateId | null = null;
+  private currentMode = 'Aceleración';
+
+  /** Builds the bench and starts rendering; rejects (after releasing what loaded) if the scene can't start. */
+  static async start(): Promise<Playground> {
+    const query = new URLSearchParams(location.search);
+    const status = requireElement('#status', HTMLElement);
+    const canvas = requireElement('canvas', HTMLCanvasElement);
+    const webgl2 = query.get('backend') === 'webgl2';
+    const renderer = new WebGPURenderer({canvas, antialias: true, forceWebGL: webgl2});
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5));
+    renderer.setSize(innerWidth, innerHeight);
+    await renderer.init();
+    AssetLoader.shared.configure(renderer);
+    const backend = isWebGPUBackend(renderer) ? 'WebGPU' : 'WebGL2 · fallback';
+    configurePreviewRenderer(renderer);
+    document.body.dataset.backend = backend;
+    const mapId = query.get('map') ?? 'ruins';
+    const vehicleId = query.get('vehicle') ?? '037';
+    const drive = new URL('/', location.href);
+    drive.search = new URLSearchParams({
+      selection: 'map',
+      renderer: webgl2 ? 'webgl2' : 'webgpu',
+      map: mapId,
+      vehicle: vehicleId,
+      camera: 'klipp',
+    }).toString();
+    requireElement('#drive', HTMLAnchorElement).href = drive.href;
+    const {scene, camera} = createPreviewScene();
+    const orbit = createPreviewOrbit(camera, canvas, 1);
+
+    let content: {world: Track; ship: Vehicle};
+    try {
+      content = await loadPreviewContent({
+        map: mapId,
+        vehicle: vehicleId,
+        onProgress: (progress) => {
+          status.textContent = `Cargando mapa · ${Math.round(progress * 100)}%`;
+        },
+      });
+    } catch (error) {
+      renderer.dispose();
+      throw error;
+    }
+    const {world, ship} = content;
+    scene.add(world.root, ship.root);
+    ship.root.scale.setScalar(SCALE);
+    const lighting = new TrackLighting(scene, {headlightMounts: ship.definition.lights.headlights});
+    lighting.setTrack(world.landscape);
+    world.textures.applyRoot(lighting.root);
+    const baseline = new BaseMaterials(scene);
+    const state: HoverState = {...createHoverState(world.landscape), modelScale: SCALE};
+    const comicStyle = createComicStyle();
+    const comicMaterials = new ComicMaterials(scene, comicStyle);
+    const lens = ship.definition.engine.kind === 'singularity' ? new LensUniforms() : null;
+    const comicPost = new ComicPipeline({renderer, scene, camera, lens}, {samples: 4, glowSamples: 12});
+
+    // Panels are created in display order; their actions reach the bench once it exists.
+    let bench: Playground | null = null;
+    const dialRoot = createDialRoot({target: requireElement('#dials', HTMLElement), mode: 'inline', defaultOpen: true, theme: 'dark'});
+    const view = createCameraKit(query, () => bench?.frameShip());
+    const stateKit = createStateKit(query, (action) => {
+      if (action === 'Aceite') bench?.effects.oil.drop();
+      else if (action === 'Limpiar') bench?.clearFx();
+    });
+    const time = createTimeKit(() => {
+      if (bench) bench.pendingSteps++;
+    });
+    const sceneKit = createSceneKit(query, mapId, vehicleId);
+    const effects = await loadPreviewEffects(renderer, scene, camera, world, ship, lens);
+    const padControls = new BoostPadDials(effects.pads, state, () => bench?.focusPad());
+    const smoke = createSmokeKit();
+
+    bench = new Playground(
+      {
+        renderer,
+        backend,
+        scene,
+        camera,
+        orbit,
+        world,
+        ship,
+        lighting,
+        baseline,
+        state,
+        comicStyle,
+        comicMaterials,
+        comicPost,
+        mapId,
+        dialRoot,
+        kits: {view, state: stateKit, time, scene: sceneKit, smoke},
+        effects,
+        padControls,
+      },
+      query,
+      vehicleId,
+      status,
+    );
+    await bench.warmUp(query);
+    return bench;
   }
-  function place(){
-    const v=stateKit.values;
-    if(STATES[stateId()].turn){
-      const direction=v.Sentido==='Izquierda'?1:-1,radius=v['Radio giro'];
-      if(circle.key!==`${radius}|${direction}`)anchorCircle();
-      state.x=circle.cx-direction*radius*Math.cos(circle.heading);state.z=circle.cz+direction*radius*Math.sin(circle.heading);
-      state.y=(world.surfaceHeight(state.x,state.z)??circle.y-.65)+.65;
-      state.yaw=circle.heading+direction*THREE.MathUtils.degToRad(v.Deriva);state.pitch=0;
-      ship.root.position.set(state.x,state.y,state.z);ship.root.rotation.set(0,state.yaw,0,'YXZ');ship.root.updateMatrixWorld();
+
+  private constructor(parts: PlaygroundParts, query: URLSearchParams, vehicleId: string, status: HTMLElement) {
+    ({
+      renderer: this.renderer,
+      backend: this.backend,
+      scene: this.scene,
+      camera: this.camera,
+      orbit: this.orbit,
+      world: this.world,
+      ship: this.ship,
+      lighting: this.lighting,
+      baseline: this.baseline,
+      state: this.state,
+      comicStyle: this.comicStyle,
+      comicMaterials: this.comicMaterials,
+      comicPost: this.comicPost,
+      mapId: this.mapId,
+      dialRoot: this.dialRoot,
+      kits: this.kits,
+      effects: this.effects,
+      padControls: this.padControls,
+    } = parts);
+    this.physics = new HoverPhysics(this.world.landscape, this.world.surfaceHeight);
+    this.status = status;
+    this.hud = requireElement('#hud', HTMLElement);
+    const nozzles = this.ship.definition.engine.exhausts;
+    this.mainNozzle = nozzles.reduce((best, nozzle) => (nozzle[3] > best[3] ? nozzle : best), nozzles[0]);
+    this.viewValues = this.kits.view.values;
+    this.stateValues = this.kits.state.values;
+    this.timeValues = this.kits.time.values;
+    this.sceneValues = this.kits.scene.values;
+
+    window.playground = {
+      views: [...VIEW_IDS],
+      states: [...STATE_IDS],
+      setView: (id) => this.setView(id),
+      setState: (id) => this.setState(id),
+      setTurn: (options) => this.setTurn(options),
+      info: () => this.info(),
+      clearFx: () => this.clearFx(),
+      pause: (on = true) => this.kits.time.setValue('Pausa', on),
+      step: (count = 1) => {
+        this.kits.time.setValue('Pausa', true);
+        this.pendingSteps += count;
+      },
+    };
+    this.subscribe(vehicleId);
+    window.addEventListener('keydown', this.onKey);
+    window.addEventListener('keyup', this.onKeyUp);
+    window.addEventListener('blur', this.onBlur);
+    window.addEventListener('resize', this.onResize);
+  }
+
+  /** First placement and shader compilation, then the frame loop. */
+  private async warmUp(query: URLSearchParams): Promise<void> {
+    const {state, scene, camera} = this;
+    this.place();
+    this.lastPosition.copy(this.ship.root.position);
+    this.frameShip();
+    const viewParam = query.get('view');
+    if (viewParam) this.setView(viewParam);
+    this.lighting.update(state, 0, {dt: 1, reducedMotion: true});
+    scene.updateMatrixWorld(true);
+    await this.renderer.compileAsync(scene, camera);
+    document.body.dataset.ready = 'true';
+    this.status.textContent = `${this.backend} · ${this.ship.definition.name} · ${tracks.resolve(this.mapId).name}`;
+    this.renderer.setAnimationLoop(this.frame);
+    window.addEventListener('pagehide', () => this.dispose(), {once: true});
+  }
+
+  dispose(): void {
+    const {kits, effects} = this;
+    this.renderer.setAnimationLoop(null);
+    window.removeEventListener('resize', this.onResize);
+    window.removeEventListener('keydown', this.onKey);
+    window.removeEventListener('keyup', this.onKeyUp);
+    window.removeEventListener('blur', this.onBlur);
+    for (const unsubscribe of this.unsubscribers) unsubscribe();
+    for (const kit of [kits.view, kits.state, kits.time, kits.scene, kits.smoke]) kit.destroy();
+    this.padControls.dispose();
+    effects.pads.dispose();
+    effects.boost.dispose();
+    effects.smoke.dispose();
+    effects.oil.dispose();
+    this.dialRoot.destroy();
+    this.orbit.dispose();
+    this.comicMaterials.dispose();
+    this.comicPost.dispose();
+    this.baseline.dispose();
+    this.lighting.dispose();
+    this.ship.dispose();
+    this.world.dispose();
+    this.renderer.dispose();
+    delete window.playground;
+  }
+
+  // --- Scripting API ---------------------------------------------------------------------------
+
+  setView(id: string): void {
+    if (!isViewId(id)) throw new Error(`Vista desconocida: ${id}`);
+    this.kits.view.setValue('Vista', VIEWS[id].label);
+    document.body.dataset.view = id;
+  }
+
+  setState(id: string): void {
+    if (!isStateId(id)) throw new Error(`Estado desconocido: ${id}`);
+    this.kits.state.setValue('Estado', STATES[id].label);
+    document.body.dataset.state = id;
+  }
+
+  setTurn({radius, direction, drift}: {radius?: number; direction?: string; drift?: number} = {}): void {
+    const kit = this.kits.state;
+    if (radius !== undefined) kit.setValue('Radio giro', radius);
+    if (direction !== undefined) kit.setValue('Sentido', direction === 'derecha' ? 'Derecha' : 'Izquierda');
+    if (drift !== undefined) kit.setValue('Deriva', drift);
+  }
+
+  info(): PlaygroundInfo {
+    const {camera, ship, state, effects} = this;
+    const local = ship.root.worldToLocal(camera.position.clone());
+    const stateId = this.stateId();
+    return {
+      view: this.viewId(),
+      state: stateId,
+      mode: this.currentMode,
+      speed: state.speed,
+      time: this.time,
+      paused: this.timeValues.Pausa,
+      power: effects.boost.stats.power,
+      palette: effects.boost.stats.palette,
+      cameraLocal: {x: local.x, y: local.y, z: local.z},
+      camera: camera.position.toArray(),
+      ship: {position: ship.root.position.toArray(), yaw: state.yaw, travel: stateSpec(stateId).turn ? this.circle.heading : state.yaw},
+      pendingSteps: this.pendingSteps,
+      frame: Number(document.body.dataset.frame ?? 0),
+      backend: this.backend,
+    };
+  }
+
+  clearFx(): void {
+    const {boost, smoke, oil} = this.effects;
+    boost.clear();
+    smoke.reset();
+    oil.clear();
+  }
+
+  // --- Panels ----------------------------------------------------------------------------------
+
+  private viewId(): ViewId {
+    return viewByLabel(this.viewValues.Vista) ?? 'libre';
+  }
+
+  private stateId(): StateId {
+    return stateByLabel(this.stateValues.Estado) ?? 'acelerando';
+  }
+
+  private subscribe(vehicleId: string): void {
+    const {kits, camera} = this;
+    this.unsubscribers.push(
+      kits.view.subscribe((values) => {
+        this.viewValues = values;
+        camera.fov = values.FOV;
+        camera.updateProjectionMatrix();
+        document.body.dataset.view = this.viewId();
+      }),
+      kits.state.subscribe((values) => {
+        this.stateValues = values;
+        document.body.dataset.state = this.stateId();
+        if (!values['VFX activos']) this.clearFx();
+      }),
+      kits.time.subscribe((values) => {
+        this.timeValues = values;
+      }),
+      kits.smoke.subscribe((values) => applySmokeDials(this.effects.smoke, values)),
+      kits.scene.subscribe((values) => {
+        this.sceneValues = values;
+        this.applyScene(values, vehicleId);
+      }),
+    );
+  }
+
+  private applyScene(values: Values<SceneKit>, vehicleId: string): void {
+    const map = tracks.list().find((track) => track.name === values.Mapa)?.id;
+    if (map !== this.mapId || values.Nave !== vehicleId) {
+      const url = new URL(location.href);
+      url.searchParams.set('map', String(map));
+      url.searchParams.set('vehicle', values.Nave);
+      location.assign(url);
       return;
     }
-    circle.key='';
-    const road=world.landscape.atDistance(route);
-    state.x=road.x;state.z=road.z;state.y=(world.surfaceHeight(road.x,road.z)??road.y)+.65;
+    const {comicStyle, comicPost, lighting} = this;
+    this.comicMaterials.setEnabled(values['Cómic']);
+    comicStyle.strength.value = values.Trama;
+    comicStyle.hatch.value = Number(values.Rayado);
+    comicStyle.dots.value = Number(values.Puntos);
+    comicPost.outline.value = Number(values.Contornos);
+    comicPost.grading.value = Number(values['Color cómic']);
+    lighting.setNight(values.Noche);
+    lighting.setHeadlights(values.Faros);
+    this.ship.setHeadlights(values.Faros);
+    this.renderer.shadowMap.enabled = values.Sombras;
+    if (this.lastRoute !== values['Posición en pista']) {
+      this.clearFx();
+      this.lastRoute = values['Posición en pista'];
+      this.route = (this.world.landscape.length * this.lastRoute) / 100;
+      this.place();
+      this.lastPosition.copy(this.ship.root.position);
+      if (this.viewId() === 'libre') this.frameShip();
+    }
+  }
+
+  // --- Placement and cameras -------------------------------------------------------------------
+
+  private anchorCircle(radius: number, direction: number): void {
+    const {circle, state} = this;
+    circle.heading = circle.anchored ? circle.heading : state.yaw;
+    circle.anchored = true;
+    circle.radius = radius;
+    circle.direction = direction;
+    circle.cx = state.x + direction * radius * Math.cos(circle.heading);
+    circle.cz = state.z - direction * radius * Math.sin(circle.heading);
+    circle.y = state.y;
+  }
+
+  /** Puts the ship on the route (or on the turning circle) for the scripted states. */
+  private place(): void {
+    const {state, world, circle, stateValues: values} = this;
+    const root = this.ship.root;
+    const spec = stateSpec(this.stateId());
+    if (spec.turn) {
+      const direction = values.Sentido === 'Izquierda' ? 1 : -1;
+      const radius = values['Radio giro'];
+      if (!circle.anchored || circle.radius !== radius || circle.direction !== direction) this.anchorCircle(radius, direction);
+      state.x = circle.cx - direction * radius * Math.cos(circle.heading);
+      state.z = circle.cz + direction * radius * Math.sin(circle.heading);
+      state.y = (world.surfaceHeight(state.x, state.z) ?? circle.y - 0.65) + 0.65;
+      state.yaw = circle.heading + direction * MathUtils.degToRad(values.Deriva);
+      state.pitch = 0;
+      root.position.set(state.x, state.y, state.z);
+      root.rotation.set(0, state.yaw, 0, 'YXZ');
+      root.updateMatrixWorld();
+      return;
+    }
+    circle.anchored = false;
+    const road = world.landscape.atDistance(this.route);
+    state.x = road.x;
+    state.z = road.z;
+    state.y = (world.surfaceHeight(road.x, road.z) ?? road.y) + 0.65;
     // Heading from a chord across the polyline: segment directions jump at every sample, the chord turns continuously.
-    const back=world.landscape.atDistance(route-1.5),ahead=world.landscape.atDistance(route+1.5);
-    state.yaw=Math.atan2(ahead.x-back.x,ahead.z-back.z);state.pitch=Math.atan2(ahead.y-back.y,Math.hypot(ahead.x-back.x,ahead.z-back.z));
+    const back = world.landscape.atDistance(this.route - 1.5);
+    const ahead = world.landscape.atDistance(this.route + 1.5);
+    state.yaw = Math.atan2(ahead.x - back.x, ahead.z - back.z);
+    state.pitch = Math.atan2(ahead.y - back.y, Math.hypot(ahead.x - back.x, ahead.z - back.z));
     // Pinned against a wall: small forward/back shake, the way contact resolution jitters in a race.
-    const shake=STATES[stateId()].wall?.04*Math.sin(time*55):0;
-    state.x+=Math.sin(state.yaw)*shake;state.z+=Math.cos(state.yaw)*shake;
-    ship.root.position.set(state.x,state.y,state.z);ship.root.rotation.set(-state.pitch,state.yaw,0,'YXZ');ship.root.updateMatrixWorld();
+    const shake = spec.wall ? 0.04 * Math.sin(this.time * 55) : 0;
+    state.x += Math.sin(state.yaw) * shake;
+    state.z += Math.cos(state.yaw) * shake;
+    root.position.set(state.x, state.y, state.z);
+    root.rotation.set(-state.pitch, state.yaw, 0, 'YXZ');
+    root.updateMatrixWorld();
   }
-  function frameShip(){setView('libre');orbit.target.copy(ship.root.position).add(new THREE.Vector3(0,1,0));camera.position.copy(orbit.target).add(new THREE.Vector3(7,5,-10).applyAxisAngle(THREE.Object3D.DEFAULT_UP,state.yaw));orbit.update();}
-  function applyView(realDt){
-    const id=viewId(),view=VIEWS[id];orbit.enabled=!view.camera;
-    if(!view.camera){lastView=id;return;}
-    if(!rigReady){rig.copy(ship.root.quaternion);rigReady=true;}else rig.slerp(ship.root.quaternion,1-Math.exp(-realDt*5));
-    if(id!==lastView){
+
+  private frameShip(): void {
+    this.setView('libre');
+    frameShipOrbit(this.orbit, this.camera, this.ship.root, this.state.yaw);
+  }
+
+  private focusPad(): void {
+    const pad = this.effects.pads.sim.entries[0];
+    this.setView('libre');
+    framePadOrbit(this.orbit, this.camera, pad);
+  }
+
+  private applyView(realDt: number): void {
+    const {camera, orbit, rig, ship, cameraRig, targetRig, wantedCamera, wantedTarget, target} = this;
+    const id = this.viewId();
+    const spec = view(id);
+    orbit.enabled = !spec.camera;
+    if (!spec.camera) {
+      this.lastView = id;
+      return;
+    }
+    const position = ship.root.position;
+    if (!this.rigReady) {
+      rig.copy(ship.root.quaternion);
+      this.rigReady = true;
+    } else {
+      rig.slerp(ship.root.quaternion, 1 - Math.exp(-realDt * 5));
+    }
+    if (id !== this.lastView) {
       // Start the glide from wherever the camera is now (another view or the free orbit).
-      inverseRig.copy(rig).invert();
-      cameraRig.subVectors(camera.position,ship.root.position).applyQuaternion(inverseRig);targetRig.subVectors(orbit.target,ship.root.position).applyQuaternion(inverseRig);
-      lastView=id;
+      this.inverseRig.copy(rig).invert();
+      cameraRig.subVectors(camera.position, position).applyQuaternion(this.inverseRig);
+      targetRig.subVectors(orbit.target, position).applyQuaternion(this.inverseRig);
+      this.lastView = id;
     }
-    if(view.nozzle)wantedTarget.set(mainNozzle[0],mainNozzle[1],mainNozzle[2]).multiplyScalar(SCALE);else wantedTarget.set(...view.target);
-    wantedCamera.set(...view.camera);if(view.nozzle)wantedCamera.add(wantedTarget);
-    const glide=1-Math.exp(-realDt*7);cameraRig.lerp(wantedCamera,glide);targetRig.lerp(wantedTarget,glide);
-    camera.position.copy(cameraRig).applyQuaternion(rig).add(ship.root.position);
-    target.copy(targetRig).applyQuaternion(rig).add(ship.root.position);camera.lookAt(target);orbit.target.copy(target);
+    if (spec.nozzle) wantedTarget.set(this.mainNozzle[0], this.mainNozzle[1], this.mainNozzle[2]).multiplyScalar(SCALE);
+    else wantedTarget.set(...spec.target);
+    wantedCamera.set(...spec.camera);
+    if (spec.nozzle) wantedCamera.add(wantedTarget);
+    const glide = 1 - Math.exp(-realDt * 7);
+    cameraRig.lerp(wantedCamera, glide);
+    targetRig.lerp(wantedTarget, glide);
+    camera.position.copy(cameraRig).applyQuaternion(rig).add(position);
+    target.copy(targetRig).applyQuaternion(rig).add(position);
+    camera.lookAt(target);
+    orbit.target.copy(target);
   }
-  function setView(id){if(!VIEWS[id])throw new Error(`Vista desconocida: ${id}`);viewKit.setValue('Vista',VIEWS[id].label);document.body.dataset.view=id;}
-  function setState(id){if(!STATES[id])throw new Error(`Estado desconocido: ${id}`);stateKit.setValue('Estado',STATES[id].label);document.body.dataset.state=id;}
-  function info(){
-    const s=STATES[stateId()],local=ship.root.worldToLocal(camera.position.clone());
-    return {view:viewId(),state:stateId(),mode:currentMode,speed:state.speed,time,paused:timeKit.values.Pausa,power:boost.stats.power,palette:boost.stats.palette,
-      cameraLocal:{x:local.x,y:local.y,z:local.z},camera:camera.position.toArray(),ship:{position:ship.root.position.toArray(),yaw:state.yaw,travel:STATES[stateId()].turn?circle.heading:state.yaw},pendingSteps,frame:Number(document.body.dataset.frame??0),backend};
-  }
-  function setTurn({radius,direction,drift}={}){
-    if(radius!==undefined)stateKit.setValue('Radio giro',radius);
-    if(direction!==undefined)stateKit.setValue('Sentido',direction==='derecha'?'Derecha':'Izquierda');
-    if(drift!==undefined)stateKit.setValue('Deriva',drift);
-  }
-  window.playground={views:Object.keys(VIEWS),states:Object.keys(STATES),setView,setState,setTurn,info,clearFx,
-    pause:(on=true)=>timeKit.setValue('Pausa',on),step:(count=1)=>{timeKit.setValue('Pausa',true);pendingSteps+=count;}};
 
-  const unsubscribers=[
-    viewKit.subscribe(v=>{camera.fov=v.FOV;camera.updateProjectionMatrix();document.body.dataset.view=viewId();}),
-    stateKit.subscribe(v=>{document.body.dataset.state=stateId();if(!v['VFX activos'])clearFx();}),
-    smokeKit.subscribe(v=>{smoke.configure({size:v.Tamaño,lifetime:v.Duración,color:v['Color humo'],density:v.Densidad,grain:v.Trama,fourSupports:v['Cuatro ruedas']});smoke.setStyle({'Híbrido':'hybrid',Procedural:'procedural',Mixto:'mixed'}[v.Estilo]);}),
-  ];
-  let lastRoute=0;
-  unsubscribers.push(sceneKit.subscribe(v=>{
-    const map=Object.values(CIRCUIT_MAPS).find(m=>m.name===v.Mapa).id;
-    if(map!==mapId||v.Nave!==vehicleId){const url=new URL(location.href);url.searchParams.set('map',map);url.searchParams.set('vehicle',v.Nave);location.assign(url);return;}
-    comicMaterials.setEnabled(v['Cómic']);comicStyle.strength.value=v.Trama;comicStyle.hatch.value=Number(v.Rayado);comicStyle.dots.value=Number(v.Puntos);
-    comicPost.outline.value=Number(v.Contornos);comicPost.grading.value=Number(v['Color cómic']);
-    lighting.setNight(v.Noche);lighting.setHeadlights(v.Faros);ship.setHeadlights(v.Faros);renderer.shadowMap.enabled=v.Sombras;
-    if(lastRoute!==v['Posición en pista']){clearFx();lastRoute=v['Posición en pista'];route=world.landscape.length*lastRoute/100;place();lastPosition.copy(ship.root.position);if(viewId()==='libre')frameShip();}
-  }));
-  // Manual driving: same fixed 60 Hz hover physics and wall collisions as the race, rendered from an interpolated pose.
-  const keys=new Set(),renderPose=createFlightRenderPose(),DRIVE_KEYS=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','ShiftLeft','ShiftRight','Space','KeyE']);
-  let manualAccumulator=0,activeState=null,currentMode='Aceleración';
-  const pressed=(...codes)=>codes.some(code=>keys.has(code));
-  const driveInput=()=>({reducedMotion:false,turn:Number(pressed('KeyD','ArrowRight'))-Number(pressed('KeyA','ArrowLeft')),
-    throttle:Number(pressed('KeyW','ArrowUp'))-Number(pressed('KeyS','ArrowDown')),boost:pressed('ShiftLeft','ShiftRight'),brake:pressed('Space'),drift:pressed('KeyE')});
-  function backToTrack(){
-    const road=world.landscape.roadAt(state.x,state.z);route=road.distance;place();
-    Object.assign(state,{speed:0,throttle:0,vx:0,vz:0,yawRate:0,roll:0,pitch:0,recoverNeeded:false,boosting:false});renderPose.reset(state);manualAccumulator=0;
+  // --- Manual driving --------------------------------------------------------------------------
+  // Same fixed 60 Hz hover physics and wall collisions as the race, rendered from an interpolated pose.
+
+  private pressed(...codes: string[]): boolean {
+    return codes.some((code) => this.keys.has(code));
   }
-  function startManual(){
-    Object.assign(state,createHoverState(world.landscape),{x:state.x,y:state.y,z:state.z,yaw:state.yaw,pitch:0,roll:0,hull:scaledHull(ship.config,SCALE),modelScale:SCALE});
-    renderPose.reset(state);manualAccumulator=0;if(viewId()==='libre')setView('carrera');
+
+  private readDriveInput(): HoverInput {
+    const input = this.driveInput;
+    input.turn = Number(this.pressed('KeyD', 'ArrowRight')) - Number(this.pressed('KeyA', 'ArrowLeft'));
+    input.throttle = Number(this.pressed('KeyW', 'ArrowUp')) - Number(this.pressed('KeyS', 'ArrowDown'));
+    input.boost = this.pressed('ShiftLeft', 'ShiftRight');
+    input.brake = this.pressed('Space');
+    input.drift = this.pressed('KeyE');
+    return input;
   }
-  const views=Object.keys(VIEWS);
-  const onKeyUp=event=>keys.delete(event.code),onBlur=()=>keys.clear();
-  const onKey=event=>{
-    if(event.target.closest?.('input,select,textarea,[contenteditable]'))return;
-    if(STATES[stateId()].manual){
-      if(DRIVE_KEYS.has(event.code)){keys.add(event.code);event.preventDefault();return;}
-      if(event.code==='KeyR'){backToTrack();return;}
-    }
-    const index=Number(event.key)-1;
-    if(index>=0&&index<views.length)setView(views[index]);
-    else if(event.key==='p'||event.key==='P')timeKit.setValue('Pausa',!timeKit.values.Pausa);
-    else if(event.key==='.')window.playground.step(1);
+
+  private backToTrack(): void {
+    const {state} = this;
+    this.route = this.world.landscape.roadAt(state.x, state.z).distance;
+    this.place();
+    Object.assign(state, {speed: 0, throttle: 0, vx: 0, vz: 0, yawRate: 0, roll: 0, pitch: 0, recoverNeeded: false, boosting: false});
+    this.renderPose.reset(state);
+    this.manualAccumulator = 0;
+  }
+
+  private startManual(): void {
+    const {state, ship} = this;
+    const hull = scaledHull(ship.definition, SCALE);
+    Object.assign(state, createHoverState(this.world.landscape), {
+      x: state.x,
+      y: state.y,
+      z: state.z,
+      yaw: state.yaw,
+      pitch: 0,
+      roll: 0,
+      hull,
+      modelScale: SCALE,
+    });
+    this.renderPose.reset(state);
+    this.manualAccumulator = 0;
+    if (this.viewId() === 'libre') this.setView('carrera');
+  }
+
+  private readonly onKeyUp = (event: KeyboardEvent): void => {
+    this.keys.delete(event.code);
   };
-  window.addEventListener('keydown',onKey);window.addEventListener('keyup',onKeyUp);window.addEventListener('blur',onBlur);
-  const resize=()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);};window.addEventListener('resize',resize);
 
-  place();lastPosition.copy(ship.root.position);frameShip();
-  if(query.get('view'))setView(query.get('view'));
-  lighting.update(state,0,{dt:1,reducedMotion:true});scene.updateMatrixWorld(true);
-  await renderer.compileAsync(scene,camera);
-  document.body.dataset.ready='true';
-  status.textContent=`${backend} · ${ship.config.name} · ${circuitMap(mapId).name}`;
-  renderer.setAnimationLoop(async now=>{
-    if(busy)return;busy=true;
-    try{
-      const elapsed=(now-previous)/1000,real=Math.min(elapsed,.05),t=timeKit.values;previous=now;
-      let dt=t.Pausa?0:real*t['Velocidad tiempo'];
-      // Queued steps run together (n × 1/60 s), so scripted steps don't depend on the frame rate.
-      if(t.Pausa&&pendingSteps>0){dt=pendingSteps/60;pendingSteps=0;}
-      time+=dt;
-      const id=stateId(),s=STATES[id],v=stateKit.values,speed=s.speed*v.Velocidad,previousPadPosition={x:state.x,y:state.y,z:state.z};
-      if(id!==activeState){if(s.manual)startManual();else if(STATES[activeState]?.manual)backToTrack();activeState=id;}
-      if(s.manual){
-        manualAccumulator+=dt;
-        while(manualAccumulator>=1/60-1e-9){
-          renderPose.capture(state);const before=advanceHover(state,driveInput(),1/60,world.landscape,world.surfaceHeight);world.step(state,1/60,before);
-          if(v['Activar placas'])pads.step(1/60,state,before);
-          if(state.recoverNeeded)backToTrack();
-          manualAccumulator-=1/60;
-        }
-        const pose=renderPose.sample(state,manualAccumulator*60);
-        ship.root.position.set(pose.x,pose.y,pose.z);ship.root.rotation.set(-pose.pitch,pose.yaw,pose.roll,'YXZ');ship.root.updateMatrixWorld();
-        currentMode=state.boosting?'Turbo':state.speed>1?'Aceleración':'Reposo';
-      }else{
-        if(s.turn){if(circle.key)circle.heading+=(v.Sentido==='Izquierda'?1:-1)*dt*speed/v['Radio giro'];}
-        else if(v['Mover nave']&&speed>0)route=(route+dt*speed)%world.landscape.length;
-        place();currentMode=s.mode;
+  private readonly onBlur = (): void => {
+    this.keys.clear();
+  };
+
+  private readonly onResize = (): void => fitToWindow(this.camera, this.renderer);
+
+  private readonly onKey = (event: KeyboardEvent): void => {
+    if (event.target instanceof Element && event.target.closest('input,select,textarea,[contenteditable]')) return;
+    if (stateSpec(this.stateId()).manual) {
+      if (DRIVE_KEYS.has(event.code)) {
+        this.keys.add(event.code);
+        event.preventDefault();
+        return;
       }
-      if(viewId()==='libre'){delta.subVectors(ship.root.position,lastPosition);camera.position.add(delta);orbit.target.add(delta);}
-      lastPosition.copy(ship.root.position);applyView(Math.min(elapsed,.25));
-      if(!s.manual){
-        state.speed=speed;state.vx=Math.sin(state.yaw)*speed;state.vz=Math.cos(state.yaw)*speed;
-        state.drifting=Boolean(s.drift);state.braking=Boolean(s.braking);state.slip=s.drift?.55:0;state.boosting=v['VFX activos']&&s.mode==='Turbo';
-        state.hull=ship.config.hull?{halfWidth:ship.config.hull.halfWidth*SCALE,halfLength:ship.config.hull.halfLength*SCALE}:undefined;
-        state.padBoostRemaining=Math.max(0,(state.padBoostRemaining??0)-dt);
-        // Pads on the route would override the chosen state with their own turbo; opt in when testing them.
-        if(dt>0&&v['Activar placas'])pads.step(dt,state,previousPadPosition);
+      if (event.code === 'KeyR') {
+        this.backToTrack();
+        return;
       }
-      if(dt>0&&v['Activar placas'])padControls.update();
-      pads.update(dt,false);
-      const padTurbo=state.padBoostRemaining>0;state.boosting=state.boosting||padTurbo;
-      await boost.update(dt,padTurbo?'Turbo':currentMode,v['VFX activos'],padTurbo,state);smoke.update(dt,{state,camera,scale:SCALE,reduced:!v['VFX activos']});oil.update(dt,state);
-      ship.pilot.update(time,true);if(orbit.enabled)orbit.update();lighting.update(state,time,{dt});boost.updatePost(comicPost);
-      comicPost.heat.updatePadFields(pads.heatFields??[]);
-      comicStyle.pixelRatio.value=renderer.getPixelRatio();renderer.getDrawingBufferSize(comicStyle.resolution.value);comicMaterials.sync();
-      comicPost.comic.value=Number(sceneKit.values['Cómic']);
-      const started=performance.now();await comicPost.render();frameMs+=performance.now()-started;frames++;
-      document.body.dataset.frame=String(Number(document.body.dataset.frame??0)+1);
-      if(now-lastHud>250){
-        fps=frames*1000/(now-lastHud||1);const ms=frameMs/Math.max(1,frames);frames=0;frameMs=0;lastHud=now;
-        const render=renderer.info.render,i=info();
-        hud.textContent=[`FPS ${fps.toFixed(0)} · cpu ${ms.toFixed(1)} ms`,`${backend} · draw calls ${render.drawCalls??render.calls??'-'} · tris ${Math.round((render.triangles??0)/1000)}k`,
-          `Vista ${VIEWS[i.view].label} · Estado ${STATES[i.state].label}`,`Modo ${i.mode} · potencia ${i.power.toFixed(2)} · ${i.palette}`,
-          `Velocidad ${speed.toFixed(0)} · tiempo ${time.toFixed(2)} s ×${t['Velocidad tiempo'].toFixed(2)}${t.Pausa?' · PAUSA':''}`].join('\n');
+    }
+    const index = Number(event.key) - 1;
+    if (index >= 0 && index < VIEW_IDS.length) this.setView(VIEW_IDS[index]);
+    else if (event.key === 'p' || event.key === 'P') this.kits.time.setValue('Pausa', !this.timeValues.Pausa);
+    else if (event.key === '.') window.playground?.step(1);
+  };
+
+  // --- Frame -----------------------------------------------------------------------------------
+
+  private readonly frame = async (now: number): Promise<void> => {
+    if (this.busy) return;
+    this.busy = true;
+    try {
+      await this.renderFrame(now);
+    } catch (error) {
+      this.renderer.setAnimationLoop(null);
+      this.status.textContent = `Error: ${messageOf(error)}`;
+      console.error(error);
+    } finally {
+      this.busy = false;
+    }
+  };
+
+  private async renderFrame(now: number): Promise<void> {
+    const {state, ship, world, camera, orbit, effects, comicPost, comicStyle, renderer} = this;
+    const {boost, smoke, oil, pads} = effects;
+    const elapsed = (now - this.previous) / 1000;
+    const real = Math.min(elapsed, 0.05);
+    const time = this.timeValues;
+    this.previous = now;
+    let dt = time.Pausa ? 0 : real * time['Velocidad tiempo'];
+    // Queued steps run together (n × 1/60 s), so scripted steps don't depend on the frame rate.
+    if (time.Pausa && this.pendingSteps > 0) {
+      dt = this.pendingSteps / 60;
+      this.pendingSteps = 0;
+    }
+    this.time += dt;
+
+    const id = this.stateId();
+    const spec = stateSpec(id);
+    const values = this.stateValues;
+    const speed = spec.speed * values.Velocidad;
+    const previousPadPosition = this.previousPadPosition;
+    previousPadPosition.x = state.x;
+    previousPadPosition.y = state.y;
+    previousPadPosition.z = state.z;
+    if (id !== this.activeState) {
+      if (spec.manual) this.startManual();
+      else if (this.activeState && stateSpec(this.activeState).manual) this.backToTrack();
+      this.activeState = id;
+    }
+    if (spec.manual) {
+      this.manualAccumulator += dt;
+      while (this.manualAccumulator >= STEP - 1e-9) {
+        this.renderPose.capture(state);
+        const before = this.physics.step(state, this.readDriveInput(), STEP);
+        world.step(state, STEP, before);
+        if (values['Activar placas']) pads.step(STEP, state, before);
+        if (state.recoverNeeded) this.backToTrack();
+        this.manualAccumulator -= STEP;
       }
-    }catch(error){renderer.setAnimationLoop(null);status.textContent=`Error: ${error.message}`;console.error(error);}finally{busy=false;}
-  });
-  window.addEventListener('pagehide',()=>{
-    renderer.setAnimationLoop(null);window.removeEventListener('resize',resize);window.removeEventListener('keydown',onKey);window.removeEventListener('keyup',onKeyUp);window.removeEventListener('blur',onBlur);unsubscribers.forEach(u=>u());
-    for(const kit of [viewKit,stateKit,timeKit,sceneKit,smokeKit])kit.destroy();
-    padControls.dispose();pads.dispose();boost.dispose();smoke.dispose();oil.dispose();root.destroy();orbit.dispose();
-    comicMaterials.dispose();comicPost.dispose();baseline.dispose();lighting.dispose();ship.dispose();world.dispose();renderer.dispose();delete window.playground;
-  },{once:true});
+      const pose = this.renderPose.sample(state, this.manualAccumulator * 60);
+      ship.root.position.set(pose.x, pose.y, pose.z);
+      ship.root.rotation.set(-pose.pitch, pose.yaw, pose.roll, 'YXZ');
+      ship.root.updateMatrixWorld();
+      this.currentMode = state.boosting ? 'Turbo' : state.speed > 1 ? 'Aceleración' : 'Reposo';
+    } else {
+      if (spec.turn) {
+        if (this.circle.anchored) this.circle.heading += ((values.Sentido === 'Izquierda' ? 1 : -1) * dt * speed) / values['Radio giro'];
+      } else if (values['Mover nave'] && speed > 0) {
+        this.route = (this.route + dt * speed) % world.landscape.length;
+      }
+      this.place();
+      this.currentMode = spec.mode;
+    }
+    if (this.viewId() === 'libre') {
+      this.delta.subVectors(ship.root.position, this.lastPosition);
+      camera.position.add(this.delta);
+      orbit.target.add(this.delta);
+    }
+    this.lastPosition.copy(ship.root.position);
+    this.applyView(Math.min(elapsed, 0.25));
+    if (!spec.manual) {
+      state.speed = speed;
+      state.vx = Math.sin(state.yaw) * speed;
+      state.vz = Math.cos(state.yaw) * speed;
+      state.drifting = Boolean(spec.drift);
+      state.braking = Boolean(spec.braking);
+      state.slip = spec.drift ? 0.55 : 0;
+      state.boosting = values['VFX activos'] && spec.mode === 'Turbo';
+      state.hull = scaleHull(ship.definition.hull, SCALE);
+      state.padBoostRemaining = Math.max(0, (state.padBoostRemaining ?? 0) - dt);
+      // Pads on the route would override the chosen state with their own turbo; opt in when testing them.
+      if (dt > 0 && values['Activar placas']) pads.step(dt, state, previousPadPosition);
+    }
+    if (dt > 0 && values['Activar placas']) this.padControls.update();
+    pads.update(dt, false);
+    const padTurbo = state.padBoostRemaining > 0;
+    state.boosting = state.boosting || padTurbo;
+    await boost.update(dt, padTurbo ? 'Turbo' : this.currentMode, values['VFX activos'], padTurbo, state);
+    smoke.update(dt, {state, camera, scale: SCALE, reduced: !values['VFX activos']});
+    oil.update(dt, state);
+    ship.pilot.update(this.time, true);
+    if (orbit.enabled) orbit.update();
+    this.lighting.update(state, this.time, {dt});
+    boost.updatePost(comicPost);
+    comicPost.heat.updatePadFields(pads.heatFields ?? []);
+    comicStyle.pixelRatio.value = renderer.getPixelRatio();
+    renderer.getDrawingBufferSize(comicStyle.resolution.value);
+    this.comicMaterials.sync();
+    comicPost.comic.value = Number(this.sceneValues['Cómic']);
+    const started = performance.now();
+    comicPost.render();
+    this.frameMs += performance.now() - started;
+    this.frames++;
+    document.body.dataset.frame = String(Number(document.body.dataset.frame ?? 0) + 1);
+    if (now - this.lastHud > HUD_INTERVAL_MS) this.updateHud(now, speed);
+  }
+
+  private updateHud(now: number, speed: number): void {
+    const fps = (this.frames * 1000) / (now - this.lastHud || 1);
+    const ms = this.frameMs / Math.max(1, this.frames);
+    this.frames = 0;
+    this.frameMs = 0;
+    this.lastHud = now;
+    const render = this.renderer.info.render;
+    const info = this.info();
+    const time = this.timeValues;
+    this.hud.textContent = [
+      `FPS ${fps.toFixed(0)} · cpu ${ms.toFixed(1)} ms`,
+      `${this.backend} · draw calls ${render.drawCalls ?? render.calls ?? '-'} · tris ${Math.round((render.triangles ?? 0) / 1000)}k`,
+      `Vista ${VIEWS[info.view].label} · Estado ${STATES[info.state].label}`,
+      `Modo ${info.mode} · potencia ${info.power.toFixed(2)} · ${info.palette}`,
+      `Velocidad ${speed.toFixed(0)} · tiempo ${this.time.toFixed(2)} s ×${time['Velocidad tiempo'].toFixed(2)}${time.Pausa ? ' · PAUSA' : ''}`,
+    ].join('\n');
+  }
 }
-main().catch(error=>{status.textContent=`No se pudo iniciar: ${error.message}`;document.body.dataset.error=error.message;console.error(error);});
+
+Playground.start().catch((error: unknown) => {
+  const message = messageOf(error);
+  const status = document.querySelector('#status');
+  if (status) status.textContent = `No se pudo iniciar: ${message}`;
+  document.body.dataset.error = message;
+  console.error(error);
+});

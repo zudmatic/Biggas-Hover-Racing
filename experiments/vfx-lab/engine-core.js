@@ -1,1 +1,1 @@
-export {createEngineCore} from '../../src/fx/exhaust/engine-core';
+export {EngineCore} from '../../src/fx/exhaust/engine-core';

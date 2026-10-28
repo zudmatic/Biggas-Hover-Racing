@@ -1,8 +1,10 @@
-import type { createWater } from "./water"
+import type {Water, WaterUniforms} from './water';
+
+type WaterPreset = {speed: number} & Record<keyof WaterUniforms, number>;
 
 /** Saved application settings from components/waterfront/scene.tsx.
- * These override the more restrained defaults inside createWater(). */
-export const WATERFRONT_PRESET = {
+ * These override the more restrained defaults inside Water. */
+export const WATERFRONT_PRESET: Readonly<WaterPreset> = {
   speed: 2.85,
   scale: 1.85,
   caustics: 0.77,
@@ -16,18 +18,10 @@ export const WATERFRONT_PRESET = {
   waterDepth: 1.5,
   clarity: 0.2,
   sunStrength: 9.1 / 7,
-} as const
-
-export function applyWaterfrontPreset(water: ReturnType<typeof createWater>) {
-  const { speed, ...uniforms } = WATERFRONT_PRESET
-  for (const key of Object.keys(uniforms) as (keyof typeof uniforms)[]) {
-    water[key].value = uniforms[key]
-  }
-  return speed
-}
+};
 
 /** A calmer, wider river. Keep the original waterfront preset available. */
-export const DESERT_WATER_PRESET = {
+export const DESERT_WATER_PRESET: Readonly<WaterPreset> = {
   speed: 1.25,
   scale: 0.55,
   caustics: 0.32,
@@ -41,12 +35,13 @@ export const DESERT_WATER_PRESET = {
   waterDepth: 2.8,
   clarity: 0.26,
   sunStrength: 1,
-} as const
+};
 
-export function applyDesertWaterPreset(water: ReturnType<typeof createWater>) {
-  const { speed, ...uniforms } = DESERT_WATER_PRESET
-  for (const key of Object.keys(uniforms) as (keyof typeof uniforms)[]) {
-    water[key].value = uniforms[key]
-  }
-  return speed
+/** Writes a preset into the water uniforms; returns its phase speed. */
+export function applyWaterPreset(water: Water, {speed, ...uniforms}: Readonly<WaterPreset>): number {
+  for (const key of Object.keys(uniforms) as (keyof WaterUniforms)[]) water[key].value = uniforms[key];
+  return speed;
 }
+
+export const applyWaterfrontPreset = (water: Water): number => applyWaterPreset(water, WATERFRONT_PRESET);
+export const applyDesertWaterPreset = (water: Water): number => applyWaterPreset(water, DESERT_WATER_PRESET);

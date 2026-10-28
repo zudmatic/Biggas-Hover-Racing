@@ -1,17 +1,48 @@
-import * as T from 'three';
+import {
+  FramebufferTexture,
+  Mesh,
+  OrthographicCamera,
+  PlaneGeometry,
+  Scene,
+  ShaderMaterial,
+  Vector2,
+  type IUniform,
+  type WebGLRenderer,
+} from 'three';
+import type {DialConfig, ResolvedValues} from 'dialkit/vanilla';
+
+/** Misregistration uniforms, shared by the studio pass and Capri's render target. */
+export interface RegistrationUniforms {
+  uRegAmount: IUniform<number>;
+  uRegAngle: IUniform<number>;
+  uRegJitter: IUniform<number>;
+  uRegTick: IUniform<number>;
+  uRegTexel: IUniform<Vector2>;
+}
 
 // Registro CMYK corrido: error de impresión, no RGB split (referencias en work/cmyk-registration/).
 // La imagen se separa en cuatro planchas de tinta y cada una se lee con su propio corrimiento; se recombinan
 // restando como tinta sobre papel. Negro rico (CMY + parte de K): las líneas negras también sueltan color.
-export function createRegistration(){
- return {uRegAmount:{value:0},uRegAngle:{value:35*Math.PI/180},uRegJitter:{value:0},uRegTick:{value:0},uRegTexel:{value:new T.Vector2(1,1)}};
+export function createRegistration(): RegistrationUniforms {
+  return {
+    uRegAmount: {value: 0},
+    uRegAngle: {value: (35 * Math.PI) / 180},
+    uRegJitter: {value: 0},
+    uRegTick: {value: 0},
+    uRegTexel: {value: new Vector2(1, 1)},
+  };
 }
 // Cuánto negro va a la plancha K; el resto queda en CMY (negro rico).
-export const REGISTRATION_BLACK=.6;
+export const REGISTRATION_BLACK = 0.6;
 // Dirección y escala de cada plancha respecto del ángulo: cian y magenta lejos, amarillo poco, negro casi en registro.
-export const PLATES=[{spin:0,scale:1},{spin:2.6,scale:.85},{spin:4.5,scale:.45},{spin:.7,scale:.12}];
+export const PLATES: readonly {spin: number; scale: number}[] = [
+  {spin: 0, scale: 1},
+  {spin: 2.6, scale: 0.85},
+  {spin: 4.5, scale: 0.45},
+  {spin: 0.7, scale: 0.12},
+];
 
-export const registrationGLSL=`
+export const registrationGLSL = `
 uniform float uRegAmount; uniform float uRegAngle; uniform float uRegJitter; uniform float uRegTick; uniform vec2 uRegTexel;
 float regHash(float n){return fract(sin(n)*43758.5453);}
 vec4 regCmyk(vec3 c){
@@ -39,28 +70,73 @@ vec3 cmykMisregister(sampler2D image,vec2 uv,float linearIn){
 `;
 
 // Controles de DialKit compartidos: estudio con un corrimiento leve, Capri apagado.
-export const registrationControls=(amount=0)=>({'CMYK corrido':[amount,0,24,.5],'Ángulo CMYK':[35,0,360,1],'Temblor CMYK':[.25,0,1,.05]});
-export function applyRegistration(registration,v){
- registration.uRegAmount.value=v['CMYK corrido'];registration.uRegAngle.value=v['Ángulo CMYK']*Math.PI/180;registration.uRegJitter.value=v['Temblor CMYK'];
+export const registrationControls = (amount = 0) =>
+  ({
+    'CMYK corrido': [amount, 0, 24, 0.5],
+    'Ángulo CMYK': [35, 0, 360, 1],
+    'Temblor CMYK': [0.25, 0, 1, 0.05],
+  }) satisfies DialConfig;
+
+export type RegistrationValues = ResolvedValues<ReturnType<typeof registrationControls>>;
+
+export function applyRegistration(registration: RegistrationUniforms, v: RegistrationValues): void {
+  registration.uRegAmount.value = v['CMYK corrido'];
+  registration.uRegAngle.value = (v['Ángulo CMYK'] * Math.PI) / 180;
+  registration.uRegJitter.value = v['Temblor CMYK'];
 }
 
 // Estudio: dibuja normal en pantalla, copia el cuadro ya terminado (tone mapping y sRGB incluidos)
 // y lo vuelve a dibujar separado en planchas. Con CMYK corrido en 0 no hace nada: el look queda idéntico.
-export function createRegistrationPass(renderer,registration){
- const size=new T.Vector2(),scene=new T.Scene(),camera=new T.OrthographicCamera(-1,1,1,-1,0,1);
- let frame=null;
- const uniforms={...registration,tFrame:{value:null}};
- scene.add(new T.Mesh(new T.PlaneGeometry(2,2),new T.ShaderMaterial({uniforms,depthTest:false,depthWrite:false,toneMapped:false,
-  vertexShader:'varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
-  fragmentShader:registrationGLSL+'uniform sampler2D tFrame; varying vec2 vUv; void main(){gl_FragColor=vec4(cmykMisregister(tFrame,vUv,0.),1.);}'})));
- return {
-  render(){
-   if(registration.uRegAmount.value<=0)return;
-   renderer.getDrawingBufferSize(size);
-   if(!frame||frame.image.width!==size.x||frame.image.height!==size.y){frame?.dispose();frame=new T.FramebufferTexture(size.x,size.y);uniforms.tFrame.value=frame;}
-   registration.uRegTexel.value.set(1/size.x,1/size.y);
-   renderer.copyFramebufferToTexture(frame);
-   renderer.render(scene,camera);
-  },
- };
+export class RegistrationPass {
+  private readonly size = new Vector2();
+  private readonly scene = new Scene();
+  private readonly camera = new OrthographicCamera(-1, 1, 1, -1, 0, 1);
+  private readonly quad: Mesh<PlaneGeometry, ShaderMaterial>;
+  private readonly frameUniform: IUniform<FramebufferTexture | null> = {value: null};
+  private frame: FramebufferTexture | null = null;
+
+  constructor(
+    private readonly renderer: WebGLRenderer,
+    private readonly registration: RegistrationUniforms,
+  ) {
+    const uniforms = {...registration, tFrame: this.frameUniform};
+    this.quad = new Mesh(
+      new PlaneGeometry(2, 2),
+      new ShaderMaterial({
+        uniforms,
+        depthTest: false,
+        depthWrite: false,
+        toneMapped: false,
+        vertexShader: 'varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}',
+        fragmentShader:
+          registrationGLSL +
+          'uniform sampler2D tFrame; varying vec2 vUv; void main(){gl_FragColor=vec4(cmykMisregister(tFrame,vUv,0.),1.);}',
+      }),
+    );
+    this.scene.add(this.quad);
+  }
+
+  render(): void {
+    if (this.registration.uRegAmount.value <= 0) return;
+    const size = this.renderer.getDrawingBufferSize(this.size);
+    if (!this.frame || this.frame.image.width !== size.x || this.frame.image.height !== size.y) {
+      this.frame?.dispose();
+      this.frame = new FramebufferTexture(size.x, size.y);
+      this.frameUniform.value = this.frame;
+    }
+    this.registration.uRegTexel.value.set(1 / size.x, 1 / size.y);
+    this.renderer.copyFramebufferToTexture(this.frame);
+    this.renderer.render(this.scene, this.camera);
+  }
+
+  dispose(): void {
+    this.frame?.dispose();
+    this.frame = null;
+    this.quad.geometry.dispose();
+    this.quad.material.dispose();
+  }
+}
+
+export function createRegistrationPass(renderer: WebGLRenderer, registration: RegistrationUniforms): RegistrationPass {
+  return new RegistrationPass(renderer, registration);
 }

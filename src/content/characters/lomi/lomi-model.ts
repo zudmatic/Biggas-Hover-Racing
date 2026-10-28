@@ -1,17 +1,24 @@
-import * as THREE from 'three';
-import {createMannequinPilot} from '../shared/mannequin-pilot';
+import {Vector3} from 'three';
+import type {CharacterDefinition, CharacterOptions} from '../character';
+import {MannequinCharacter, type MannequinSpec} from '../shared/mannequin-pilot';
 
-const LOMI={
-  id:'lomi',name:'Lomi',url:'models/lomi/lomi.glb',
+export const LOMI: MannequinSpec = {
+  url: 'models/lomi/lomi.glb',
   // No calm idle clip: a still stance, left arm in model space, x mirrored for the right.
-  stance:{arm:[.25,-1,-.2],forearm:[.16,-1,.25],hand:[.12,-1,.4]},
+  stance: {arm: [0.25, -1, -0.2], forearm: [0.16, -1, 0.25], hand: [0.12, -1, 0.4]},
   // Seats were fitted from this clip's first frame, not the bind pose.
-  seatFrom:'dance_loop_adjusted_fit',
-  scale:{cockpit:1.05,nomada:1.45},sole:{down:.095,forward:.04},
+  seatFrom: 'dance_loop_adjusted_fit',
+  scale: {cockpit: 1.05, saddle: 1.45},
+  sole: {down: 0.095, forward: 0.04},
   // The arms reach less than half as far as Ajo's, so the Nómada's grips extend to the palms.
-  handlebarExtensions:true,
+  handlebarExtensions: true,
   // Lomi's hands are part of the body mesh: the palm sits between wrist and knuckles.
-  palm:({bones},side)=>bones[`hand_${side}`].getWorldPosition(new THREE.Vector3()).lerp(bones[`middle_01_${side}`].getWorldPosition(new THREE.Vector3()),.5),
+  palm: ({bones}, side) =>
+    bones
+      .get(`hand_${side}`)
+      .getWorldPosition(new Vector3())
+      .lerp(bones.get(`middle_01_${side}`).getWorldPosition(new Vector3()), 0.5),
 };
 
-export const createLomiModel=options=>createMannequinPilot(LOMI,options);
+export const createLomi = (definition: CharacterDefinition, options: CharacterOptions): Promise<MannequinCharacter> =>
+  MannequinCharacter.load(LOMI, definition, options);

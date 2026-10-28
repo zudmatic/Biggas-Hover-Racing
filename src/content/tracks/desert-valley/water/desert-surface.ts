@@ -1,54 +1,129 @@
-import * as THREE from 'three';
+import {BufferAttribute, DataTexture, MathUtils, NearestFilter, PlaneGeometry, RedFormat, Box3, Vector3} from 'three';
+import type {Mesh} from 'three';
+import type {Disposable} from '@/core/disposable';
 import {sampleWaterHeight} from './waves';
 
-export const RIVER_SURFACE=Object.freeze({
-  segments:128,mobileSegments:80,coverageResolution:256,
-  shoreDepthStart:.15,shoreDepthFull:2.5,maximumWaveHeight:.65,
+export const RIVER_SURFACE = Object.freeze({
+  segments: 128,
+  mobileSegments: 80,
+  coverageResolution: 256,
+  shoreDepthStart: 0.15,
+  shoreDepthFull: 2.5,
+  maximumWaveHeight: 0.65,
 });
+
+/** Height of the dry ground under (x, z), or null where there is none. */
+export type DryHeight = (x: number, z: number) => number | null | undefined;
 
 // Runtime geometry only: the original GLB and authored two-triangle water stay
 // intact. Dry cells are omitted and the displacement fades into shallow banks.
-export function createDesertWaterSurface(surface,dryHeight,{mobile=false}={}){
-  surface.updateWorldMatrix(true,false);
-  const bounds=new THREE.Box3().setFromObject(surface),size=bounds.getSize(new THREE.Vector3());
-  const waterLevel=(bounds.min.y+bounds.max.y)*.5,segments=mobile?RIVER_SURFACE.mobileSegments:RIVER_SURFACE.segments;
-  const inside=(x,z)=>x>=bounds.min.x&&x<=bounds.max.x&&z>=bounds.min.z&&z<=bounds.max.z;
-  function depthAt(x,z){if(!inside(x,z))return -Infinity;const floor=dryHeight(x,z);return floor===null?10:waterLevel-floor;}
-  function shoreWeight(x,z){return THREE.MathUtils.smoothstep(depthAt(x,z),RIVER_SURFACE.shoreDepthStart,RIVER_SURFACE.shoreDepthFull);}
-  function isWet(x,z){return depthAt(x,z)>0;}
-  function heightAt(x,z,phase=0,height=0){return waterLevel+sampleWaterHeight(x,z,phase,height)*shoreWeight(x,z);}
+export class DesertRiver implements Disposable {
+  /** Wet-cell surface grid, local to the authored water mesh, with a `waterShore` weight. */
+  readonly geometry: PlaneGeometry;
+  /** Conservative wet mask: effect fragments on dry ground/roads are clipped. */
+  readonly coverage: DataTexture;
+  readonly bounds: Box3;
+  readonly waterLevel: number;
+  readonly triangles: number;
+  readonly coverageInfo: {minXZ: [number, number]; sizeXZ: [number, number]};
 
-  const geometry=new THREE.PlaneGeometry(size.x,size.z,segments,segments).rotateX(-Math.PI/2).translate((bounds.min.x+bounds.max.x)*.5,waterLevel,(bounds.min.z+bounds.max.z)*.5);
-  const positions=geometry.attributes.position,weights=new Float32Array(positions.count),wet=new Uint8Array(positions.count);
-  for(let i=0;i<positions.count;i++){
-    const x=positions.getX(i),z=positions.getZ(i);
-    weights[i]=shoreWeight(x,z);wet[i]=Number(isWet(x,z));
-  }
-  const indices=[],original=geometry.index;
-  for(let i=0;i<original.count;i+=3){
-    const a=original.getX(i),b=original.getX(i+1),c=original.getX(i+2);
-    const x=(positions.getX(a)+positions.getX(b)+positions.getX(c))/3,z=(positions.getZ(a)+positions.getZ(b)+positions.getZ(c))/3;
-    if(wet[a]||wet[b]||wet[c]||isWet(x,z))indices.push(a,b,c);
-  }
-  geometry.setIndex(indices);geometry.setAttribute('waterShore',new THREE.BufferAttribute(weights,1));
-  geometry.applyMatrix4(surface.matrixWorld.clone().invert());
-  geometry.computeBoundingBox();geometry.computeBoundingSphere();
-  geometry.boundingBox.expandByScalar(RIVER_SURFACE.maximumWaveHeight);
-  geometry.boundingSphere.radius+=RIVER_SURFACE.maximumWaveHeight;
+  constructor(
+    surface: Mesh,
+    private readonly dryHeight: DryHeight,
+    {mobile = false}: {mobile?: boolean} = {},
+  ) {
+    surface.updateWorldMatrix(true, false);
+    const bounds = (this.bounds = new Box3().setFromObject(surface));
+    const size = bounds.getSize(new Vector3());
+    const waterLevel = (this.waterLevel = (bounds.min.y + bounds.max.y) * 0.5);
+    const segments = mobile ? RIVER_SURFACE.mobileSegments : RIVER_SURFACE.segments;
+    const geometry = (this.geometry = new PlaneGeometry(size.x, size.z, segments, segments)
+      .rotateX(-Math.PI / 2)
+      .translate((bounds.min.x + bounds.max.x) * 0.5, waterLevel, (bounds.min.z + bounds.max.z) * 0.5));
+    const positions = geometry.attributes.position;
+    const weights = new Float32Array(positions.count);
+    const wet = new Uint8Array(positions.count);
+    for (let i = 0; i < positions.count; i++) {
+      const x = positions.getX(i);
+      const z = positions.getZ(i);
+      weights[i] = this.shoreWeight(x, z);
+      wet[i] = Number(this.isWet(x, z));
+    }
+    const indices: number[] = [];
+    const original = geometry.index!;
+    for (let i = 0; i < original.count; i += 3) {
+      const a = original.getX(i);
+      const b = original.getX(i + 1);
+      const c = original.getX(i + 2);
+      const x = (positions.getX(a) + positions.getX(b) + positions.getX(c)) / 3;
+      const z = (positions.getZ(a) + positions.getZ(b) + positions.getZ(c)) / 3;
+      if (wet[a] || wet[b] || wet[c] || this.isWet(x, z)) indices.push(a, b, c);
+    }
+    geometry.setIndex(indices);
+    geometry.setAttribute('waterShore', new BufferAttribute(weights, 1));
+    geometry.applyMatrix4(surface.matrixWorld.clone().invert());
+    geometry.computeBoundingBox();
+    geometry.computeBoundingSphere();
+    geometry.boundingBox!.expandByScalar(RIVER_SURFACE.maximumWaveHeight);
+    geometry.boundingSphere!.radius += RIVER_SURFACE.maximumWaveHeight;
+    this.triangles = indices.length / 3;
 
-  // A conservative mask clips all effect fragments on dry ground/roads. Only
-  // cells with wet corners and a wet center participate; use nearest sampling.
-  const n=RIVER_SURFACE.coverageResolution,mask=new Uint8Array(n*n),corners=new Uint8Array((n+1)*(n+1));
-  for(let z=0;z<=n;z++)for(let x=0;x<=n;x++)corners[z*(n+1)+x]=Number(depthAt(bounds.min.x+x*size.x/n,bounds.min.z+z*size.z/n)>.1);
-  for(let z=0;z<n;z++)for(let x=0;x<n;x++){
-    const a=z*(n+1)+x;
-    if(corners[a]&&corners[a+1]&&corners[a+n+1]&&corners[a+n+2]&&depthAt(bounds.min.x+(x+.5)*size.x/n,bounds.min.z+(z+.5)*size.z/n)>.1)mask[z*n+x]=255;
+    // A conservative mask clips all effect fragments on dry ground/roads. Only
+    // cells with wet corners and a wet center participate; use nearest sampling.
+    const n = RIVER_SURFACE.coverageResolution;
+    const mask = new Uint8Array(n * n);
+    const corners = new Uint8Array((n + 1) * (n + 1));
+    for (let z = 0; z <= n; z++) {
+      for (let x = 0; x <= n; x++)
+        corners[z * (n + 1) + x] = Number(this.depthAt(bounds.min.x + (x * size.x) / n, bounds.min.z + (z * size.z) / n) > 0.1);
+    }
+    for (let z = 0; z < n; z++) {
+      for (let x = 0; x < n; x++) {
+        const a = z * (n + 1) + x;
+        if (
+          corners[a] &&
+          corners[a + 1] &&
+          corners[a + n + 1] &&
+          corners[a + n + 2] &&
+          this.depthAt(bounds.min.x + ((x + 0.5) * size.x) / n, bounds.min.z + ((z + 0.5) * size.z) / n) > 0.1
+        )
+          mask[z * n + x] = 255;
+      }
+    }
+    const coverage = (this.coverage = new DataTexture(mask, n, n, RedFormat));
+    coverage.name = 'Desert water effects coverage';
+    coverage.flipY = false;
+    coverage.generateMipmaps = false;
+    coverage.minFilter = coverage.magFilter = NearestFilter;
+    coverage.needsUpdate = true;
+    this.coverageInfo = {minXZ: [bounds.min.x, bounds.min.z], sizeXZ: [size.x, size.z]};
   }
-  const coverage=new THREE.DataTexture(mask,n,n,THREE.RedFormat);
-  coverage.name='Desert water effects coverage';coverage.flipY=false;coverage.generateMipmaps=false;
-  coverage.minFilter=coverage.magFilter=THREE.NearestFilter;coverage.needsUpdate=true;
-  return {geometry,coverage,bounds,waterLevel,isWet,shoreWeight,depthAt,heightAt,
-    triangles:indices.length/3,coverageInfo:{minXZ:[bounds.min.x,bounds.min.z],sizeXZ:[size.x,size.z]},
-    dispose(){coverage.dispose();},
-  };
+
+  private inside(x: number, z: number): boolean {
+    const {min, max} = this.bounds;
+    return x >= min.x && x <= max.x && z >= min.z && z <= max.z;
+  }
+
+  depthAt(x: number, z: number): number {
+    if (!this.inside(x, z)) return -Infinity;
+    const floor = this.dryHeight(x, z);
+    return floor === null || floor === undefined ? 10 : this.waterLevel - floor;
+  }
+
+  shoreWeight(x: number, z: number): number {
+    return MathUtils.smoothstep(this.depthAt(x, z), RIVER_SURFACE.shoreDepthStart, RIVER_SURFACE.shoreDepthFull);
+  }
+
+  isWet(x: number, z: number): boolean {
+    return this.depthAt(x, z) > 0;
+  }
+
+  /** Animated surface height (same waves as the GPU surface). */
+  heightAt(x: number, z: number, phase = 0, height = 0): number {
+    return this.waterLevel + sampleWaterHeight(x, z, phase, height) * this.shoreWeight(x, z);
+  }
+
+  dispose(): void {
+    this.coverage.dispose();
+  }
 }

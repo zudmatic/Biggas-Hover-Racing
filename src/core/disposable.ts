@@ -20,9 +20,24 @@ export class DisposableGroup implements Disposable {
   }
 
   /** Registers a DOM listener that is removed with the group. */
-  listen<K extends keyof WindowEventMap>(target: Window, type: K, listener: (event: WindowEventMap[K]) => void, options?: AddEventListenerOptions): void;
-  listen<K extends keyof DocumentEventMap>(target: Document, type: K, listener: (event: DocumentEventMap[K]) => void, options?: AddEventListenerOptions): void;
-  listen<K extends keyof HTMLElementEventMap>(target: HTMLElement, type: K, listener: (event: HTMLElementEventMap[K]) => void, options?: AddEventListenerOptions): void;
+  listen<K extends keyof WindowEventMap>(
+    target: Window,
+    type: K,
+    listener: (event: WindowEventMap[K]) => void,
+    options?: AddEventListenerOptions,
+  ): void;
+  listen<K extends keyof DocumentEventMap>(
+    target: Document,
+    type: K,
+    listener: (event: DocumentEventMap[K]) => void,
+    options?: AddEventListenerOptions,
+  ): void;
+  listen<K extends keyof HTMLElementEventMap>(
+    target: HTMLElement,
+    type: K,
+    listener: (event: HTMLElementEventMap[K]) => void,
+    options?: AddEventListenerOptions,
+  ): void;
   listen(target: EventTarget, type: string, listener: (event: Event) => void, options?: AddEventListenerOptions): void;
   listen(target: EventTarget, type: string, listener: (event: never) => void, options?: AddEventListenerOptions): void {
     const handler = listener as EventListener;

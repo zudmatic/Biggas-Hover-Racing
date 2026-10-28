@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import * as THREE from 'three';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
-import {createSurfaceIndex} from '../src/sim/track-collision.ts';
+import {SurfaceIndex} from '../src/sim/track-collision.ts';
 const out='public/models/mario-raceway';fs.mkdirSync(out,{recursive:true});
 globalThis.window={URL:globalThis.URL};
 THREE.TextureLoader.prototype.load=function(url){const texture=new THREE.Texture();texture.userData.url=url;return texture;};
@@ -46,7 +46,7 @@ const smooth=medial.map((_,i)=>{const p=new THREE.Vector3();for(let k=-4;k<=4;k+
 let curve=new THREE.CatmullRomCurve3(smooth,true,'centripetal');curve.arcLengthDivisions=5000;
 let routePoints=curve.getSpacedPoints(Math.ceil(curve.getLength()/1.5)).slice(0,-1);
 const start=new THREE.Vector3(-186.3,8,-70.725);let startIndex=routePoints.reduce((best,p,i)=>p.distanceToSquared(start)<routePoints[best].distanceToSquared(start)?i:best,0);routePoints=[...routePoints.slice(startIndex),...routePoints.slice(0,startIndex)];if(routePoints[1].z>routePoints[0].z)routePoints=[routePoints[0],...routePoints.slice(1).reverse()];
-const surface=createSurfaceIndex(roads.map(({geometry})=>new THREE.Mesh(geometry)));
+const surface=new SurfaceIndex(roads.map(({geometry})=>new THREE.Mesh(geometry))).height;
 for(const p of routePoints){const y=surface(p.x,p.z);if(y===null)throw new Error('Route leaves asphalt');p.y=y;}
 let length=0;const samples=routePoints.map((p,i)=>{const forward=routePoints[(i+1)%routePoints.length].clone().sub(p).normalize();const sample={index:i,distance_m:length,position:p.toArray(),forward:forward.toArray(),width_m:15};length+=p.distanceTo(routePoints[(i+1)%routePoints.length]);return sample;});
 const checkpoints=Array.from({length:16},(_,order)=>{const index=samples.findIndex(s=>s.distance_m>=length*order/16),sample=samples[index];return {order,route_index:index,position_gltf:sample.position,forward_gltf:sample.forward,width_m:15,height_m:8};});
