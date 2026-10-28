@@ -30,8 +30,8 @@ async function main(){
     v.model=prepareVehicleModel((await AssetLoader.shared.gltf(v.model)).scene,v);
     v.model.traverse(mesh=>{if(mesh.isMesh&&v.definitionCloth?.meshes.test(mesh.name))v.cloth.push(new ShipCloth(mesh,{toShip:mesh.matrixWorld}));});
   }));
-  const ship=new THREE.Group();scene.add(ship);ship.add(vehicles['033'].model);
-  let nozzles=vehicles['033'].nozzles;
+  const ship=new THREE.Group();scene.add(ship);ship.add(vehicles[vehicleDefinitions.resolve().id].model);
+  let nozzles=vehicles[vehicleDefinitions.resolve().id].nozzles;
 
   const ink=uniform(0),hot=uniform(new THREE.Color('#fff1bc')),fire=uniform(new THREE.Color('#ff6b16'));
   // Crossed, advected flame sheets keep combustion attached to each nozzle.

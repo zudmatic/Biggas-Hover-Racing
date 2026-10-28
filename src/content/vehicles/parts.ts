@@ -5,7 +5,7 @@ export type ShipPartId = 'cockpit' | 'engines' | 'mast' | 'hull' | 'cooling' | '
 
 type ShipPart = VehiclePart & {id: ShipPartId};
 
-// Names and dimensions come from the supplied 033 GLB and its authoring manifest.
+// Shared hangar systems; each vehicle overrides its names, anchors and views.
 // Coordinates are authoring units, not meters. +Y up, +Z forward.
 export const SHIP_PARTS: ShipPart[] = [
   {id: 'cockpit', name: 'Cabina monoplaza', tag: '01', anchor: [0, 1.8, 0.15], offset: [0, 0.75, 0], view: [4.9, 7.4, 7.4]},

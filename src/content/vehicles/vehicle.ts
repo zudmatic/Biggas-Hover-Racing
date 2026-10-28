@@ -3,6 +3,7 @@ import {AssetLoader} from '@/core/assets/asset-loader';
 import type {Disposable} from '@/core/disposable';
 import {LocalExhaust} from '@/fx/exhaust/local-exhaust';
 import type {LomiPlasma} from '@/fx/lomi/lomi-plasma';
+import {VehicleLivery} from './vehicle-livery';
 import {ResourceSet} from './resources';
 import {ShipCloth} from './ship-cloth';
 import {ShipEyes} from './ship-eyes';
@@ -54,6 +55,8 @@ export class Vehicle implements Disposable {
     const exhaust = options.exhaust === false ? null : new LocalExhaust(root, definition.engine.exhausts);
     const vehicle = new Vehicle(definition, root, pilot, exhaust, headlamps);
     vehicle.resources.addMaterialsOf(source);
+    vehicle.resources.addMaterialsOf(root);
+    vehicle.setLivery(options.livery);
     const assembly: VehicleAssembly = {definition, root, clips: gltf.animations, liveNodes, clothMeshes, options};
     try {
       for (const attach of [...BUILT_IN_COMPONENTS, ...(definition.components ?? [])]) {
@@ -70,6 +73,7 @@ export class Vehicle implements Disposable {
 
   /** Attached components in update order: built-ins first, then the definition's own. */
   readonly components: VehicleComponent[] = [];
+  private readonly livery: VehicleLivery;
   /** Source materials and textures only reachable from the unbaked model. */
   private readonly resources = new ResourceSet();
   private readonly frame: VehicleFrame = {time: 0, speed: 0, boosting: false, reducedMotion: false};
@@ -81,7 +85,13 @@ export class Vehicle implements Disposable {
     /** Local flame jets; null when the caller draws its own exhaust. */
     readonly exhaust: LocalExhaust | null,
     private readonly headlamps: ReadonlyMap<MeshStandardMaterial, MeshStandardMaterial>,
-  ) {}
+  ) {
+    this.livery = new VehicleLivery(root, definition.paint);
+  }
+
+  setLivery(id?: string): string {
+    return this.livery.set(id);
+  }
 
   /** The first attached component of a class, e.g. `vehicle.component(ShipEyes)`. */
   component<T extends VehicleComponent>(type: ComponentClass<T>): T | null {
@@ -122,6 +132,7 @@ export class Vehicle implements Disposable {
   }
 
   dispose(): void {
+    this.livery.dispose();
     this.exhaust?.dispose();
     for (const component of this.components) component.dispose();
     this.pilot.dispose();

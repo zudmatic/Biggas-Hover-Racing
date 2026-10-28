@@ -24,7 +24,7 @@ Abrir la URL que imprime Vite. `npm run build` genera `dist/`; `npm run preview`
 
 `simulator.html` y `propulsor-studio.html` conservan sus redirecciones. El enlace anterior `/?view=spaceship` sigue abriendo el hangar.
 
-Parámetros compartidos: `vehicle=033|037|038|039|bluleet|040`, `pilot=zud|zudmatic|ajo|bluleet|lomi`, `map=ruins|nexus|mario-raceway|desert-valley`, `comic=0|1`, `renderer=webgl2`. La selección de Zud admite `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`; Zudmatic conserva sus paletas.
+Parámetros compartidos: `vehicle=037|038|039|bluleet|040`, `pilot=zud|zudmatic|ajo|bluleet|lomi`, `map=ruins|nexus|mario-raceway|desert-valley`, `comic=0|1`, `renderer=webgl2`. La selección de Zud admite `hat=beanie|samurai_kasa|cloud_chef|crescent_wizard`; Zudmatic conserva sus paletas. Zudoneta 037 es la nave predeterminada (incluidos los enlaces antiguos con `vehicle=033`) y admite `livery=original|cobalto|carmesi|turquesa|violeta`, independiente de la paleta del piloto.
 
 ## Controles
 

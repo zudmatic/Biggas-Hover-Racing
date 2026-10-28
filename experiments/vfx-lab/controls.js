@@ -31,7 +31,7 @@ export function createControls(actions){
     return kits[key]=createDialKit(name,config,{id:`three-vfx-${key}-${key==='palette'?'v4':'v2'}`,persist:key!=='studio',defaultCollapsed:false,onAction:action=>action==='Copiar todo'?void copyAll():actions(action)});
   };
   add('studio','Estudio',{
-    Vehículo:{type:'select',options:vehicles.list().map(s=>`${s.id} · ${s.name.replace(/ \d+$/,'')}`),default:'037 · Oliva'},
+    Vehículo:{type:'select',options:vehicles.list().map(s=>`${s.id} · ${s.name.replace(/ \d+$/,'')}`),default:`${vehicles.resolve().id} · ${vehicles.resolve().name}`},
     Modo:{type:'select',options:['Turbo','Aceleración','Reposo','Soltar'],default:'Turbo'},
     Pausa:false,'Velocidad animación':[1,.1,2,.05],'Simular giro':false,
     'Amplitud giro':[.5,0,1.5,.05],'Velocidad giro':[.65,0,2,.05],

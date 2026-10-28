@@ -1,3 +1,5 @@
+import {shipLiveryMarkup} from '@/ui/vehicle-livery/vehicle-livery';
+
 // Static hangar page markup. Pure string building, so the DOM stays byte-identical to the original page.
 
 export interface HangarMarkupPart {
@@ -9,13 +11,14 @@ export interface HangarMarkupPart {
 export interface HangarMarkupInput {
   /** Vite base URL. */
   base: string;
-  ship: {id: string; name: string; title: string; file: string; windshield?: boolean};
+  ship: {id: string; name: string; title: string; file: string; windshield?: boolean; paint?: boolean};
   parts: readonly HangarMarkupPart[];
   /** Every hangar ship, in picker order. */
   ships: readonly {id: string; name: string}[];
   /** `pilot=…&palette=…&hat=…` carried across hangar and game links. */
   pilotParams: string;
   hat: string;
+  livery: string;
   pilotName: string;
   downloadUrl: string;
 }
@@ -62,7 +65,7 @@ const viewport = ({ship, parts, hat}: HangarMarkupInput): string => {
   const hotspots = parts
     .map(
       (part) =>
-        `<button class="ship-hotspot" disabled data-hotspot="${part.id}" aria-label="Identificar ${part.name}" aria-pressed="false" title="${part.name}">${part.tag}</button>`,
+        `<button class="ship-hotspot" hidden disabled data-hotspot="${part.id}" aria-label="Identificar ${part.name}" aria-pressed="false" title="${part.name}">${part.tag}</button>`,
     )
     .join('');
   const views = HANGAR_VIEWS.map(
@@ -91,7 +94,7 @@ const transport = (): string =>
   '<div class="ship-playback"><span id="ship-time-label">00:00 / 00:18</span><select id="ship-speed" aria-label="Velocidad de animación" disabled><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="1.5">1.5×</option></select><button id="ship-loop" aria-label="Repetir vuelo" aria-pressed="false" title="Repetir vuelo" disabled>↻</button></div>' +
   '</section>';
 
-const panel = ({ship, parts, pilotName}: HangarMarkupInput): string => {
+const panel = ({ship, parts, pilotName, livery}: HangarMarkupInput): string => {
   const list = parts
     .map(
       (part) =>
@@ -103,11 +106,11 @@ const panel = ({ship, parts, pilotName}: HangarMarkupInput): string => {
     `<label class="ship-switch">${ship.windshield ? 'Ocultar parabrisas' : 'Ocultar cabina'}<input id="ship-hide-canopy" type="checkbox" disabled></label>` +
     `<label class="ship-switch">${pilotName} al mando<input id="ship-pilot" type="checkbox" disabled></label>` +
     '<label class="ship-switch">Desarmar<input id="ship-explode" type="checkbox" disabled></label>' +
-    '<label class="ship-switch">Etiquetas<input id="ship-label-toggle" type="checkbox" checked disabled></label>' +
+    '<label class="ship-switch">Etiquetas<input id="ship-label-toggle" type="checkbox" disabled></label>' +
     '<button id="ship-comic" class="ship-comic" aria-pressed="true" disabled><span aria-hidden="true">◐</span> Cómic</button>';
   return [
     `<aside class="ship-panel" aria-label="Componentes de la nave"><div class="ship-panel-top"><h2>Componentes</h2><span>${String(parts.length).padStart(2, '0')}</span></div>`,
-    `      <div class="ship-part-list">${list}</div>`,
+    `      ${ship.paint ? shipLiveryMarkup(livery) : ''}<div class="ship-part-list">${list}</div>`,
     '      <p class="sr-only" id="ship-description" aria-live="polite"></p>',
     `      <div class="ship-toggles">${toggles}</div>`,
     '      </aside>',

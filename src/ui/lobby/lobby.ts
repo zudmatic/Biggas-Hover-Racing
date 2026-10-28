@@ -1,3 +1,5 @@
+import {shipLivery, shipLiveryChoice} from '@/content/vehicles/zudoneta-037/liveries';
+import {shipLiveryMarkup} from '../vehicle-livery/vehicle-livery';
 import '../renderer-navigation';
 import {ZUD_HATS, zudHat} from '../../content/characters/hats/hat-catalog';
 import {vehicles} from '@/content/vehicles';
@@ -35,6 +37,7 @@ interface LobbyChoice extends PilotChoice {
   map: string;
   vehicle: string;
   paper: boolean;
+  livery: string;
   entryTransition: ReturnType<typeof createRaceEntryTransition>;
 }
 type Preview = NonNullable<Awaited<ReturnType<typeof createFlightPreview>>>;
@@ -47,6 +50,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
   let {pilot: selectedPilot, palette: selectedPalette, hat: selectedHat} = pilotChoice();
   let selectedVehicle = vehicles.resolve(new URLSearchParams(location.search).get('vehicle')).id;
   const lookQuery = new URLSearchParams(location.search);
+  let selectedLivery = shipLiveryChoice(lookQuery);
   let paperChosen = lookQuery.has('comic');
   let stage = 0,
     selectedMap = tracks.resolve(lookQuery.get('map')).id,
@@ -55,24 +59,24 @@ export function chooseFlight(): Promise<LobbyChoice> {
     leaving = false,
     paper = paperChosen ? lookQuery.get('comic') !== '0' : selectedMap !== 'desert-valley' && selectedPilot !== 'bluleet';
   document.title = 'Biggas Hover Racing';
-  document.body.innerHTML = `<main class="race-lobby" data-stage="0" data-pilot="zud" data-vehicle="033"><div class="lobby-paper-surface" aria-hidden="true"></div><div class="lobby-title-ribbon" aria-hidden="true"></div><div class="lobby-title-checkers" aria-hidden="true"></div><header class="lobby-header"><a class="lobby-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong></a><nav class="lobby-steps" aria-label="Preparación de carrera" hidden>${steps
+  document.body.innerHTML = `<main class="race-lobby" data-stage="0" data-pilot="zud" data-vehicle="037"><div class="lobby-paper-surface" aria-hidden="true"></div><div class="lobby-title-ribbon" aria-hidden="true"></div><div class="lobby-title-checkers" aria-hidden="true"></div><header class="lobby-header"><a class="lobby-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong></a><nav class="lobby-steps" aria-label="Preparación de carrera" hidden>${steps
     .slice(1)
     .map((name, i) => `<button type="button" data-step="${i + 1}" disabled><span>0${i + 1}</span>${name}</button>`)
     .join(
       '',
     )}</nav><div class="lobby-header-actions">${SoundControl.markup('lobby-sound')}<button type="button" id="lobby-paper" aria-label="Papel" aria-pressed="true" title="Shader de papel"><span aria-hidden="true">◐</span> Papel</button><a class="lobby-hangar" href="${base}spaceship.html">Hangar</a></div></header>
     <div class="lobby-preview" aria-label="Vista del modelo seleccionado" hidden><img class="lobby-preview-fallback" data-lobby-image="zud" src="${base}images/flight/zud.png" alt="Zud"><canvas class="lobby-preview-canvas" role="img" aria-label="Modelo 3D. Arrastra para girar."></canvas><span class="lobby-preview-loading" role="status">Cargando vista…</span><span class="lobby-drag-hint">↔ Girar</span></div>
-    <section class="lobby-screen lobby-landing" data-screen="0" aria-labelledby="lobby-title-0"><div class="lobby-title-mark"><span class="lobby-title-orbit" aria-hidden="true">✳</span><h1 id="lobby-title-0" tabindex="-1"><span class="lobby-title-biggas">BIGGAS</span><span class="lobby-title-racing">HOVER<br>RACING</span></h1><span class="lobby-title-edition">033 / ORIGINAL SERIES</span></div><button class="race-primary lobby-primary lobby-start" type="button">Jugar <span aria-hidden="true">▶</span></button><span class="lobby-start-hint"><kbd>ENTER</kbd> PARA JUGAR</span></section>
-    <section class="lobby-screen lobby-selection" data-screen="1" aria-labelledby="lobby-title-1" hidden><div class="lobby-section-title"><h1 id="lobby-title-1" tabindex="-1">ELIGE TU PERSONAJE</h1><span>01 / 09</span></div><div class="lobby-roster-panel">${roster('pilot', base)}</div><div class="lobby-selected-name"><span>P1</span><strong>ZUD</strong></div><div class="lobby-profile"><fieldset class="lobby-hats"><legend>SOMBRERO <span class="lobby-hat-name">${zudHat(selectedHat).name}</span></legend><div>${ZUD_HATS.map((hat) => `<button type="button" data-hat="${hat.id}" aria-label="Sombrero ${hat.name}" aria-pressed="${hat.id === selectedHat}" title="${hat.name}" style="--hat-color:${hatSwatches[hat.id].color}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${hatSwatches[hat.id].path}"/></svg></span></button>`).join('')}</div></fieldset><fieldset class="lobby-palettes" hidden><legend>COLOR <span class="lobby-palette-name">Original</span></legend><div>${ZUDMATIC_PALETTES.map((p) => `<button type="button" data-palette="${p.name}" aria-label="Color ${p.name}" aria-pressed="${p.name === selectedPalette}" title="${p.name}" style="--palette-main:${p.colors.orange};--palette-detail:${p.colors.blue};--palette-accent:${p.parts?.part_015 ?? p.colors.ivory}"><span></span></button>`).join('')}</div></fieldset><div class="lobby-profile-brand">BIGGAS<span>HOVER RACING</span></div><dl><div><dt>Vehículo</dt><dd>Nave 033</dd></div><div><dt>Estado</dt><dd>Listo</dd></div></dl></div></section>
-    <section class="lobby-screen lobby-selection" data-screen="2" aria-labelledby="lobby-title-2" hidden><div class="lobby-section-title"><h1 id="lobby-title-2" tabindex="-1">ELIGE TU VEHÍCULO</h1><span>01 / 09</span></div><div class="lobby-roster-panel">${roster('vehicle', base)}</div><div class="lobby-selected-name"><span>033</span><strong>NAVE DE ZUD</strong></div><div class="lobby-profile"><div class="lobby-profile-brand">033<span>HOVERCRAFT</span></div><dl class="lobby-specs"><div><dt>Velocidad</dt><dd>187 <small>km/h</small></dd></div><div><dt>Turbo</dt><dd>259 <small>km/h</small></dd></div><div><dt>Flotación</dt><dd>0,65 <small>m</small></dd></div></dl></div></section>
-    <section class="lobby-screen lobby-maps" data-screen="3" aria-labelledby="lobby-title-3" hidden><div class="lobby-map-heading"><div><span class="lobby-kicker">03 / DESTINO</span><h1 id="lobby-title-3" tabindex="-1">ELIGE TU <em>CIRCUITO.</em></h1></div><div class="lobby-team"><img data-lobby-image="zud-face" src="${base}images/flight/zud-face.png" alt=""><span>ZUD <b>×</b> 033</span><img data-lobby-image="033" src="${base}images/flight/033.png" alt=""></div></div><fieldset class="lobby-map-list"><legend class="lobby-sr-only">Mapa</legend>${tracks
+    <section class="lobby-screen lobby-landing" data-screen="0" aria-labelledby="lobby-title-0"><div class="lobby-title-mark"><span class="lobby-title-orbit" aria-hidden="true">✳</span><h1 id="lobby-title-0" tabindex="-1"><span class="lobby-title-biggas">BIGGAS</span><span class="lobby-title-racing">HOVER<br>RACING</span></h1><span class="lobby-title-edition">037 / ORIGINAL SERIES</span></div><button class="race-primary lobby-primary lobby-start" type="button">Jugar <span aria-hidden="true">▶</span></button><span class="lobby-start-hint"><kbd>ENTER</kbd> PARA JUGAR</span></section>
+    <section class="lobby-screen lobby-selection" data-screen="1" aria-labelledby="lobby-title-1" hidden><div class="lobby-section-title"><h1 id="lobby-title-1" tabindex="-1">ELIGE TU PERSONAJE</h1><span>01 / 09</span></div><div class="lobby-roster-panel">${roster('pilot', base)}</div><div class="lobby-selected-name"><span>P1</span><strong>ZUD</strong></div><div class="lobby-profile"><fieldset class="lobby-hats"><legend>SOMBRERO <span class="lobby-hat-name">${zudHat(selectedHat).name}</span></legend><div>${ZUD_HATS.map((hat) => `<button type="button" data-hat="${hat.id}" aria-label="Sombrero ${hat.name}" aria-pressed="${hat.id === selectedHat}" title="${hat.name}" style="--hat-color:${hatSwatches[hat.id].color}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${hatSwatches[hat.id].path}"/></svg></span></button>`).join('')}</div></fieldset><fieldset class="lobby-palettes" hidden><legend>COLOR <span class="lobby-palette-name">Original</span></legend><div>${ZUDMATIC_PALETTES.map((p) => `<button type="button" data-palette="${p.name}" aria-label="Color ${p.name}" aria-pressed="${p.name === selectedPalette}" title="${p.name}" style="--palette-main:${p.colors.orange};--palette-detail:${p.colors.blue};--palette-accent:${p.parts?.part_015 ?? p.colors.ivory}"><span></span></button>`).join('')}</div></fieldset><div class="lobby-profile-brand">BIGGAS<span>HOVER RACING</span></div><dl><div><dt>Vehículo</dt><dd>Zudoneta</dd></div><div><dt>Estado</dt><dd>Listo</dd></div></dl></div></section>
+    <section class="lobby-screen lobby-selection" data-screen="2" aria-labelledby="lobby-title-2" hidden><div class="lobby-section-title"><h1 id="lobby-title-2" tabindex="-1">ELIGE TU VEHÍCULO</h1><span>01 / 09</span></div><div class="lobby-roster-panel">${roster('vehicle', base)}</div><div class="lobby-selected-name"><span>037</span><strong>ZUDONETA</strong></div><div class="lobby-profile">${shipLiveryMarkup(selectedLivery)}<div class="lobby-profile-brand">037<span>HOVERCRAFT</span></div><dl class="lobby-specs"><div><dt>Velocidad</dt><dd>187 <small>km/h</small></dd></div><div><dt>Turbo</dt><dd>259 <small>km/h</small></dd></div><div><dt>Flotación</dt><dd>0,65 <small>m</small></dd></div></dl></div></section>
+    <section class="lobby-screen lobby-maps" data-screen="3" aria-labelledby="lobby-title-3" hidden><div class="lobby-map-heading"><div><span class="lobby-kicker">03 / DESTINO</span><h1 id="lobby-title-3" tabindex="-1">ELIGE TU <em>CIRCUITO.</em></h1></div><div class="lobby-team"><img data-lobby-image="zud-face" src="${base}images/flight/zud-face.png" alt=""><span>ZUD <b>×</b> 037</span><img data-lobby-image="037" src="${base}images/flight/037.png" alt=""></div></div><fieldset class="lobby-map-list"><legend class="lobby-sr-only">Mapa</legend>${tracks
       .list()
       .map(
         (map) =>
           `<label class="lobby-map-card race-panel"><input type="radio" name="map" value="${map.id}" ${selectedMap === map.id ? 'checked' : ''}><span class="lobby-map-art"><img data-lobby-image="${map.id}" src="${base}images/flight/${map.id}.png" alt="${map.description}"><span class="lobby-map-number">${map.number}</span><span class="lobby-map-check" aria-hidden="true">✓</span></span><span class="lobby-map-info"><strong>${map.name}</strong><span>${map.summary}</span></span></label>`,
       )
       .join('')}</fieldset></section>
-    <footer class="lobby-footer"><div class="lobby-footer-brand"><span class="lobby-checker" aria-hidden="true"></span> HOVER CLUB / 033</div><button type="button" class="lobby-back" hidden><span aria-hidden="true">←</span> Volver</button><span class="lobby-key-hint" hidden><kbd>ENTER</kbd> CONFIRMAR <kbd>ESC</kbd> VOLVER</span><button type="button" class="race-primary lobby-primary lobby-next" hidden>Confirmar Zud <span aria-hidden="true">→</span></button><span class="lobby-edition">VOL. 01</span></footer><div class="lobby-launching" role="status" hidden><span class="lobby-kicker">ZUD × 033</span><strong>Preparando pista<span>…</span></strong><span class="lobby-launch-track"></span></div>
+    <footer class="lobby-footer"><div class="lobby-footer-brand"><span class="lobby-checker" aria-hidden="true"></span> HOVER CLUB / 037</div><button type="button" class="lobby-back" hidden><span aria-hidden="true">←</span> Volver</button><span class="lobby-key-hint" hidden><kbd>ENTER</kbd> CONFIRMAR <kbd>ESC</kbd> VOLVER</span><button type="button" class="race-primary lobby-primary lobby-next" hidden>Confirmar Zud <span aria-hidden="true">→</span></button><span class="lobby-edition">VOL. 01</span></footer><div class="lobby-launching" role="status" hidden><span class="lobby-kicker">ZUD × 037</span><strong>Preparando pista<span>…</span></strong><span class="lobby-launch-track"></span></div>
   </main>`;
   const root = document.querySelector<HTMLElement>('.race-lobby')!;
   const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => {
@@ -152,6 +156,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
         pilot: selectedPilot,
         palette: selectedPalette,
         hat: selectedHat,
+        livery: selectedLivery,
         paper,
         entryTransition,
       });
@@ -266,6 +271,12 @@ export function chooseFlight(): Promise<LobbyChoice> {
       selectedVehicle = vehicles.resolve(id).id;
       const config = vehicles.require(selectedVehicle);
       root.dataset.vehicle = selectedVehicle;
+      root.dataset.livery = selectedLivery;
+      $('.ship-liveries').hidden = !config.paint;
+      $('.ship-livery-name').textContent = shipLivery(selectedLivery).name;
+      root.querySelectorAll<HTMLButtonElement>('button[data-livery]').forEach((button) =>
+        button.setAttribute('aria-pressed', String(button.dataset.livery === selectedLivery)),
+      );
       root.querySelectorAll<HTMLButtonElement>('[data-vehicle-choice]').forEach((button) => {
         const selected = button.dataset.vehicleChoice === selectedVehicle;
         button.classList.toggle('is-selected', selected);
@@ -283,17 +294,24 @@ export function chooseFlight(): Promise<LobbyChoice> {
       $<HTMLImageElement>('.lobby-team img:last-child').dataset.lobbyImage = config.image;
       $('.lobby-launching .lobby-kicker').textContent = `${characters.require(selectedPilot).name.toUpperCase()} × ${config.id}`;
       $<HTMLAnchorElement>('.lobby-hangar').href =
-        `${base}spaceship.html?vehicle=${config.id}&${pilotQuery({pilot: selectedPilot, palette: selectedPalette, hat: selectedHat})}`;
+        `${base}spaceship.html?vehicle=${config.id}&${pilotQuery({pilot: selectedPilot, palette: selectedPalette, hat: selectedHat})}&livery=${selectedLivery}`;
       if (stage === 2) {
         $<HTMLImageElement>('.lobby-preview-fallback').dataset.lobbyImage = config.image;
         $<HTMLImageElement>('.lobby-preview-fallback').alt = `${config.name} con ${characters.require(selectedPilot).name} al mando`;
       }
+      preview?.setLivery(selectedLivery);
       preview?.setVehicle(selectedVehicle);
       updatePaperImages();
     }
     root
       .querySelectorAll<HTMLButtonElement>('[data-vehicle-choice]')
       .forEach((button) => button.addEventListener('click', () => selectVehicle(button.dataset.vehicleChoice), {signal}));
+    root.querySelectorAll<HTMLButtonElement>('button[data-livery]').forEach((button) =>
+      button.addEventListener('click', () => {
+        selectedLivery = shipLivery(button.dataset.livery).id;
+        selectVehicle(selectedVehicle);
+      }, {signal}),
+    );
     $('[data-screen="2"] .lobby-roster').addEventListener(
       'keydown',
       (event) => {
@@ -376,6 +394,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
             pilot: selectedPilot,
             palette: selectedPalette,
             hat: selectedHat,
+            livery: selectedLivery,
             onStatus: (status) => {
               if (!leaving)
                 root.dataset.preview =
@@ -395,6 +414,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
           preview = result;
           preview.setPilot(selectedPilot, selectedPalette, selectedHat);
           preview.setPaper(paper);
+          preview.setLivery(selectedLivery);
           preview.setVehicle(selectedVehicle);
           preview.setKind(stage === 1 ? 'pilot' : 'vehicle');
         })
@@ -413,6 +433,7 @@ export async function createFlightEntry() {
   url.searchParams.set('pilot', choice.pilot);
   url.searchParams.set('palette', choice.palette);
   url.searchParams.set('hat', choice.hat);
+  url.searchParams.set('livery', choice.livery);
   url.searchParams.set('comic', choice.paper ? '1' : '0');
   url.searchParams.delete('seed');
   url.searchParams.delete('selection');

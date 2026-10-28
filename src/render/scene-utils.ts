@@ -1,4 +1,4 @@
-import type {Color, Material, Mesh, Object3D} from 'three';
+import type {Color, Material, Mesh, Object3D, Texture} from 'three';
 
 /** Material type flags read when deciding which surfaces a look converts. */
 export interface MaterialFlags {
@@ -13,6 +13,7 @@ export interface MaterialFlags {
 export type SurfaceMaterial = Material &
   MaterialFlags & {
     color?: Color;
+    map?: Texture | null;
     emissive?: Color;
     emissiveIntensity?: number;
   };

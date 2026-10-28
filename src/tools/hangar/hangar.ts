@@ -1,16 +1,19 @@
+import {positionLocal} from 'three/tsl';
+import type {Node} from 'three/webgpu';
+import {VehicleLivery} from '@/content/vehicles/vehicle-livery';
+import {shipLivery, shipLiveryChoice} from '@/content/vehicles/zudoneta-037/liveries';
+import {createExhaustEngine} from '@/fx/exhaust/engines';
+import type {ExhaustEngine} from '@/fx/exhaust/exhaust-engine';
+import {LensUniforms} from '@/fx/singularity/singularity-lens';
 import '@/ui/renderer-navigation';
 import {
   ACESFilmicToneMapping,
-  AdditiveBlending,
   Box3,
   Clock,
   Color,
-  ConeGeometry,
-  DoubleSide,
   Group,
   MathUtils,
   Mesh,
-  MeshBasicMaterial,
   PCFShadowMap,
   PerspectiveCamera,
   Raycaster,
@@ -36,13 +39,12 @@ import {characters} from '@/content/characters';
 import {GameRenderer} from '@/render/game-renderer';
 import {ComicView} from '@/render/comic-view';
 import {LomiPlasma} from '@/fx/lomi/lomi-plasma';
-import {loadEnergyTextures, type EnergyTextures} from '@/fx/lomi/lomi-energy';
+import {IDLE_STATE, loadEnergyTextures, type EnergyTextures} from '@/fx/lomi/lomi-energy';
 import {HANGAR_VIEWS, hangarMarkup, type HangarViewName} from './hangar-markup';
 import {HangarStage} from './hangar-stage';
 import './hangar.css';
 
-// The characters catalog is not typed yet: local stand-ins for the pilot choice and the seated pilot,
-// describing only what the hangar uses.
+// The hangar only needs the pilot selection and seated actor contract.
 
 interface HangarPilotChoice {
   pilot: string;
@@ -75,12 +77,6 @@ interface HangarMesh {
   rest: Vector3;
   /** Which side of the ship's centre line the mesh sits on. */
   side: 1 | -1;
-}
-
-interface Plume {
-  mesh: Mesh<ConeGeometry, MeshBasicMaterial>;
-  /** Nozzle z: the plume grows backwards from here. */
-  outlet: number;
 }
 
 interface PartLabel {
@@ -270,10 +266,15 @@ export class Hangar {
   private readonly pilotMeshes: Object3D[] = [];
   private readonly plasma: LomiPlasma | null = null;
   private readonly cloth: ShipCloth[];
-  private readonly plumes: Plume[] = [];
+  private readonly livery: VehicleLivery;
+  private selectedLivery: string;
+  private readonly lens: LensUniforms | null;
+  private readonly anchors: Object3D[] = [];
+  private propulsion: ExhaustEngine | null = null;
+  private propulsionSeek = true;
+  private propulsionActive = false;
   private readonly labels: PartLabel[];
   private readonly splitMeshes = new Map<string, HangarMesh[]>();
-  private readonly hotVanes: HangarMesh[];
   private readonly showPilot: boolean;
   private readonly initialComic: boolean;
   private readonly simulatorBase: string;
@@ -295,7 +296,6 @@ export class Hangar {
   private explode = 0;
   private open = 0;
   private idleTime = 0;
-  private plasmaTime = 0;
   private cameraLift = 0;
   private viewTween: ViewTween | null = null;
   private down: {x: number; y: number} | null = null;
@@ -309,7 +309,8 @@ export class Hangar {
     const query = new URLSearchParams(location.search);
     const config = vehicles.resolve(query.get('vehicle'));
     const choice: HangarPilotChoice = pilotChoice();
-    const pilotParams: string = pilotQuery(choice);
+    const selectedLivery = shipLiveryChoice(query);
+    const pilotParams = `${pilotQuery(choice)}&livery=${selectedLivery}`;
     const base = import.meta.env.BASE_URL;
     document.title = `${config.id} · ${config.title}`;
     const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -321,11 +322,13 @@ export class Hangar {
         title: config.title,
         file: config.model.slice(config.model.lastIndexOf('/') + 1),
         windshield: config.canopy?.kind === 'windshield',
+        paint: !!config.paint,
       },
       parts: config.hangar.parts,
       ships: vehicles.list(),
       pilotParams,
       hat: choice.hat,
+      livery: selectedLivery,
       pilotName: characters.resolve(choice.pilot).name,
       downloadUrl: `${base}${config.model}`,
     });
@@ -346,7 +349,16 @@ export class Hangar {
       renderer.dispose();
       return null;
     }
-    return new Hangar(context, viewer, assets);
+    const hangar = new Hangar(context, viewer, assets);
+    try {
+      await hangar.start();
+      return hangar;
+    } catch (error) {
+      console.error(error);
+      page.fail('No se pudo iniciar el motor de la nave. Intentá de nuevo.');
+      hangar.dispose();
+      return null;
+    }
   }
 
   private static createViewer(renderer: WebGPURenderer, {page, ship: config, reducedMotion}: HangarContext): HangarViewer {
@@ -406,7 +418,7 @@ export class Hangar {
   }
 
   private constructor(context: HangarContext, viewer: HangarViewer, {model, pilot, energy}: HangarAssets) {
-    const {page, ship: config, choice, pilotParams, base, reducedMotion} = context;
+    const {page, ship: config, choice, base, reducedMotion} = context;
     this.page = page;
     this.config = config;
     this.parts = config.hangar.parts;
@@ -431,6 +443,9 @@ export class Hangar {
     });
     this.collectMeshes(model);
     if (this.canopy) this.system('cockpit').attach(this.canopy);
+    this.livery = new VehicleLivery(this.ship, config.paint);
+    this.selectedLivery = shipLiveryChoice();
+    page.viewport.dataset.livery = this.livery.set(this.selectedLivery);
     for (const item of this.meshes) item.rest = item.mesh.position.clone();
 
     if (energy) this.plasma = this.createPlasma(model, energy);
@@ -444,7 +459,7 @@ export class Hangar {
     const query = new URLSearchParams(location.search);
     this.initialComic = query.has('comic') ? query.get('comic') !== '0' : !this.showPilot;
     this.comicEnabled = this.initialComic;
-    this.simulatorBase = `${base}?vehicle=${config.id}&${pilotParams}`;
+    this.simulatorBase = `${base}?vehicle=${config.id}&${pilotQuery(choice)}`;
     pilot.root.visible = this.showPilot;
     page.pilotInput.checked = this.showPilot;
     page.comicButton.setAttribute('aria-pressed', String(this.initialComic));
@@ -452,8 +467,8 @@ export class Hangar {
     pilot.root.traverse((object) => {
       if (isMesh(object)) this.pilotMeshes.push(object);
     });
-    this.comic = new ComicView(this.renderer, this.scene, this.camera);
-    if (config.engine.kind !== 'singularity') this.createPlumes();
+    this.lens = config.engine.kind === 'singularity' ? new LensUniforms() : null;
+    this.comic = new ComicView(this.renderer, this.scene, this.camera, {lens: this.lens});
 
     this.bindControls();
     this.sizeObserver = new ResizeObserver(() => this.resize());
@@ -471,7 +486,6 @@ export class Hangar {
           this.meshes.filter((item) => item.system === part.id),
         );
     }
-    this.hotVanes = this.meshes.filter((item) => item.emissive && /aleta[_ ]caliente/.test(item.mesh.name));
 
     page.enableControls();
     if (!this.canopy) {
@@ -483,7 +497,6 @@ export class Hangar {
     this.syncCanopyControls();
     page.viewport.dataset.meshCount = String(this.meshes.length);
     this.updateTransport();
-    this.renderer.setAnimationLoop(this.frame);
     for (const type of ['webglcontextlost', 'graphicslost']) {
       this.listeners.listen(page.canvas, type, (event) => {
         event.preventDefault();
@@ -504,7 +517,9 @@ export class Hangar {
     this.controls.dispose();
     this.listeners.dispose();
     void this.renderTask.finally(() => {
+      this.propulsion?.dispose();
       this.comic.dispose();
+      this.livery.dispose();
       this.plasma?.dispose();
       this.pilot.dispose();
       this.stage.dispose();
@@ -531,7 +546,9 @@ export class Hangar {
       const inCanopy = this.canopyMeshes.has(mesh);
       const system = this.config.hangar.classify(mesh.name, inCanopy);
       mesh.userData.system = system;
-      const material = mesh.material.clone();
+      const material = mesh.material.clone() as Material & {positionNode?: Node};
+      // Three r182 otherwise reuses stale per-object transforms after an exploded view.
+      material.positionNode ??= positionLocal;
       mesh.material = material;
       const emissive = isEmissive(material) ? {material, color: material.emissive.clone(), intensity: material.emissiveIntensity} : null;
       mesh.castShadow = true;
@@ -549,6 +566,7 @@ export class Hangar {
       if (!isMesh(object) && object.userData.shader === 'lomi_ship_thrust') anchors.push(object);
     });
     for (const anchor of anchors) this.system('engines').attach(anchor);
+    this.anchors.push(...anchors);
     const tagged = (shader: string): Mesh[] => this.meshes.filter(({mesh}) => mesh.userData.shader === shader).map(({mesh}) => mesh);
     return new LomiPlasma(this.ship, {
       crystals: tagged('lomi_ship_crystal'),
@@ -559,26 +577,12 @@ export class Hangar {
     });
   }
 
-  // Plumes point backwards (-Z). Their scale and emission follow the flight timeline.
-  private createPlumes(): void {
-    const engines = this.system('engines');
-    const plume = (radius: number, length: number, color: number, opacity: number) =>
-      new Mesh(
-        new ConeGeometry(radius, length, 8, 1, true),
-        new MeshBasicMaterial({color, transparent: true, opacity, depthWrite: false, side: DoubleSide, blending: AdditiveBlending}),
-      );
-    for (const [x, y, z, radius] of this.config.engine.exhausts) {
-      const outer = plume(radius, 1.2, 0xff9944, 0.3);
-      outer.rotation.x = -Math.PI / 2;
-      outer.position.set(x, y, z - 0.6);
-      engines.add(outer);
-      this.plumes.push({mesh: outer, outlet: z});
-      const core = plume(0.12, 0.8, 0xd9f6ff, 0.7);
-      core.rotation.x = -Math.PI / 2;
-      core.position.set(x, y, z - 0.4);
-      engines.add(core);
-      this.plumes.push({mesh: core, outlet: z});
-    }
+  private async start(): Promise<void> {
+    this.propulsion = await createExhaustEngine(this.config.engine.kind, this.renderer, this.scene, {
+      root: this.system('engines'), definition: this.config, anchors: this.anchors, plasma: this.plasma,
+    }, {camera: this.camera, lens: this.lens});
+    this.page.viewport.dataset.engine = this.config.engine.kind;
+    this.renderer.setAnimationLoop(this.frame);
   }
 
   private bindControls(): void {
@@ -592,12 +596,31 @@ export class Hangar {
         if (isViewName(view)) this.goToView(VIEW_POSITIONS[view], view);
       });
     }
+    for (const button of page.app.querySelectorAll<HTMLButtonElement>('button[data-livery]')) {
+      listeners.listen(button, 'click', () => {
+        this.selectedLivery = this.livery.set(button.dataset.livery);
+        page.viewport.dataset.livery = this.selectedLivery;
+        page.app.querySelector<HTMLElement>('.ship-livery-name')!.textContent = shipLivery(this.selectedLivery).name;
+        for (const item of page.app.querySelectorAll<HTMLButtonElement>('button[data-livery]')) {
+          item.setAttribute('aria-pressed', String(item.dataset.livery === this.selectedLivery));
+        }
+        const url = new URL(location.href);
+        url.searchParams.set('livery', this.selectedLivery);
+        history.replaceState(null, '', url);
+        for (const link of page.app.querySelectorAll<HTMLAnchorElement>('.ship-back,.ship-picker a,.ship-simulator')) {
+          const target = new URL(link.href);
+          target.searchParams.set('livery', this.selectedLivery);
+          link.href = target.href;
+        }
+      });
+    }
     listeners.listen(page.playButton, 'click', () => this.togglePlay());
     listeners.listen(page.resetButton, 'click', () => this.reset());
     listeners.listen(page.timeInput, 'input', () => {
       this.playing = false;
       this.elapsed = Number(page.timeInput.value);
-      page.canopyInput.checked = !!this.canopy && page.pilotInput.checked;
+      this.propulsionSeek = true;
+      page.canopyInput.checked = false;
       page.explodeInput.checked = false;
       this.updateTransport();
     });
@@ -623,7 +646,6 @@ export class Hangar {
     listeners.listen(page.pilotInput, 'change', () => {
       this.pilot.root.visible = page.pilotInput.checked;
       if (page.pilotInput.checked) {
-        page.hideCanopyInput.checked = !!this.canopy;
         this.goToView(COCKPIT_VIEW);
       }
       this.syncCanopyControls();
@@ -634,6 +656,7 @@ export class Hangar {
       this.updateSimulatorLink();
     });
     listeners.listen(this.reducedMotion, 'change', () => {
+      this.propulsionSeek = true;
       controls.enableDamping = !this.reducedMotion.matches;
       if (!this.reducedMotion.matches) return;
       this.playing = false;
@@ -748,6 +771,7 @@ export class Hangar {
   private stopFlight(): void {
     this.playing = false;
     this.elapsed = 0;
+    this.propulsionSeek = true;
     this.updateTransport();
   }
 
@@ -755,8 +779,11 @@ export class Hangar {
     const {page} = this;
     this.playing = !this.playing;
     if (this.playing) {
-      if (this.elapsed >= FLIGHT_DURATION) this.elapsed = 0;
-      page.canopyInput.checked = !!this.canopy && page.pilotInput.checked;
+      if (this.elapsed >= FLIGHT_DURATION) {
+        this.elapsed = 0;
+        this.propulsionSeek = true;
+      }
+      page.canopyInput.checked = false;
       page.explodeInput.checked = false;
     }
     this.updateTransport();
@@ -775,23 +802,20 @@ export class Hangar {
     page.canopyInput.checked = false;
     this.syncCanopyControls();
     page.explodeInput.checked = false;
-    page.labelsInput.checked = true;
+    page.labelsInput.checked = false;
     this.goToView(VIEW_POSITIONS.perspective, 'perspective');
   }
 
   private syncCanopyControls(): void {
     const {page, canopy} = this;
     const hidden = page.hideCanopyInput.checked;
-    const occupied = page.pilotInput.checked;
-    // Zud's hat needs more clearance than the closed cover provides.
-    page.canopyInput.disabled = !canopy || hidden || occupied;
+    page.canopyInput.disabled = !canopy || hidden;
     page.hideCanopyInput.disabled = !canopy;
-    if (occupied && canopy) page.canopyInput.checked = true;
     if (canopy) canopy.visible = !hidden;
   }
 
   private updateSimulatorLink(): void {
-    this.page.simulatorLink.href = `${this.simulatorBase}&comic=${this.comicEnabled ? '1' : '0'}`;
+    this.page.simulatorLink.href = `${this.simulatorBase}&livery=${this.selectedLivery}&comic=${this.comicEnabled ? '1' : '0'}`;
   }
 
   private resize(): void {
@@ -817,6 +841,7 @@ export class Hangar {
       if (this.elapsed >= FLIGHT_DURATION) {
         if (this.loop) {
           this.elapsed %= FLIGHT_DURATION;
+          this.propulsionSeek = true;
         } else {
           this.elapsed = FLIGHT_DURATION;
           this.playing = false;
@@ -840,16 +865,7 @@ export class Hangar {
     this.explode = MathUtils.lerp(this.explode, page.explodeInput.checked ? 1 : 0, ease);
     this.open = MathUtils.lerp(this.open, page.canopyInput.checked ? 1 : 0, ease);
     this.poseShip(pose.altitude + pose.bob, pose.roll, pose.pitch);
-    this.updatePlumes(pose.power, reduced);
-    const engines = this.selected === 'engines';
-    for (const {emissive} of this.hotVanes) {
-      if (!emissive) continue;
-      emissive.material.emissive.setHex(engines ? 0xd6632e : 0xff6b1c);
-      emissive.material.emissiveIntensity = engines ? 0.2 + pose.power * 2 : pose.power * 2;
-    }
     if (this.pilot.root.visible) this.pilot.update(clothTime, !reduced && elapsed > 0 && elapsed < FLIGHT_DURATION);
-    this.plasmaTime += dt;
-    this.plasma?.idle(this.plasmaTime, reduced);
     this.stage.update(pose.altitude);
 
     this.updateCamera(dt, pose.altitude);
@@ -882,8 +898,7 @@ export class Hangar {
     dataset.comic = String(this.comicEnabled);
 
     this.rendering = true;
-    this.renderTask = this.comic
-      .render(this.comicEnabled, BACKGROUND)
+    this.renderTask = this.renderWithEngine(dt, pose.power)
       .then(this.onRendered)
       .catch(this.onRenderError)
       .finally(this.onRenderSettled);
@@ -927,15 +942,28 @@ export class Hangar {
     }
   }
 
-  private updatePlumes(power: number, reduced: boolean): void {
-    const {plumes, elapsed} = this;
-    for (let i = 0; i < plumes.length; i++) {
-      const {mesh, outlet} = plumes[i];
-      const length = power * (1 + (reduced ? 0 : 0.08 * Math.sin(elapsed * 20 + i)));
-      mesh.visible = power > 0.01;
-      mesh.scale.y = length;
-      mesh.position.z = outlet - (i % 2 === 0 ? 0.6 : 0.4) * length;
+  private async renderWithEngine(dt: number, power: number): Promise<void> {
+    const engine = this.propulsion!;
+    const idle = this.config.engine.kind === 'singularity' && this.elapsed === 0;
+    const active = !this.reducedMotion.matches && (power > 0 || idle);
+    const seek = this.propulsionSeek;
+    this.propulsionSeek = false;
+    const clear = seek || this.propulsionActive !== active;
+    this.propulsionActive = active;
+    const step = active ? (seek ? 0.1 : this.playing ? dt * this.speed : idle ? dt : 0) : 0;
+    if (clear) {
+      engine.clear();
+      await engine.update(0, 'Soltar', false);
     }
+    await engine.update(step, power > 0.1 ? 'Aceleración' : 'Reposo', active, false, {
+      ...IDLE_STATE, throttle: power, speed: power * 28,
+    });
+    this.scene.updateMatrixWorld(true);
+    this.camera.updateMatrixWorld();
+    engine.updatePost(this.comic);
+    this.page.viewport.dataset.enginePower = engine.stats.power.toFixed(3);
+    this.page.viewport.dataset.engineParticles = String(engine.stats.emitted);
+    await this.comic.render(this.comicEnabled, BACKGROUND);
   }
 
   /** View tweens run in lift-free space; the camera then rises with the ship and the exploded view. */

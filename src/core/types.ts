@@ -18,4 +18,5 @@ export interface RacerChoice {
   /** Character customization; ignored by characters that don't support it. */
   palette?: string;
   hat?: string;
+  livery?: string;
 }

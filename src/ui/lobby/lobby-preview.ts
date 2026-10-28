@@ -1,3 +1,4 @@
+import {shipLivery} from '@/content/vehicles/zudoneta-037/liveries';
 import * as THREE from 'three';
 import {characters} from '@/content/characters';
 import type {Character} from '@/content/characters/character';
@@ -21,6 +22,7 @@ export interface PreviewOptions {
   pilot?: string;
   palette?: string;
   hat?: string;
+  livery?: string;
   onStatus?: (status: PreviewStatus) => void;
 }
 
@@ -32,10 +34,11 @@ export async function createFlightPreview(
     signal,
     initialKind = 'pilot',
     paper = true,
-    vehicle = '033',
+    vehicle = '037',
     pilot = 'zud',
     palette = 'Original',
     hat = 'beanie',
+    livery = 'original',
     onStatus = () => {},
   }: PreviewOptions,
 ) {
@@ -124,7 +127,8 @@ export async function createFlightPreview(
   let selectedVehicle = vehicles.resolve(vehicle).id,
     selectedPilot = characters.resolve(pilot).id,
     selectedPalette = zudmaticPalette(palette).name,
-    selectedHat = zudHat(hat).id;
+    selectedHat = zudHat(hat).id,
+    selectedLivery = shipLivery(livery).id;
   const vehicleKey = () => `vehicle:${selectedVehicle}:${selectedPilot}`;
   const activeId = () => (kind === 'pilot' ? `pilot:${selectedPilot}` : vehicleKey());
   let disposed = false,
@@ -182,7 +186,7 @@ export async function createFlightPreview(
   function activeActor() {
     return kind === 'pilot' ? pilots.get(selectedPilot) : ships.get(vehicleKey())?.pilot.actor;
   }
-  const actorKey = () => `${activeId()}:${selectedHat}:${selectedPalette}:${paperEnabled}`;
+  const actorKey = () => `${activeId()}:${selectedHat}:${selectedPalette}:${selectedLivery}:${paperEnabled}`;
   function ready() {
     return assetsReady() && renderedKey === actorKey();
   }
@@ -240,6 +244,7 @@ export async function createFlightPreview(
     canvas.dataset.pilot = selectedPilot;
     canvas.dataset.palette = selectedPalette;
     canvas.dataset.hat = selectedHat;
+    canvas.dataset.livery = vehicles.require(selectedVehicle).paint ? selectedLivery : 'original';
     frameCamera();
     pedestal.scale.setScalar(kind === 'pilot' ? 0.83 : 1.24);
     dirty = true;
@@ -312,12 +317,13 @@ export async function createFlightPreview(
     if (!pending.has(requested))
       pending.set(
         requested,
-        Vehicle.load(vehicles.resolve(id), {character: pilot, palette: selectedPalette, hat: selectedHat, exhaust: false})
+        Vehicle.load(vehicles.resolve(id), {character: pilot, palette: selectedPalette, hat: selectedHat, livery: selectedLivery, exhaust: false})
           .then((ship) => {
             if (disposed || signal.aborted) {
               ship.dispose();
               return;
             }
+            ship.setLivery(selectedLivery);
             ship.pilot.actor.setPalette?.(selectedPalette);
             ships.set(requested, ship);
             ship.update(0, 0, false, true);
@@ -337,10 +343,16 @@ export async function createFlightPreview(
     setKind(kind);
     return loadVehicle();
   }
+  function setLivery(id: string) {
+    selectedLivery = shipLivery(id).id;
+    ships.forEach((ship) => ship.setLivery(selectedLivery));
+    setKind(kind);
+  }
   function setPilot(id: string, palette = selectedPalette, hat = selectedHat) {
     selectedPilot = characters.resolve(id).id;
     selectedPalette = zudmaticPalette(palette).name;
-    selectedHat = zudHat(hat).id;
+    selectedHat = zudHat(hat).id,
+    selectedLivery = shipLivery(livery).id;
     applyHat(zud);
     ships.forEach((ship) => applyHat(ship.pilot.actor));
     pilots.forEach((actor) => actor.setPalette?.(selectedPalette));
@@ -387,6 +399,7 @@ export async function createFlightPreview(
     setKind,
     setVehicle,
     setPilot,
+    setLivery,
     setPaper(enabled: boolean) {
       paperEnabled = enabled;
       dirty = true;

@@ -254,9 +254,15 @@ export class ComicMaterials implements Disposable {
     for (const binding of this.bindings) binding.mesh.material = on ? binding.printed : binding.source;
   }
 
-  /** Follows the authored materials' animated emissive intensity. */
+  /** Follows live paint-map replacements and animated emissive intensity. */
   sync(): void {
-    for (const [source, material] of this.cache) material.emissiveIntensity = source.emissiveIntensity ?? 1;
+    for (const [source, material] of this.cache) {
+      if (material.map !== (source.map ?? null)) {
+        material.map = source.map ?? null;
+        material.needsUpdate = true;
+      }
+      material.emissiveIntensity = source.emissiveIntensity ?? 1;
+    }
   }
 
   dispose(): void {

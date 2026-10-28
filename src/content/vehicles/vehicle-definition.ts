@@ -1,3 +1,4 @@
+import type {VehiclePaint} from './vehicle-livery';
 import type {SeatFit, Vec3Tuple} from '@/core/types';
 import type {VehicleComponentFactory} from './vehicle-component';
 
@@ -122,6 +123,8 @@ export interface VehicleDefinition {
   readonly image: string;
   /** GLB path relative to public/. */
   readonly model: string;
+  /** Optional body paint variants; mechanical surfaces retain their authored PBR maps. */
+  readonly paint?: VehiclePaint;
   readonly transform?: VehicleTransform;
   /** Omitted: the hover physics' default hull. */
   readonly hull?: HullShape;

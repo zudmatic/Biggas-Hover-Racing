@@ -1,3 +1,4 @@
+import {shipLiveryChoice} from '@/content/vehicles/zudoneta-037/liveries';
 import {ACESFilmicToneMapping, Color, Fog, PCFShadowMap, PerspectiveCamera, Scene} from 'three';
 import type {WebGPURenderer} from 'three/webgpu';
 import {audio} from '@/audio/audio-system';
@@ -70,6 +71,7 @@ export class RaceSession implements Disposable {
   private readonly trackConfig = tracks.resolve(this.query.get('map'));
   private readonly vehicleConfig = vehicles.resolve(this.query.get('vehicle'));
   private readonly choice = pilotChoice(this.query);
+  private readonly livery = shipLiveryChoice(this.query);
   private readonly naturalLook = this.trackConfig.id === 'desert-valley';
   private readonly artReview = import.meta.env.DEV && this.naturalLook && this.query.has('artView');
   private readonly screen: RaceScreen;
@@ -126,7 +128,7 @@ export class RaceSession implements Disposable {
     history.replaceState(null, '', canonical);
 
     const base = import.meta.env.BASE_URL;
-    const team = pilotQuery(choice);
+    const team = `${pilotQuery(choice)}&livery=${this.livery}`;
     this.screen = new RaceScreen({
       pilotName: pilot.name,
       vehicleId: vehicleConfig.id,
@@ -146,6 +148,7 @@ export class RaceSession implements Disposable {
       pilot: choice.pilot,
       palette: choice.palette,
       hat: choice.hat,
+      livery: vehicleConfig.paint ? this.livery : 'original',
       vehicle: vehicleConfig.id,
     });
     entryTransition?.mount();
@@ -231,6 +234,7 @@ export class RaceSession implements Disposable {
           character: this.choice.pilot,
           palette: this.choice.palette,
           hat: this.choice.hat,
+          livery: this.livery,
           exhaust: false,
         }),
         this.loadTrack(),
@@ -343,7 +347,7 @@ export class RaceSession implements Disposable {
     });
     this.player = new Racer(
       'p1',
-      {character: this.choice.pilot, vehicle: this.vehicleConfig.id, palette: this.choice.palette, hat: this.choice.hat},
+      {character: this.choice.pilot, vehicle: this.vehicleConfig.id, palette: this.choice.palette, hat: this.choice.hat, livery: this.livery},
       track.landscape,
       track,
       this.input,

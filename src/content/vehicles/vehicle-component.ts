@@ -27,6 +27,7 @@ export interface VehicleLoadOptions {
   character?: string;
   palette?: string;
   hat?: string;
+  livery?: string;
   /** Local flame jets for model viewers (racing draws exhaust in fx/exhaust). Default true. */
   exhaust?: boolean;
   /** TSL plasma; the WebGL thumbnail script opts out. Default true. */
