@@ -17,8 +17,8 @@ export class FovDials implements Disposable {
     'Nitro · lente y FOV',
     {
       'FOV base': [65, 45, 80, 1],
-      'FOV por velocidad': [12, 0, 20, 1],
-      'FOV extra nitro': [16, 0, 30, 1],
+      'FOV por velocidad': [8, 0, 20, 1],
+      'FOV extra nitro': [7, 0, 30, 1],
       'Rapidez entrada': [9, 1, 20, 0.5],
       'Rapidez salida': [3.5, 1, 12, 0.5],
       Restablecer: {type: 'action', label: 'Restablecer lente'},
