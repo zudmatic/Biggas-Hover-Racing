@@ -1,1 +1,1 @@
-export {createDither} from '../../src/vfx/dither.js';
+export {Dither} from '../../src/render/shaders/dither';

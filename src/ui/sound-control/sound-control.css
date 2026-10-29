@@ -1,0 +1,23 @@
+.sound-control{position:relative;flex-shrink:0;--sound-accent:#ba4b2a;--sound-track:#d5d8ca}
+:is(.race-lobby,.flight-app) .sound-control{--sound-accent:var(--race-blue);--sound-track:#e1e1e1}
+.sound-control .sound-muted{display:none}
+.sound-control .sound-trigger[data-muted=true] .sound-waves{display:none}
+.sound-control .sound-trigger[data-muted=true] .sound-muted{display:block}
+.sound-control .sound-panel{position:fixed;z-index:20;width:228px;max-width:calc(100vw - 24px);padding:16px;background:#f4f1e8;color:#283b38;border:1px solid #fff8;border-radius:9px;box-shadow:0 8px 24px #14251e26;text-align:left;font:12px Arial,Helvetica,sans-serif}
+:is(.race-lobby,.flight-app) .sound-panel{background:var(--race-paper);color:var(--race-ink);border:var(--race-border);border-radius:6px;box-shadow:var(--race-shadow)}
+.sound-panel[hidden]{display:none!important}
+.sound-volume-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:700}
+.sound-volume-value,.sound-effects-value{font:12px monospace;color:var(--sound-accent);font-variant-numeric:tabular-nums}
+.sound-volume-limits+.sound-volume-heading{margin-top:14px}
+.sound-control .sound-volume{display:block;appearance:none;width:100%;height:32px;margin:8px 0 0;padding:0;border:0;cursor:pointer;touch-action:none;background:transparent;accent-color:var(--sound-accent)}
+.sound-volume::-webkit-slider-runnable-track{height:5px;border-radius:3px;background:linear-gradient(to right,var(--sound-accent) var(--sound-volume),var(--sound-track) var(--sound-volume))}
+.sound-volume::-moz-range-track{height:5px;border-radius:3px;background:var(--sound-track)}
+.sound-volume::-moz-range-progress{height:5px;border-radius:3px;background:var(--sound-accent)}
+.sound-volume::-webkit-slider-thumb{appearance:none;width:18px;height:18px;margin-top:-6.5px;border:2px solid #fff;border-radius:50%;background:var(--sound-accent);box-shadow:0 0 0 1px var(--sound-accent)}
+.sound-volume::-moz-range-thumb{width:14px;height:14px;border:2px solid #fff;border-radius:50%;background:var(--sound-accent);box-shadow:0 0 0 1px var(--sound-accent)}
+.sound-control .sound-volume:focus-visible{outline:2px solid var(--sound-accent);outline-offset:2px;border-radius:3px}
+.sound-volume-limits{display:flex;justify-content:space-between;color:#666;font:9px monospace}
+.sound-control .sound-mute{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;min-height:38px;margin-top:12px;padding:8px 0 0;background:transparent;border:0;border-top:1px solid var(--sound-track);border-radius:0;color:inherit;font:11px Arial,Helvetica,sans-serif;backdrop-filter:none}
+.sound-control .sound-mute:hover{background:transparent;color:var(--sound-accent)}
+.sound-control .sound-mute:focus-visible{outline:2px solid var(--sound-accent);outline-offset:3px}
+.sound-mute kbd{border:1px solid var(--sound-track);border-radius:3px;padding:2px 4px;font:10px monospace}

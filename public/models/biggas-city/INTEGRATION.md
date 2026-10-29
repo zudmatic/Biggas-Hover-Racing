@@ -22,8 +22,16 @@ pause/reduced motion disable its movement as appropriate. No city fixture lights
 train audio or ad texture are loaded. Forest texture tiles stay at 256px desktop /
 128px mobile; a dedicated earth tile adds gravel and shallow ruts.
 
-Validate with `tests/biggas-forest.spec.js` (ground support, tree impacts, driven
-slalom, cave clearance, dust lifecycle) and the existing launch/water/jump tests.
+The implementation lives in `src/content/tracks/biggas-forest/`. `ForestTrack`
+implements the shared typed Track API; GLBs use the central AssetLoader, and the
+scene uses main's natural/comic render pipelines, dynamic camera and audio buses.
+Only this track opts into the authored ramp launch and forest collision behavior.
+Waterfall/wind ambience and the cave engine echo follow the shared mute/pause state.
+
+Run `npm run check` for TypeScript and production-build validation. Local-only
+forest checks cover ground support, tree impacts, driven slalom, cave clearance,
+dust lifecycle and takeoff/landing at 16–72 m/s. Tests are not committed, following
+main's repository convention.
 The original import and previous Blender refinement notes below describe source
 assets, rather than the current scene composition.
 

@@ -1,8 +1,17 @@
 node_modules/
 dist/
 .context/
-test-results/
-playwright-report/
 .DS_Store
 .vercel
 .env*
+*.tsbuildinfo
+
+# Tests are local-only and never committed.
+tests/
+test-results/
+playwright-report/
+playwright*.config.*
+**/*.spec.ts
+**/*.spec.js
+**/*.test.ts
+**/*.test.js
