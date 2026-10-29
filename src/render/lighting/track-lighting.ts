@@ -44,6 +44,7 @@ export interface LightingTrack {
   map: string;
   length: number;
   atDistance(distance: number): LightingRoadSample;
+  configureLighting?: (lights:Light[])=>void;
 }
 
 /** The ship pose and drive state the sun, headlights and underglow follow. */
@@ -54,6 +55,7 @@ export interface LightingState {
   yaw: number;
   pitch: number;
   modelScale?: number;
+  speed?:number;
   braking?: boolean;
   drifting?: boolean;
   boosting?: boolean;
@@ -112,6 +114,7 @@ export class TrackLighting implements Disposable {
   private blend = 0;
   private headlightsOn = false;
   private desert = false;
+  private forest = false;
 
   private readonly dayFog = new Color(0xb6c6bd);
   private readonly nightFog = new Color(0x182c43);
@@ -174,6 +177,13 @@ export class TrackLighting implements Disposable {
   /** Dresses the lights for a track: desert palette and shadows, or lamp posts along the road. */
   setTrack(track: LightingTrack): void {
     const {sun, scene, mobile} = this;
+    if(track.map==='biggas-city'){
+      this.forest=true;this.desert=true;this.dayFog.set(0xb6c6bd);this.daySky.set(0xc4d5c0);this.dayGround.set(0x8f8563);this.daySun.set(0xffead0);
+      if(isLinearFog(scene.fog)){scene.fog.near=300;scene.fog.far=1400;}
+      sun.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
+      Object.assign(sun.shadow.camera,{left:-180,right:180,top:180,bottom:-180,near:5,far:900});sun.shadow.camera.updateProjectionMatrix();
+      track.configureLighting?.([this.sun,this.sky,this.fill,...this.headlights,this.engine]);return;
+    }
     if (track.map === 'desert-valley') {
       this.desert = true;
       this.dayFog.set(0xc7d9dc);
@@ -245,6 +255,12 @@ export class TrackLighting implements Disposable {
     const arc = reducedMotion || desert ? 0 : Math.sin(time * 0.018) * 18;
     sun.position.set(state.x + (desert ? -160 : -110) + arc, state.y + (desert ? 220 : 180), state.z + (desert ? -120 : 70));
     sun.target.position.set(state.x, state.y, state.z);
+    if(this.forest){
+      const lead=30+Math.min(50,(state.speed??0)*.8),target=sun.target.position;
+      target.set(state.x+Math.sin(state.yaw)*lead,state.y,state.z+Math.cos(state.yaw)*lead);
+      const texel=360/sun.shadow.mapSize.x;target.x=Math.round(target.x/texel)*texel;target.z=Math.round(target.z/texel)*texel;
+      sun.position.set(target.x-220,target.y+360,target.z+140);
+    }
 
     this.anchor.set(state.x, state.y, state.z);
     const found = this.selectNearestFixtures();

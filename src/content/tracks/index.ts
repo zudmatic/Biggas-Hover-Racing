@@ -3,6 +3,7 @@ import type {TrackDefinition} from './track-definition';
 import {desertValley} from './desert-valley';
 import {ruins} from './ruins';
 import {nexus} from './nexus';
+import {biggasForest} from './biggas-forest';
 import {marioRaceway} from './mario-raceway';
 
 export type {TrackDefinition, TrackLoadOptions, TrackLook, FxMaterialFactory} from './track-definition';
@@ -15,3 +16,4 @@ tracks.register(desertValley);
 tracks.register(ruins);
 tracks.register(nexus);
 tracks.register(marioRaceway);
+tracks.register(biggasForest);

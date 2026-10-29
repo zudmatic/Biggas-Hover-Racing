@@ -1,3 +1,4 @@
+import type {HoverState, Position3} from './hover-state';
 import type {GameplayData, RouteData, RouteSample, Vec3Array} from './route-data';
 
 /** Resting hover height above the driving surface, in metres. */
@@ -19,6 +20,7 @@ export interface RoadPoint {
   /** Signed lateral offset of the queried point from the centreline. */
   offset: number;
   width: number;
+  bank?: number;
 }
 
 export interface RoadQuery extends RoadPoint {
@@ -35,6 +37,7 @@ export interface Gate {
   radius: number;
   order: number;
   distance: number;
+  alternatives?: Gate[];
 }
 
 export interface SpawnPoint {
@@ -85,6 +88,9 @@ export class Landscape {
   physicalBoundaries = false;
   /** Desert Valley allows airborne traversal over gaps and ramps. */
   allowJumps = false;
+  /** Authored forest ramp; independent of Desert Valley ledge physics. */
+  launchAt?: (previous: Position3, state: HoverState) => {height: number; velocity: number} | null;
+  surfaceGradeAt?: (x: number, z: number, yaw: number) => number | undefined;
   jumpSettings: JumpSettings | null = null;
   shortcut: Vec3Array[] | null = null;
 

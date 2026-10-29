@@ -72,8 +72,8 @@ export class RaceSession implements Disposable {
   private readonly vehicleConfig = vehicles.resolve(this.query.get('vehicle'));
   private readonly choice = pilotChoice(this.query);
   private readonly livery = shipLiveryChoice(this.query);
-  private readonly naturalLook = this.trackConfig.id === 'desert-valley';
-  private readonly artReview = import.meta.env.DEV && this.naturalLook && this.query.has('artView');
+  private readonly naturalLook = this.trackConfig.look === 'natural';
+  private readonly artReview = import.meta.env.DEV && this.trackConfig.id === 'desert-valley' && this.query.has('artView');
   private readonly screen: RaceScreen;
   private readonly hud: Hud;
   private readonly input: RaceInput;
@@ -221,7 +221,7 @@ export class RaceSession implements Disposable {
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = PCFShadowMap;
     renderer.toneMapping = ACESFilmicToneMapping;
-    renderer.toneMappingExposure = this.naturalLook ? 0.98 : 1.05;
+    renderer.toneMappingExposure = this.trackConfig.id === 'desert-valley' ? 0.98 : 1.05;
     renderer.info.autoReset = false;
     this.applyQuality(this.quality.settings);
     this.lighting.sun.shadow.autoUpdate = false;
@@ -268,6 +268,7 @@ export class RaceSession implements Disposable {
       }
       this.graphics = await this.graphicsModule.FlightGraphics.create(renderer, scene, this.camera, vehicle, this.oil, {
         naturalDesert: this.naturalLook,
+        naturalForest: this.trackConfig.id === 'biggas-city',
         boostPads: this.boostPads,
       });
       this.graphics.setQuality(this.quality.settings);
@@ -370,6 +371,7 @@ export class RaceSession implements Disposable {
         return session.phase;
       },
       get look() {
+        if (!session.comic && session.trackConfig.id === 'biggas-city') return 'forest-anime';
         return session.naturalLook && !session.comic ? 'sunlit' : 'comic';
       },
       get state() {
@@ -688,6 +690,7 @@ export class RaceSession implements Disposable {
       phase,
       night: lighting.night,
       camera: this.camera,
+      shadowLight: lighting.sun,
       scale: this.modelScale,
       dt: driving ? dt : 0,
     });

@@ -57,7 +57,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
     preview: Preview | null = null,
     previewStarted = false,
     leaving = false,
-    paper = paperChosen ? lookQuery.get('comic') !== '0' : selectedMap !== 'desert-valley' && selectedPilot !== 'bluleet';
+    paper = paperChosen ? lookQuery.get('comic') !== '0' : tracks.resolve(selectedMap).look !== 'natural' && selectedPilot !== 'bluleet';
   document.title = 'Biggas Hover Racing';
   document.body.innerHTML = `<main class="race-lobby" data-stage="0" data-pilot="zud" data-vehicle="037"><div class="lobby-paper-surface" aria-hidden="true"></div><div class="lobby-title-ribbon" aria-hidden="true"></div><div class="lobby-title-checkers" aria-hidden="true"></div><header class="lobby-header"><a class="lobby-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong></a><nav class="lobby-steps" aria-label="Preparación de carrera" hidden>${steps
     .slice(1)
@@ -177,7 +177,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
         () => {
           selectedMap = input.value;
           root.dataset.map = selectedMap;
-          if (!paperChosen) setPaper(selectedMap !== 'desert-valley' && selectedPilot !== 'bluleet');
+          if (!paperChosen) setPaper(tracks.resolve(selectedMap).look !== 'natural' && selectedPilot !== 'bluleet');
         },
         {signal},
       ),

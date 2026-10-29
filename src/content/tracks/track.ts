@@ -25,6 +25,7 @@ export interface TrackUpdateContext {
   phase: GamePhase;
   night?: boolean;
   camera?: Camera;
+  shadowLight?: DirectionalLight;
   /** Vehicle model scale. */
   scale?: number;
   /** Seconds since the previous frame while driving; 0 when frozen. */

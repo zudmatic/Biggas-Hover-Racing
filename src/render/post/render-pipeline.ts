@@ -6,7 +6,7 @@ import type {HeatField} from '@/fx/heat/heat-field';
 import type {LensUniforms} from '@/fx/singularity/singularity-lens';
 
 /** Post-processing looks. Add an id here and a factory in pipelines.ts to plug in a new one. */
-export type LookId = 'comic' | 'natural';
+export type LookId = 'comic' | 'natural' | 'forest-anime';
 
 export type {HeatField} from '@/fx/heat/heat-field';
 export type {LensUniforms} from '@/fx/singularity/singularity-lens';

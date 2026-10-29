@@ -1,5 +1,5 @@
 import {createHoverState, type HoverInput, type HoverState, type Position3} from './hover-state';
-import {HOVER_HEIGHT, Landscape, type Gate} from './landscape';
+import {HOVER_HEIGHT, Landscape, type Gate,type RoadPoint} from './landscape';
 
 export {HOVER_HEIGHT, Landscape} from './landscape';
 export {createHoverState, type HoverInput, type HoverState, type Position3} from './hover-state';
@@ -80,12 +80,16 @@ export class HoverPhysics {
     const fz = Math.cos(state.yaw);
     const rx = -fz;
     const rz = fx;
-    let longitudinal = Math.max(0, state.vx * fx + state.vz * fz);
+    state.collisionRecoilTime=Math.max(0,state.collisionRecoilTime-dt);
+    const forestAir=!!landscape.launchAt&&state.airborne;
+    const forwardSpeed=state.vx*fx+state.vz*fz;
+    let longitudinal = forestAir||state.collisionRecoilTime>0?forwardSpeed:Math.max(0,forwardSpeed);
     let lateral = state.vx * rx + state.vz * rz;
     // Limit the total propulsion energy while sideways: drift must not grant speed.
     const forwardTarget = Math.sqrt(Math.max(0, target * target - lateral * lateral));
-    longitudinal += clamp(forwardTarget - longitudinal, -acceleration * dt, acceleration * dt);
-    const grip = state.braking
+    const propulsion=acceleration*(forestAir?.12:1);
+    longitudinal += clamp(forwardTarget - longitudinal, -propulsion * dt, propulsion * dt);
+    const grip = forestAir ? .65 : state.braking
       ? HOVER_HANDLING.brakeGrip
       : HOVER_HANDLING.grip + (HOVER_HANDLING.driftGrip - HOVER_HANDLING.grip) * state.driftBlend;
     lateral *= Math.exp(-grip * dt);
@@ -136,7 +140,12 @@ export class HoverPhysics {
     const hoverTarget = HOVER_HEIGHT + (input.reducedMotion ? 0 : Math.sin(state.hoverTime * 2.4) * 0.035) + (state.boosting ? 0.08 : 0);
     const jump = landscape.jumpSettings;
     state.landingTime = Math.max(0, (state.landingTime ?? 0) - dt);
-    if (
+    const launch=!state.airborne&&landscape.launchAt?.(previous,state);
+    if(launch){state.airborne=true;state.airTime=0;state.verticalVelocity=launch.velocity;state.y=launch.height+state.hover;state.landingSeverity=0;}
+    if(landscape.launchAt&&state.airborne){
+      state.airTime+=dt;state.y+=state.verticalVelocity*dt-11*dt*dt;state.verticalVelocity-=22*dt;
+      if(surfaceHeight(state.x,state.z)!=null&&state.airTime>.04&&state.y<=surface+state.hover)landHover(state,surface,road);
+    } else if (
       landscape.allowJumps &&
       (state.airborne || (previous.y - state.hover - surface > (jump?.takeoffDropM ?? 0.8) && state.speed > (jump?.minimumSpeedMps ?? 3)))
     ) {
@@ -170,7 +179,7 @@ export class HoverPhysics {
       if (state.y > surface + MAX_HOVER_HEIGHT) state.hoverVelocity = Math.min(surfaceVelocity, state.hoverVelocity);
       state.y = surface + state.hover;
     }
-    let groundGrade = road.grade * Math.cos(heading);
+    let groundGrade = landscape.surfaceGradeAt?.(state.x,state.z,state.yaw)??(road.grade*Math.cos(heading)-(road.bank??0)*Math.sin(heading));
     if (landscape.allowJumps && !state.airborne) {
       // Ramp pitch follows the actual driving surface, including ramps placed
       // beside the route guide. Ignore discontinuous cliffs at a takeoff lip.
@@ -180,11 +189,11 @@ export class HoverPhysics {
         groundGrade = (front - rear) / 2.4;
     }
     const pitchTarget =
-      (state.airborne ? Math.atan2(state.hoverVelocity, Math.max(5, state.speed)) : Math.atan(groundGrade)) +
+      (state.airborne ? Math.atan2(landscape.launchAt?state.verticalVelocity:state.hoverVelocity, Math.max(5, state.speed)) : Math.atan(groundGrade)) +
       clamp(state.acceleration * 0.0016, -0.07, 0.055);
     state.pitchRate += ((pitchTarget - state.pitch) * HOVER_HANDLING.pitchStiffness - state.pitchRate * HOVER_HANDLING.pitchDamping) * dt;
     state.pitch += state.pitchRate * dt;
-    const rollTarget = clamp((-state.yawRate * 0.11 - state.slip * 0.18) * Math.min(1, state.speed / 12), -0.34, 0.34);
+    const rollTarget = -Math.atan(road.bank??0)*Math.cos(heading)+clamp((-state.yawRate * 0.11 - state.slip * 0.18) * Math.min(1, state.speed / 12), -0.34, 0.34);
     state.rollRate += ((rollTarget - state.roll) * HOVER_HANDLING.rollStiffness - state.rollRate * HOVER_HANDLING.rollDamping) * dt;
     state.roll += state.rollRate * dt;
     state.cooldown = Math.max(0, state.cooldown - dt);
@@ -217,6 +226,7 @@ export class HoverPhysics {
 
 /** True when the segment a→b crosses `gate` forwards, inside its radius. */
 export function crossesCircuitGate(a: Position3, b: Position3, gate: Gate): boolean {
+  if(gate.alternatives?.some(alternative=>crossesCircuitGate(a,b,alternative)))return true;
   const da = (a.x - gate.x) * gate.nx + (a.z - gate.z) * gate.nz;
   const db = (b.x - gate.x) * gate.nx + (b.z - gate.z) * gate.nz;
   if (da >= 0 || db < 0) return false;
@@ -232,4 +242,14 @@ export function formatRaceTime(seconds: number): string {
   const s = Math.floor(seconds % 60);
   const centiseconds = Math.floor((seconds % 1) * 100);
   return `${String(minutes).padStart(2, '0')}:${String(s).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+}
+
+export function landHover(state:HoverState,surface:number,road:RoadPoint):void{
+  const groundVelocity=road.grade*(state.vx*road.nx+state.vz*road.nz)+(road.bank??0)*(-state.vx*road.nz+state.vz*road.nx);
+  const impact=Math.max(0,groundVelocity-state.verticalVelocity),sideways=Math.abs(state.vx*Math.cos(state.yaw)-state.vz*Math.sin(state.yaw))/Math.max(1,state.speed);
+  const severity=clamp((impact-11.5)/10+Math.max(0,sideways-.22),0,1),retention=1-severity*.4;
+  state.vx*=retention;state.vz*=retention;state.speed=Math.hypot(state.vx,state.vz);
+  if(severity>.1){state.throttle=Math.min(state.throttle,state.speed);state.impact=severity*9;state.impactSerial++;state.impactX=state.x;state.impactZ=state.z;}
+  state.hover=Math.max(.43,state.hover-Math.min(.18,impact*.012));state.hoverVelocity=-Math.min(1.3,impact*.09);
+  state.y=surface+state.hover;state.airborne=false;state.verticalVelocity=0;state.airTime=0;state.landingSeverity=severity;state.landingSerial++;state.unsupportedTime=0;
 }

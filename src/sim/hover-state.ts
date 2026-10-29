@@ -48,6 +48,12 @@ export interface HoverState extends Position3 {
   hover: number;
   hoverVelocity: number;
   airborne: boolean;
+  airTime: number;
+  verticalVelocity: number;
+  landingSeverity: number;
+  landingSerial: number;
+  unsupportedTime: number;
+  collisionRecoilTime: number;
   landingTime: number;
   slip: number;
   impact: number;
@@ -91,6 +97,12 @@ export function createHoverState(landscape: Landscape): HoverState {
     hover: HOVER_HEIGHT,
     hoverVelocity: 0,
     airborne: false,
+    airTime: 0,
+    verticalVelocity: 0,
+    landingSeverity: 0,
+    landingSerial: 0,
+    unsupportedTime: 0,
+    collisionRecoilTime: 0,
     landingTime: 0,
     slip: 0,
     impact: 0,

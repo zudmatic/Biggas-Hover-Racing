@@ -4,6 +4,7 @@ import {attribute} from 'three/tsl';
 import type {Disposable} from '@/core/disposable';
 import type {GamePhase} from '@/core/types';
 import type {EngineKind, ExhaustMount} from '@/content/vehicles/vehicle-definition';
+import {createBiggasCityLook, type ForestLook} from '@/content/tracks/biggas-forest/biggas-city-look.js';
 import {DesertLook} from '@/content/tracks/desert-valley/desert-look';
 import {createSmokeMaterial} from '@/fx/drift/smoke-material';
 import {createExhaustEngine, exhaustEngines} from '@/fx/exhaust/engines';
@@ -39,6 +40,7 @@ export interface BoostPadHeat {
 export interface FlightGraphicsOptions {
   /** Desert Valley: the natural (non-comic) look uses the PS2 desert pipeline. */
   naturalDesert?: boolean;
+  naturalForest?: boolean;
   boostPads?: BoostPadHeat | null;
 }
 
@@ -87,7 +89,7 @@ interface FlightGraphicsParts {
   boostPads: BoostPadHeat | null;
   naturalDesert: boolean;
   baseline: BaseMaterials;
-  look: DesertLook | null;
+  look: DesertLook | ForestLook | null;
   lens: LensUniforms | null;
   engine: ExhaustEngine;
 }
@@ -106,13 +108,13 @@ export class FlightGraphics implements Disposable {
     camera: PerspectiveCamera,
     vehicle: FlightVehicle,
     oil: BotFlameSource,
-    {naturalDesert = false, boostPads = null}: FlightGraphicsOptions = {},
+    {naturalDesert = false, naturalForest = false, boostPads = null}: FlightGraphicsOptions = {},
   ): Promise<FlightGraphics> {
     preventShadowVersionChurn(scene);
     // Order matters: the desert look binds the scene's materials after the
     // baseline swap and before the exhaust adds its own meshes.
     const baseline = new BaseMaterials(scene);
-    const look = naturalDesert ? new DesertLook(scene, renderer) : null;
+    const look = naturalForest ? createBiggasCityLook(scene, renderer) : naturalDesert ? new DesertLook(scene, renderer) : null;
     const family = exhaustEngines.resolve(vehicle.definition.engine.kind);
     const lens = family.needsLens ? new LensUniforms() : null;
     let engine: ExhaustEngine;
@@ -127,8 +129,8 @@ export class FlightGraphics implements Disposable {
   }
 
   readonly stats: FlightGraphicsStats = {glowSamples: 12, samples: 4};
-  /** The PS2 desert look (Desert Valley only). */
-  readonly look: DesertLook | null;
+  /** The natural retro look for Desert Valley and Biggas Forest. */
+  readonly look: DesertLook | ForestLook | null;
   readonly engine: ExhaustEngine;
 
   private readonly renderer: WebGPURenderer;
@@ -205,7 +207,7 @@ export class FlightGraphics implements Disposable {
     this.materials?.sync();
     style.pixelRatio.value = renderer.getPixelRatio();
     renderer.getDrawingBufferSize(style.resolution.value);
-    if (!comic) look?.update();
+    if (!comic) look?.update({reducedMotion: reduced});
 
     const running = phase === 'flying' || phase === 'countdown' || phase === 'intro';
     const mode = state.boosting ? 'Turbo' : state.speed > 1 ? 'Aceleración' : 'Reposo';
@@ -241,7 +243,8 @@ export class FlightGraphics implements Disposable {
 
   /** The pipeline of this frame's look at the current quality (compiled once per look and quality). */
   private pipelineFor(comic: boolean): RenderPipeline {
-    const lookId: LookId = this.naturalDesert && !comic ? 'natural' : 'comic';
+    const forest = this.look && 'kind' in this.look && this.look.kind === 'forest-anime';
+    const lookId: LookId = comic ? 'comic' : forest ? 'forest-anime' : this.naturalDesert ? 'natural' : 'comic';
     let pipeline = this.pipelines.get(lookId);
     if (!pipeline) {
       const {renderer, scene, camera, lens} = this;
@@ -249,7 +252,7 @@ export class FlightGraphics implements Disposable {
       this.pipelines.set(lookId, pipeline);
     }
     pipeline.setQuality(this.quality);
-    this.stats.glowSamples = lookId === 'natural' ? 0 : this.quality.glowSamples;
+    this.stats.glowSamples = lookId !== 'comic' ? 0 : this.quality.glowSamples;
     return pipeline;
   }
 }

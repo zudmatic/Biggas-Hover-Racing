@@ -166,6 +166,7 @@ export class ComicMaterial extends MeshLambertNodeMaterial {
 
 /** Source material properties a comic copy takes over (the color objects are shared, not copied). */
 const COPIED_PROPERTIES = [
+  'lightsNode',
   'map',
   'alphaMap',
   'normalMap',

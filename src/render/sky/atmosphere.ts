@@ -22,6 +22,7 @@ import {
 } from 'three';
 import type {Disposable} from '@/core/disposable';
 import {CIRCUIT_SPEED} from '@/sim/hover-physics';
+import {createBiggasCitySky} from '@/content/tracks/biggas-forest/biggas-city-sky.js';
 import {DesertSky} from './desert-sky';
 import {createStarField, createSunDisc, seededRandom, type Sky, type SkyUpdateOptions} from './sky';
 
@@ -233,7 +234,8 @@ export class CircuitSky implements Sky {
 }
 
 /** The sky of a track: Desert Valley's painted panorama, or the procedural circuit sky. */
-export function createCircuitSky(scene: Scene, {mobile = false, map = 'ruins'}: CircuitSkyOptions = {}): CircuitSky | DesertSky {
+export function createCircuitSky(scene: Scene, {mobile = false, map = 'ruins'}: CircuitSkyOptions = {}): Sky {
+  if(map==='biggas-city')return createBiggasCitySky(scene,{mobile});
   if (map === 'desert-valley') return new DesertSky(scene, {mobile});
   return new CircuitSky(scene, {mobile, map});
 }

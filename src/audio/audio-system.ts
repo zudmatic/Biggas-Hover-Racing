@@ -222,6 +222,11 @@ export class AudioSystem implements Disposable {
     return {context: this.context, destination: this.buses.world.input, active: this.worldActive};
   }
 
+  /** Gated engine send for track-owned acoustic reflections. */
+  get engineOutput(): AudioNode | null {
+    return this.disposed ? null : this.buses?.engine.input ?? null;
+  }
+
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
