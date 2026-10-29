@@ -7,8 +7,8 @@ import {uniform,texture,uv,positionLocal,vec2,vec3,mix,smoothstep} from 'three/t
 // both joins continuous; haze and a zenith fade remove the image's top/bottom
 // edges. The complete dome follows the camera, including jump-height views.
 export function createBiggasCitySky(scene,{mobile=false}={}){
-  const root=new THREE.Group();root.name='Cielo pintado de Biggas City';scene.add(root);
-  const mountains=createBiggasHorizon(scene,{mobile});
+  const root=new THREE.Group();root.name='Cielo pintado de Biggas Forest';scene.add(root);
+  const mountains=createBiggasHorizon(root,{mobile});
   const radius=4400,geometry=new THREE.SphereGeometry(radius,32,20);
   const ready=uniform(0),nightBlend=uniform(0);let disposed=false,blend=0;
   const panorama=new THREE.TextureLoader().load(`${import.meta.env.BASE_URL}textures/sky/desert-cloud-panorama-v01.webp`,()=>{

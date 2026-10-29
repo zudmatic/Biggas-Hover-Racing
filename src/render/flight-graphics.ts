@@ -243,7 +243,8 @@ export class FlightGraphics implements Disposable {
 
   /** The pipeline of this frame's look at the current quality (compiled once per look and quality). */
   private pipelineFor(comic: boolean): RenderPipeline {
-    const lookId: LookId = this.naturalDesert && !comic ? 'natural' : 'comic';
+    const forest = this.look && 'kind' in this.look && this.look.kind === 'forest-anime';
+    const lookId: LookId = comic ? 'comic' : forest ? 'forest-anime' : this.naturalDesert ? 'natural' : 'comic';
     let pipeline = this.pipelines.get(lookId);
     if (!pipeline) {
       const {renderer, scene, camera, lens} = this;
@@ -251,7 +252,7 @@ export class FlightGraphics implements Disposable {
       this.pipelines.set(lookId, pipeline);
     }
     pipeline.setQuality(this.quality);
-    this.stats.glowSamples = lookId === 'natural' ? 0 : this.quality.glowSamples;
+    this.stats.glowSamples = lookId !== 'comic' ? 0 : this.quality.glowSamples;
     return pipeline;
   }
 }

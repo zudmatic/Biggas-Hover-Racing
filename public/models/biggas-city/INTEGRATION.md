@@ -35,6 +35,22 @@ main's repository convention.
 The original import and previous Blender refinement notes below describe source
 assets, rather than the current scene composition.
 
+## Anime horizon and materials
+
+The forest now uses its own `ForestAnimeMaterial` and `ForestAnimePipeline`.
+Three lighting bands preserve the shared painted textures, vertex AO, shadows
+and emissive controls. A restrained rim light and foreground depth contours
+run without extra scene passes. Projection is stable; the previous PSX jitter
+is removed. Water, foam, glass and exhaust retain their animated materials.
+The comic toggle still works; other tracks retain their existing looks.
+
+One camera-following open cylinder replaces both distant mountain meshes:
+128 triangles on desktop / 64 on mobile, one draw, no shadows or colliders.
+The generated 2172×724 alpha WebP is 480 KiB. Mirrored horizontal sampling
+joins both ends continuously, including the skyline mask. Lower-edge haze
+and night tint blend the panorama into the existing sky. Asset provenance
+and the generation prompt are in `public/textures/biggas-forest/README.md`.
+
 # Biggas City 039 v02
 
 Imported from the supplied `Biggas_City_039_v02_Game_Package.zip`. The final

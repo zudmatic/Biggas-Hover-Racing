@@ -371,6 +371,7 @@ export class RaceSession implements Disposable {
         return session.phase;
       },
       get look() {
+        if (!session.comic && session.trackConfig.id === 'biggas-city') return 'forest-anime';
         return session.naturalLook && !session.comic ? 'sunlit' : 'comic';
       },
       get state() {
