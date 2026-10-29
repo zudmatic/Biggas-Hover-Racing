@@ -1,3 +1,4 @@
+import {withFlightOptions} from './helpers/flight.js';
 import {test,expect} from '@playwright/test';
 import fs from 'node:fs';
 import * as THREE from 'three';
@@ -30,7 +31,7 @@ test('a driven lap crosses every checkpoint and the pipe without a collision or 
 test('Mario Raceway loads from the selector with comic, day/night, headlights and no race records',async({page})=>{
  test.setTimeout(120000);const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.addInitScript(()=>{localStorage.setItem('zud.hover.v2.ruins034','33');localStorage.setItem('zud.hover.v1.mario-raceway','75');});
- await page.goto('/?selection=map&map=mario-raceway');await expect(page.locator('.lobby-map-card')).toHaveCount(3);await expect(page.locator('input[value="mario-raceway"]')).toBeChecked();
+ await page.goto('/?selection=map&map=mario-raceway');await expect(page.locator('.lobby-map-card')).toHaveCount(4);await expect(page.locator('input[value="mario-raceway"]')).toBeChecked();
  await expect.poll(()=>page.locator('.lobby-map-art img').evaluateAll(imgs=>imgs.every(i=>i.complete&&i.naturalWidth>0))).toBe(true);
  await page.getByRole('button',{name:'Volar',exact:true}).click();const app=page.locator('.flight-app');await expect(app).toHaveAttribute('data-ready','true',{timeout:90000});await expect(app).toHaveAttribute('data-map','mario-raceway');await expect(app).toHaveAttribute('data-comic','true');await expect(page.locator('#flight-best')).toHaveCount(0);
  await page.keyboard.down('KeyW');await expect.poll(async()=>Number(await app.getAttribute('data-speed'))).toBeGreaterThan(12);await page.keyboard.up('KeyW');await page.keyboard.press('KeyF');await expect(app).toHaveAttribute('data-headlights','true');await withFlightOptions(page,()=>page.getByRole('button',{name:'Iluminación nocturna'}).click());await expect(app).toHaveAttribute('data-lighting','night');await page.keyboard.press('KeyR');await expect.poll(async()=>Number(await app.getAttribute('data-speed'))).toBeLessThan(1);
@@ -40,5 +41,5 @@ test('Mario Raceway loads from the selector with comic, day/night, headlights an
 
 test('mobile map cards stay readable and launch Mario Raceway in free driving from a legacy race link',async({browser})=>{
  test.setTimeout(120000);const context=await browser.newContext({viewport:{width:390,height:844},isMobile:true,hasTouch:true}),page=await context.newPage();await page.goto(`http://127.0.0.1:${process.env.TEST_PORT??5173}/?selection=map&map=mario-raceway&mode=race&comic=0`);
- await expect(page.locator('.lobby-map-card')).toHaveCount(3);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(390);await expect(page.getByText('Mario Raceway',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Volar',exact:true}).click();await expect(page.locator('.flight-app')).toHaveAttribute('data-ready','true',{timeout:90000});await expect(page.locator('.flight-app')).toHaveAttribute('data-comic','false');await expect(page.locator('.flight-status')).toBeVisible();await expect(page.locator('.flight-app')).toHaveAttribute('data-phase','flying');await context.close();
+ await expect(page.locator('.lobby-map-card')).toHaveCount(4);expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBe(390);await expect(page.getByText('Mario Raceway',{exact:true})).toBeVisible();await page.getByRole('button',{name:'Volar',exact:true}).click();await expect(page.locator('.flight-app')).toHaveAttribute('data-ready','true',{timeout:90000});await expect(page.locator('.flight-app')).toHaveAttribute('data-comic','false');await expect(page.locator('.flight-status')).toBeVisible();await expect(page.locator('.flight-app')).toHaveAttribute('data-phase','flying');await context.close();
 });

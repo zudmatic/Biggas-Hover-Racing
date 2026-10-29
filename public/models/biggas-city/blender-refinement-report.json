@@ -1,0 +1,108 @@
+{
+  "blender": "4.5.7 LTS",
+  "skills": "https://github.com/arjun988/blender-skills",
+  "units": "metres",
+  "exportAxis": "+Y up",
+  "texturesAdded": 0,
+  "lightsAdded": 0,
+  "parts": {
+    "Forest_LOD1": {
+      "objects": 5260,
+      "trianglesBefore": 3517995,
+      "trianglesAfter": 3517995,
+      "inputSha256": "8852803414f5b8c3a66402a8021368b32ab18cbf472d67599172291d52784f64",
+      "outputSha256": "33310ff30225200c377ab6646a0dcc7b8b2e26dc801e6bdafdf8a2de17cff8df",
+      "bytesBefore": 2213456,
+      "bytesAfter": 2025488,
+      "changes": [
+        {
+          "mesh": "F039_AlpinePine_Mesh_LOD1",
+          "min": 0.74,
+          "max": 1.0,
+          "samples": 698
+        },
+        {
+          "mesh": "F039_Beech_Mesh_LOD1",
+          "min": 0.74,
+          "max": 1.0,
+          "samples": 679
+        },
+        {
+          "mesh": "F039_Birch_Mesh_LOD1",
+          "min": 0.74,
+          "max": 0.9995101650966212,
+          "samples": 571
+        },
+        {
+          "mesh": "F039_Cedar_Mesh_LOD1",
+          "min": 0.74,
+          "max": 1.0,
+          "samples": 591
+        },
+        {
+          "mesh": "F039_Maple_Mesh_LOD1",
+          "min": 0.74,
+          "max": 1.0,
+          "samples": 679
+        },
+        {
+          "mesh": "F039_Oak_Mesh_LOD1",
+          "min": 0.74,
+          "max": 1.0,
+          "samples": 679
+        },
+        {
+          "mesh": "F039_Shrub_Mesh_LOD1",
+          "min": 0.74,
+          "max": 1.0,
+          "samples": 112
+        },
+        {
+          "mesh": "F039_YoungPine_Mesh_LOD1",
+          "min": 0.74,
+          "max": 1.0,
+          "samples": 591
+        }
+      ]
+    },
+    "Landmark": {
+      "objects": 118,
+      "trianglesBefore": 405656,
+      "trianglesAfter": 166334,
+      "inputSha256": "069c8a86f17f4dd2b4eec8df00d5ee8a91a95968bf43f145e7c30bb676caa146",
+      "outputSha256": "d7883904f6a65dffda877308fc97acb9f4d125f1f37f921d322af5fd5fb354e4",
+      "bytesBefore": 7802852,
+      "bytesAfter": 3600496,
+      "changes": [
+        {
+          "object": "CAT_Front leg and articulated paw -1",
+          "before": 59400,
+          "after": 10692,
+          "ratio": 0.18,
+          "maxSurfaceErrorMetres": 0.005455962847918272
+        },
+        {
+          "object": "CAT_Front leg and articulated paw 1",
+          "before": 59400,
+          "after": 10692,
+          "ratio": 0.18,
+          "maxSurfaceErrorMetres": 0.005196597892791033
+        },
+        {
+          "object": "CAT_Head and ears sculpt",
+          "before": 97720,
+          "after": 17588,
+          "ratio": 0.18,
+          "maxSurfaceErrorMetres": 0.007956608198583126
+        },
+        {
+          "object": "CAT_Seated body sculpt",
+          "before": 75332,
+          "after": 13558,
+          "ratio": 0.18,
+          "maxSurfaceErrorMetres": 0.013214543461799622
+        }
+      ]
+    }
+  }
+}

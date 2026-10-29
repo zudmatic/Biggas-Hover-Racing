@@ -1,4 +1,5 @@
 import {gameMusic} from './game-music.js';
+import {createBiggasAmbience} from './biggas-city-audio.js';
 // Procedural hovercraft sound: no downloads, and no audio context before a gesture.
 const preferenceKey='biggas-hover-racing-sound';
 const clamp=(value,min=0,max=1)=>Math.min(max,Math.max(min,value));
@@ -7,6 +8,7 @@ export const soundIcon='<svg width="18" height="18" viewBox="0 0 24 24" fill="no
 export function createRaceAudio({music=null}={}){
   let context=null,master,engineBus,compressor,noise,hum,turbine,harmonic,air,boost,drift;
   let phase='loading',enabled=true,disposed=false,lastImpact=-Infinity,lastCue='',lastCountdown=0;
+  let ambience=null;
   const loops=[],voices=new Set();
   const supported=typeof window!=='undefined'&&!!(window.AudioContext||window.webkitAudioContext);
   try{enabled=localStorage.getItem(preferenceKey)!=='off';}catch{}
@@ -39,6 +41,7 @@ export function createRaceAudio({music=null}={}){
     if(!context||disposed)return;
     smooth(master.gain,enabled?.55:0,.035);
     smooth(engineBus.gain,document.hidden?0:phase==='flying'?.85:phase==='countdown'?.35:0,.045);
+    ambience?.setActive(enabled&&!document.hidden&&phase==='flying');
   }
   function stopVoices(){
     for(const voice of voices){try{voice.source.stop();}catch{}voice.source.disconnect();voice.level.disconnect();}
@@ -55,7 +58,7 @@ export function createRaceAudio({music=null}={}){
   return {
     get enabled(){return enabled;},
     get supported(){return supported&&!disposed;},
-    get status(){return {enabled,supported,phase,context:context?.state??'uninitialized',voices:voices.size,lastCue};},
+    get status(){return {enabled,supported,phase,context:context?.state??'uninitialized',voices:voices.size,lastCue,ambience:ambience?.levels??null};},
     // Call synchronously from click / keydown, before loading the circuit.
     unlock(){
       if(disposed||!enabled)return;
@@ -72,8 +75,10 @@ export function createRaceAudio({music=null}={}){
       if(phase!=='countdown')lastCountdown=0;
       applyLevels();
     },
-    update(state){
+    update(state,environment){
       if(!context||disposed||!['flying','countdown'].includes(phase))return;
+      if(environment&&!ambience){ambience=createBiggasAmbience(context,master,engineBus,noise);applyLevels();}
+      ambience?.update(environment);
       const speed=clamp(state.speed/72),throttle=clamp(state.throttle/52),boosting=state.boosting?1:0;
       const pitch=48+speed*116+throttle*13+boosting*22;
       smooth(hum.source.frequency,pitch);smooth(turbine.source.frequency,pitch*2.01);smooth(harmonic.source.frequency,pitch*3);
@@ -106,6 +111,7 @@ export function createRaceAudio({music=null}={}){
     },
     dispose(){
       if(disposed)return;disposed=true;music?.dispose();stopVoices();
+      ambience?.dispose();ambience=null;
       loops.forEach(source=>{try{source.stop();}catch{}source.disconnect();});
       if(context){master?.disconnect();compressor?.disconnect();context.close().catch(()=>{});}
     },

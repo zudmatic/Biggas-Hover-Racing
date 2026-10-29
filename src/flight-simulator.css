@@ -191,3 +191,6 @@ button:disabled{cursor:not-allowed;opacity:.45}
 .flight-hangar-link{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px;margin-top:16px;padding:0 12px;border:var(--race-border);border-radius:6px;font-size:12px;font-weight:800}
 .flight-menu-sections summary:focus-visible{outline-offset:-4px}
 @media(hover:hover) and (pointer:fine){.flight-menu-sections summary:hover,.flight-hangar-link:hover{background:var(--race-yellow)}}
+
+.flight-route{display:block;margin:6px 0;color:var(--race-yellow);font-size:10px;font-weight:800;max-width:180px}
+.flight-route[hidden]{display:none}

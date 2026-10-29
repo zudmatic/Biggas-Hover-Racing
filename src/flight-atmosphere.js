@@ -1,9 +1,11 @@
 import * as THREE from 'three';
+import {createBiggasCitySky} from './biggas-city-sky.js';
 
 const clamp=THREE.MathUtils.clamp;
 const randomSource=seed=>()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
 
 export function createCircuitSky(scene,{mobile=false,map='ruins'}={}){
+  if(map==='biggas-city')return createBiggasCitySky(scene,{mobile});
   const random=randomSource(map==='nexus'?35035:34034),root=new THREE.Group();root.name='Cielo del circuito';scene.add(root);
   const domeGeometry=new THREE.SphereGeometry(4400,32,20),positions=domeGeometry.attributes.position;
   const colors=new Float32Array(positions.count*3);domeGeometry.setAttribute('color',new THREE.BufferAttribute(colors,3));

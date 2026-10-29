@@ -1,5 +1,5 @@
 import {createHeatField} from './vfx/heat-field.js';
-import {Color,Vector2,ACESFilmicToneMapping,SRGBColorSpace} from 'three';
+import {Color,Vector2,ACESFilmicToneMapping,SRGBColorSpace,NoToneMapping,ColorManagement} from 'three';
 import {PostProcessing} from 'three/webgpu';
 import {color as tslColor,pass,uniform,float,vec2,vec3,vec4,screenUV,mix,smoothstep,fract,toneMapping,workingToColorSpace} from 'three/tsl';
 import {RETRO_DEFAULTS as p} from './retro-style.js';
@@ -64,6 +64,16 @@ export function createComicPost(renderer,scene,camera,{glowSamples=12,samples=4}
   const baseSample=source.sample(uv);
   post.outputNode=vec4(mix(mix(paper,srgb(toneMapping(ACESFilmicToneMapping,exposure,baseSample.rgb.div(baseSample.a.max(.001)))),baseSample.a),color,comic),1);
   return {outline,grading,heat,comic,
+    async compile(){
+      // Match the actual HDR scene pass, rather than compiling a canvas render
+      // whose sample count/output format can require different GPU pipelines.
+      const toneMapping=renderer.toneMapping,outputColorSpace=renderer.outputColorSpace,background=scene.background;
+      const target=renderer.getRenderTarget(),mrt=renderer.getMRT();
+      scenePass.renderTarget.samples=samples;scenePass.renderTarget.texture.type=renderer.getOutputBufferType();
+      renderer.toneMapping=NoToneMapping;renderer.outputColorSpace=ColorManagement.workingColorSpace;scene.background=null;
+      try{await scenePass.compileAsync(renderer);}
+      finally{renderer.setRenderTarget(target);renderer.setMRT(mrt);renderer.toneMapping=toneMapping;renderer.outputColorSpace=outputColorSpace;scene.background=background;}
+    },
     async render(backgroundColor){
       renderer.getDrawingBufferSize(size);resolution.value.copy(size);pixelRatio.value=renderer.getPixelRatio();near.value=camera.near;far.value=camera.far;
       pixelWorld.value=2*Math.tan(camera.fov*Math.PI/360)/camera.zoom/size.y;exposure.value=renderer.toneMappingExposure;

@@ -2,8 +2,9 @@ import * as THREE from 'three';
 import {createDetailInstances} from './detail-instances.js';
 
 const randomFactory=()=>{let seed=34034;return ()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};};
-export function createCircuitDetails(root,landscape,{mobile=false,city=false,islands=!city}={}){
+export function createCircuitDetails(root,landscape,{mobile=false,city=false,woodland=false,islands=!city}={}){
   const random=randomFactory(),details=new THREE.Group();details.name='Circuito · ambiente vivo';root.add(details);
+  details.userData.dynamicLighting=true;
   const clay=new THREE.MeshStandardMaterial({color:0xba572e,roughness:.9}),ivory=new THREE.MeshStandardMaterial({color:0xe3dcc0,roughness:.85}),metal=new THREE.MeshStandardMaterial({color:0x314b47,roughness:.7}),green=new THREE.MeshStandardMaterial({color:0x6c874b,roughness:1}),ink=new THREE.MeshBasicMaterial({color:0x8ad8cc});
   clay.name='Paint · cones';ivory.name='Paint · ivory';metal.name='Metal';green.name='Foliage';ink.name='Light lens';
   const fabric=clay.clone(),fabricIvory=ivory.clone();fabric.name=fabricIvory.name='Cloth';
@@ -32,8 +33,8 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false,isl
     const island=make(islandGeometry(45+random()*60,height),new THREE.MeshStandardMaterial({color:i%2?0x627568:0x4e6862,flatShading:true,roughness:1}));
     island.name='Island rock';island.position.set(Math.cos(a)*rad,-12,Math.sin(a)*rad);island.rotation.y=random()*6;detailCount++;
   }
-  const lightGeometry=new THREE.BoxGeometry(.2,.13,.6),lights=new THREE.InstancedMesh(lightGeometry,ink,200);details.add(lights);
-  for(let i=0;i<100;i++)for(let side=-1;side<=1;side+=2){const road=landscape.atDistance(i*landscape.length/100);transforms.position.set(road.x-road.nz*(road.width/2-.17)*side,road.y+.16,road.z+road.nx*(road.width/2-.17)*side);transforms.rotation.set(0,Math.atan2(road.nx,road.nz),0);transforms.scale.set(1,1,1);transforms.updateMatrix();lights.setMatrixAt(i*2+(side===1?1:0),transforms.matrix);}detailCount+=200;
+  const lightGeometry=new THREE.BoxGeometry(.2,.13,.6),lights=new THREE.InstancedMesh(lightGeometry,ink,woodland?0:200);details.add(lights);
+  for(let i=0;i<(woodland?0:100);i++)for(let side=-1;side<=1;side+=2){const road=landscape.atDistance(i*landscape.length/100);transforms.position.set(road.x-road.nz*(road.width/2-.17)*side,road.y+.16,road.z+road.nx*(road.width/2-.17)*side);transforms.rotation.set(0,Math.atan2(road.nx,road.nz),0);transforms.scale.set(1,1,1);transforms.updateMatrix();lights.setMatrixAt(i*2+(side===1?1:0),transforms.matrix);}detailCount+=woodland?0:200;
   for(let i=0;i<12;i++){
     const road=landscape.atDistance(25+i*landscape.length/12),side=i%2?1:-1,group=new THREE.Group();group.position.set(road.x-road.nz*(road.width/2+.8)*side,road.y,road.z+road.nx*(road.width/2+.8)*side);group.rotation.y=Math.atan2(road.nx,road.nz);details.add(group);
     const pole=poles.add(group);pole.position.y=2.35;
@@ -59,7 +60,7 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false,isl
     group.name='Cono dinámico';cones.push({group,origin:group.position.clone(),velocity:new THREE.Vector3(),spin:0,age:0,active:false});detailCount+=3;
   }
   // Small maintenance drones patrol above the towers, safely outside the racing volume.
-  for(let i=0;i<2;i++){
+  for(let i=0;i<(woodland?0:2);i++){
     const group=new THREE.Group();details.add(group);make(new THREE.BoxGeometry(1.3,.5,1.5),metal,group);
     const lens=make(new THREE.SphereGeometry(.17,8,6),ink,group);lens.position.set(0,0,.8);
     const rotorGroup=new THREE.Group();group.add(rotorGroup);
@@ -102,6 +103,7 @@ export function createCircuitDetails(root,landscape,{mobile=false,city=false,isl
       ripples.forEach((r,i)=>{const life=(t*.4+i/14)%1;r.scale.setScalar(.5+life*3);r.material.opacity=(1-life)*.35;});
     }
     mist.visible=!reduced;sparks.visible=!reduced;
+    hover.visible=!state.airborne;
     hover.position.set(state.x,state.y-state.hover+.06,state.z);hover.scale.set(1.1+state.speed*.004,1,1.65);hover.rotation.y=state.yaw;hover.material.opacity=state.boosting||state.drifting?.32:.16;hover.material.color.setHex(state.drifting?0xffb24c:0x64ddc7);
     if(!reduced&&dt>0&&phase==='flying'){
       if(state.impactSerial!==impactSerial){impactSerial=state.impactSerial;if(state.impact>1)for(let i=0;i<18;i++)emit(state.impactX,state.y+.2,state.impactZ,-state.vx*.1,-state.vz*.1,true);}

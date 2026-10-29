@@ -2,7 +2,7 @@ import {createFlightRenderPose} from './flight-render-pose.js';
 import {createFlightCameraKlipp} from './flight-camera-klipp.js';
 import {pilotChoice,pilotConfig,pilotQuery} from './pilot-catalog.js';
 import * as THREE from 'three';
-import {circuitMap} from './circuit-maps.js';
+import {circuitMap,circuitComic} from './circuit-maps.js';
 import {createCircuitLighting} from './circuit-lighting.js';
 import {createCircuitWorld} from './circuit-world.js';
 import {createHoverState,advanceHover,recoverHover,crossesCircuitGate} from './circuit-physics.js';
@@ -20,6 +20,7 @@ import {createFlightPerformance} from './flight-performance.js';
 export async function createFlightSimulator({entryTransition}={}){
   const base=import.meta.env.BASE_URL,query=new URLSearchParams(location.search),reduced=matchMedia('(prefers-reduced-motion: reduce)');
   const mapConfig=circuitMap(query.get('map')),selectedShip=shipConfig(query.get('vehicle')),choice=pilotChoice(query),selectedPilot=pilotConfig(choice.pilot),pilotParams=pilotQuery(choice);
+  const initialComic=circuitComic(mapConfig.id,query.get('comic'));
   document.title=`Biggas Hover Racing · ${mapConfig.name} ${mapConfig.number}`;
   const canonical=new URL(location.href);canonical.searchParams.set('map',mapConfig.id);canonical.searchParams.set('vehicle',selectedShip.id);canonical.searchParams.delete('seed');canonical.searchParams.delete('mode');history.replaceState(null,'',canonical);
   document.body.innerHTML=`<main class="flight-app" data-ready="false" data-phase="loading">
@@ -30,13 +31,13 @@ export async function createFlightSimulator({entryTransition}={}){
         ${soundControlMarkup('flight-sound').replace('</button>','<span>Sonido</span></button>')}
         <button id="flight-camera" disabled aria-label="Cambiar cámara">Cámara <span id="flight-camera-state">Cercana</span></button>
         <button id="flight-light" aria-label="Iluminación nocturna" aria-pressed="false">Iluminación <span id="flight-light-state">Día</span></button>
-        <button id="flight-comic" aria-pressed="${query.get('comic')!=='0'}" aria-label="Cómic">Estilo cómic <span id="flight-comic-state">${query.get('comic')!=='0'?'Activado':'Desactivado'}</span></button>
+        <button id="flight-comic" aria-pressed="${initialComic}" aria-label="Cómic">Estilo cómic <span id="flight-comic-state">${initialComic?'Activado':'Desactivado'}</span></button>
         <div class="flight-quality"><label for="flight-quality">Gráficos</label><select id="flight-quality"><option value="auto">Automático</option><option value="high">Mayor calidad</option><option value="performance">Más fluidez</option></select><span id="flight-quality-state">Se adapta a tu equipo</span></div>
         <a class="flight-hangar-link" href="${base}spaceship.html?vehicle=${selectedShip.id}&${pilotParams}">Ir al hangar <span aria-hidden="true">→</span></a>
       </div></details></div><nav class="flight-exit-links" aria-label="Salir del circuito"><a id="flight-map-selection" href="${base}?selection=map&map=${mapConfig.id}&vehicle=${selectedShip.id}&${pilotParams}">Selección de mapa <span aria-hidden="true">→</span></a><a id="flight-main-menu" href="${base}">Volver al menú principal <span aria-hidden="true">⌂</span></a></nav></section>
     <div class="flight-loader" role="status"><span id="flight-load-status">Preparando ${mapConfig.name} ${mapConfig.number}…</span><progress max="1" value="0"></progress></div>
     <div class="flight-notice" role="status" hidden></div>
-    <section class="flight-telemetry race-panel race-panel-dark" aria-label="Telemetría"><span class="flight-hud-label">VELOCIDAD</span><div class="flight-speed"><output id="flight-speed">0</output><span>km/h</span></div><span class="flight-drift" hidden>DERRAPE</span><div class="flight-altitude">ALT <output id="flight-altitude">0</output> m</div><div class="flight-energy" role="progressbar" aria-label="Reserva de turbo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span></span></div><div class="flight-energy-label"><span>TURBO</span><span id="flight-energy-value">100%</span></div></section>
+    <section class="flight-telemetry race-panel race-panel-dark" aria-label="Telemetría"><span class="flight-hud-label">VELOCIDAD</span><div class="flight-speed"><output id="flight-speed">0</output><span>km/h</span></div><span class="flight-drift" hidden>DERRAPE</span><div class="flight-altitude">ALT <output id="flight-altitude">0</output> m</div><output class="flight-route" id="flight-route" hidden></output><div class="flight-energy" role="progressbar" aria-label="Reserva de turbo" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><span></span></div><div class="flight-energy-label"><span>TURBO</span><span id="flight-energy-value">100%</span></div></section>
     <aside class="flight-minimap race-panel race-panel-dark" aria-label="Mapa del circuito"><canvas width="192" height="192" role="img" aria-label="Tu posición en el circuito"></canvas><span id="flight-map-caption">${mapConfig.name.toUpperCase()} / ${mapConfig.number}</span></aside>
     <div class="flight-key-hint">ESC · PAUSA / CONTROLES</div>
     <div class="flight-touch" hidden><div class="flight-stick" role="group" aria-label="Joystick: girar"><span></span></div><div class="flight-touch-buttons"><button data-hold="accelerate" aria-label="Acelerar" aria-pressed="false">ACELERAR</button><button data-hold="brake" aria-label="Frenar" aria-pressed="false">FRENAR</button><button data-hold="drift" aria-label="Derrapar" aria-pressed="false">DERRAPAR</button><button data-hold="boost" aria-label="Turbo" aria-pressed="false">TURBO</button></div></div>
@@ -57,7 +58,7 @@ export async function createFlightSimulator({entryTransition}={}){
   const camera=new THREE.PerspectiveCamera(62,innerWidth/innerHeight,.15,7000);
   const lighting=createCircuitLighting(scene,{mobile,headlightMounts:selectedShip.headlights});
   const skyWorld=createCircuitSky(scene,{mobile,map:mapConfig.id}),speedAtmosphere=createSpeedAtmosphere(scene,{mobile});
-  let comicEnabled=query.get('comic')!=='0';
+  let comicEnabled=initialComic;
   let shadowElapsed=Infinity,shadowInterval=1/30;
   const performanceControl=createFlightPerformance({width:innerWidth,height:innerHeight,pixelRatio:devicePixelRatio,mobile,onChange:applyQuality});
   function applyQuality(settings){
@@ -163,7 +164,8 @@ export async function createFlightSimulator({entryTransition}={}){
   function buildMap(){
     const ctx=mapBase.getContext('2d');
     ctx.fillStyle=mapPalette.dark;ctx.fillRect(0,0,192,192);ctx.strokeStyle=mapPalette.paper;ctx.lineWidth=7;ctx.setLineDash([]);ctx.beginPath();
-      landscape.samples.forEach((sample,i)=>{const x=(sample.position[0]/mapHalf()+1)*96,y=(sample.position[2]/mapHalf()+1)*96;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.closePath();ctx.stroke();ctx.lineWidth=1;ctx.strokeStyle=mapPalette.dark;ctx.stroke();mapBitmap=mapBase;
+      landscape.samples.forEach((sample,i)=>{const x=(sample.position[0]/mapHalf()+1)*96,y=(sample.position[2]/mapHalf()+1)*96;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.closePath();ctx.stroke();ctx.lineWidth=1;ctx.strokeStyle=mapPalette.dark;ctx.stroke();
+      for(const branch of landscape.branches??[]){ctx.strokeStyle='#'+branch.color.toString(16).padStart(6,'0');ctx.lineWidth=2;ctx.setLineDash([3,2]);ctx.beginPath();branch.samples.forEach((p,i)=>{const x=(p.x/mapHalf()+1)*96,y=(p.z/mapHalf()+1)*96;if(i)ctx.lineTo(x,y);else ctx.moveTo(x,y);});ctx.stroke();}ctx.setLineDash([]);mapBitmap=mapBase;
   }
 
   function drawMap(){
@@ -174,6 +176,7 @@ export async function createFlightSimulator({entryTransition}={}){
     if(now-lastHud<.1)return;lastHud=now;
     const drivingState=state.braking&&state.speed>.1?'FRENANDO':state.drifting?'DERRAPANDO':state.boosting?'TURBO':state.speed>.1?'EN MARCHA':'DETENIDO';
     setText($('#flight-driving-state'),drivingState);
+    const routeLabel=$('#flight-route');routeLabel.hidden=!(state.routeName||state.routeHint);setText(routeLabel,state.routeName||state.routeHint||'');const routeAccent=landscape.branches?.find(b=>b.id===state.routeId||state.routeHint?.startsWith(b.name));routeLabel.style.color=routeAccent?'#'+routeAccent.color.toString(16).padStart(6,'0'):'';app.dataset.route=state.routeId??'';app.dataset.wind=(state.windStrength??0).toFixed(2);app.dataset.wetSurface=String(!!state.wetSurface);
     setText(hud.speed,String(Math.round(state.speed*3.6)));setText(hud.alt,Math.max(0,state.y-(world.surfaceHeight(state.x,state.z)??landscape.height(state.x,state.z))).toFixed(1));
     const energy=Math.round(state.energy*100);hud.energy.style.transform=`scaleX(${state.energy})`;hud.energyBar.setAttribute('aria-valuenow',String(energy));setText(hud.energyValue,`${energy}%`);
     $('.flight-drift').hidden=!state.drifting||phase!=='flying';app.dataset.drifting=String(state.drifting);app.dataset.lighting=lighting.night?'night':'day';app.dataset.headlights=String(lighting.headlightsEnabled);app.dataset.textureFamilies=String(world.textures.count);
@@ -181,7 +184,7 @@ export async function createFlightSimulator({entryTransition}={}){
     app.dataset.fps=String(performanceControl.fps);
     app.dataset.fxAir=String(world.fx.stats.air);app.dataset.fxMarks=String(world.fx.stats.marks);app.dataset.fxTime=world.fx.stats.time.toFixed(3);app.dataset.fxStyle=world.fx.style;
     setText($('#flight-quality-state'),performanceControl.fps?`${performanceControl.fps} FPS`:'Se adapta a tu equipo');
-    app.dataset.offTrack=String((state.offTrackTime??0)>0);app.dataset.yaw=state.yaw.toFixed(3);app.dataset.pitch=state.pitch.toFixed(3);app.dataset.speed=state.speed.toFixed(2);app.dataset.x=state.x.toFixed(2);app.dataset.y=state.y.toFixed(2);app.dataset.z=state.z.toFixed(2);app.dataset.gate=String(gateIndex);app.dataset.energy=state.energy.toFixed(3);app.dataset.time=simulationTime.toFixed(2);app.dataset.camera=String(cameraMode);app.dataset.comic=String(comicEnabled);app.dataset.hover=(state.y-(world.surfaceHeight(state.x,state.z)??landscape.height(state.x,state.z))).toFixed(3);app.dataset.wallHit=String(state.wallHit);app.dataset.slip=state.slip.toFixed(3);app.dataset.impact=state.impact.toFixed(2);app.dataset.effectsTime=worldTime.toFixed(2);app.dataset.detailCount=String(world.detailCount);
+    app.dataset.offTrack=String((state.offTrackTime??0)>0);app.dataset.yaw=state.yaw.toFixed(3);app.dataset.pitch=state.pitch.toFixed(3);app.dataset.speed=state.speed.toFixed(2);app.dataset.x=state.x.toFixed(2);app.dataset.y=state.y.toFixed(2);app.dataset.z=state.z.toFixed(2);app.dataset.gate=String(gateIndex);app.dataset.energy=state.energy.toFixed(3);app.dataset.time=simulationTime.toFixed(2);app.dataset.camera=String(cameraMode);app.dataset.comic=String(comicEnabled);app.dataset.look=mapConfig.id==='biggas-city'&&!comicEnabled?'psx':comicEnabled?'comic':'normal';app.dataset.hover=(state.y-(world.surfaceHeight(state.x,state.z)??landscape.height(state.x,state.z))).toFixed(3);app.dataset.wallHit=String(state.wallHit);app.dataset.slip=state.slip.toFixed(3);app.dataset.impact=state.impact.toFixed(2);app.dataset.effectsTime=worldTime.toFixed(2);app.dataset.detailCount=String(world.detailCount);
     drawMap();
   }
   async function loadWorld(){
@@ -233,10 +236,12 @@ export async function createFlightSimulator({entryTransition}={}){
   try{
     const results=await Promise.allSettled([createFlightShip(selectedShip.id,{...choice,exhaust:false}),loadWorld()]);const failure=results.find(result=>result.status==='rejected');if(failure)throw failure.reason;vehicle=results[0].value;vehicle.root.scale.setScalar(modelScale);vehicle.setHeadlights(lighting.headlightsEnabled);scene.add(vehicle.root);syncShip();updateCamera(1,true);
     oil=await createFlightOil({scene,landscape,surfaceHeight:world.surfaceHeight,app,clearInput,onPrepare:prepareOilTest,onNotice:notice,materialFactory:gpuModule?.oilMaterialFactory});oil.reset(state,true);
-    {gpuGraphics=await gpuModule.createFlightWebGPU(renderer,scene,camera,vehicle,oil);gpuGraphics.setQuality(performanceControl.settings);}
+    {gpuGraphics=await gpuModule.createFlightWebGPU(renderer,scene,camera,vehicle,oil,{naturalCity:mapConfig.id==='biggas-city'});gpuGraphics.setQuality(performanceControl.settings);}
+    lighting.refreshTrackLights(landscape);
     setPhase('loading');loader.hidden=!!entryTransition;setText($('#flight-load-status'),'Preparando gráficos…');
     lighting.update(state,worldTime,{reducedMotion:reduced.matches});skyWorld.update(camera,0,{reducedMotion:reduced.matches});scene.updateMatrixWorld(true);camera.updateMatrixWorld();
-    await renderer.compileAsync(scene,camera);
+    if(mapConfig.id==='biggas-city')await gpuGraphics.prepare({state,phase,comic:comicEnabled,reduced:reduced.matches});
+    else await renderer.compileAsync(scene,camera);
     loader.hidden=true;
     if(entryTransition){
       // Draw the track before revealing it; driving starts once the cover is gone.
@@ -252,13 +257,13 @@ export async function createFlightSimulator({entryTransition}={}){
     if(disposed||rendering)return;rendering=true;try{const rawDelta=clock.getDelta(),dt=Math.min(rawDelta,.1);if(document.hidden||phase==='loading')return;
     if(phase==='flying')performanceControl.sample(rawDelta*1000);
     accumulator+=dt;while(accumulator>=1/60){step(1/60);accumulator-=1/60;}
-    raceAudio.update(state);
+    raceAudio.update(state,world.adventure?.ambienceAt(state,worldTime,reduced.matches));
     const viewState=phase==='flying'?renderPose.sample(state,accumulator*60):state;
     syncShip(viewState);updateCamera(dt,false,viewState);
     const pilotFrame=Math.floor(simulationTime*24);if(pilotFrame!==lastPilotFrame){vehicle.update(pilotFrame/24,state.speed,state.boosting,reduced.matches,viewState);lastPilotFrame=pilotFrame;}
     if(phase!=='paused')worldTime+=dt;
-    world.update(worldTime,reduced.matches,{state,phase,night:lighting.night,camera,scale:modelScale,dt:phase==='flying'?dt:0});
     lighting.update(state,worldTime,{dt,reducedMotion:reduced.matches,paused:phase==='paused'});
+    world.update(worldTime,reduced.matches,{state,phase,night:lighting.night,camera,shadowLight:lighting.sun,scale:modelScale,dt:phase==='flying'?dt:0});
     skyWorld.update(camera,worldTime,{night:lighting.night,dt,reducedMotion:reduced.matches});
     speedAtmosphere.update(camera,state,simulationTime,{dt,phase,reducedMotion:reduced.matches});
     shadowElapsed+=dt;

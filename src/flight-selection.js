@@ -2,7 +2,7 @@ import './renderer-navigation.js';
 import {ZUD_HATS,zudHat} from './hat-catalog.js';
 import {SHIPS,shipConfig} from './ship-catalog.js';
 import {PILOTS,ZUDMATIC_PALETTES,pilotConfig,pilotChoice,pilotQuery} from './pilot-catalog.js';
-import {CIRCUIT_MAPS,circuitMap} from './circuit-maps.js';
+import {CIRCUIT_MAPS,circuitMap,circuitComic} from './circuit-maps.js';
 import './flight-selection.css';
 import {raceAudio} from './race-audio.js';
 import {soundControlMarkup,mountSoundControl} from './sound-control.js';
@@ -27,7 +27,8 @@ export function chooseFlight(){
   const base=import.meta.env.BASE_URL,reduced=matchMedia('(prefers-reduced-motion: reduce)'),controller=new AbortController(),{signal}=controller;
   let {pilot:selectedPilot,palette:selectedPalette,hat:selectedHat}=pilotChoice();
   let selectedVehicle=shipConfig(new URLSearchParams(location.search).get('vehicle')).id;
-  let stage=0,selectedMap=circuitMap(new URLSearchParams(location.search).get('map')).id,preview=null,previewStarted=false,leaving=false,paper=new URLSearchParams(location.search).get('comic')!=='0';
+  let stage=0,selectedMap=circuitMap(new URLSearchParams(location.search).get('map')).id,preview=null,previewStarted=false,leaving=false,paper=circuitComic(selectedMap,new URLSearchParams(location.search).get('comic'));
+  let paperChosen=new URLSearchParams(location.search).has('comic');
   document.title='Biggas Hover Racing';
   document.body.innerHTML=`<main class="race-lobby" data-stage="0" data-pilot="zud" data-vehicle="033"><div class="lobby-paper-surface" aria-hidden="true"></div><div class="lobby-title-ribbon" aria-hidden="true"></div><div class="lobby-title-checkers" aria-hidden="true"></div><header class="lobby-header"><a class="lobby-brand" href="${base}" aria-label="Biggas Hover Racing, inicio"><span aria-hidden="true">✳</span><strong>BIGGAS<small>HOVER RACING</small></strong></a><nav class="lobby-steps" aria-label="Preparación de carrera" hidden>${steps.slice(1).map((name,i)=>`<button type="button" data-step="${i+1}" disabled><span>0${i+1}</span>${name}</button>`).join('')}</nav><div class="lobby-header-actions">${soundControlMarkup('lobby-sound')}<button type="button" id="lobby-paper" aria-label="Papel" aria-pressed="true" title="Shader de papel"><span aria-hidden="true">◐</span> Papel</button><a class="lobby-hangar" href="${base}spaceship.html">Hangar</a></div></header>
     <div class="lobby-preview" aria-label="Vista del modelo seleccionado" hidden><img class="lobby-preview-fallback" data-lobby-image="zud" src="${base}images/flight/zud.png" alt="Zud"><canvas class="lobby-preview-canvas" role="img" aria-label="Modelo 3D. Arrastra para girar."></canvas><span class="lobby-preview-loading" role="status">Cargando vista…</span><span class="lobby-drag-hint">↔ Girar</span></div>
@@ -66,7 +67,7 @@ export function chooseFlight(){
     $('.lobby-start').addEventListener('click',advance,{signal});$('.lobby-next').addEventListener('click',advance,{signal});
     $('.lobby-back').addEventListener('click',event=>show(Math.max(0,stage-1),{keyboard:event.detail===0}),{signal});
     root.querySelectorAll('[data-step]').forEach(button=>button.addEventListener('click',event=>show(Number(button.dataset.step),{keyboard:event.detail===0}),{signal}));
-    root.querySelectorAll('input[name=map]').forEach(input=>input.addEventListener('change',()=>{selectedMap=input.value;root.dataset.map=selectedMap;},{signal}));
+    root.querySelectorAll('input[name=map]').forEach(input=>input.addEventListener('change',()=>{selectedMap=input.value;root.dataset.map=selectedMap;if(!paperChosen)setPaper(circuitComic(selectedMap));},{signal}));
     function selectPilot(id){
       selectedPilot=pilotConfig(id).id;const config=PILOTS[selectedPilot];root.dataset.pilot=selectedPilot;root.dataset.palette=selectedPalette;root.dataset.hat=selectedHat;
       root.querySelectorAll('[data-pilot-choice]').forEach(button=>{const selected=button.dataset.pilotChoice===selectedPilot;button.classList.toggle('is-selected',selected);button.setAttribute('aria-pressed',String(selected));button.setAttribute('aria-label',`${PILOTS[button.dataset.pilotChoice].name}${selected?', seleccionado':''}`);button.querySelector('.lobby-slot-player').hidden=!selected;});
@@ -125,7 +126,7 @@ export function chooseFlight(){
     function setPaper(enabled){
       paper=enabled;root.dataset.paper=String(paper);$('#lobby-paper').setAttribute('aria-pressed',String(paper));preview?.setPaper(paper);updatePaperImages();
     }
-    $('#lobby-paper').addEventListener('click',()=>setPaper(!paper),{signal});
+    $('#lobby-paper').addEventListener('click',()=>{paperChosen=true;setPaper(!paper);},{signal});
     setPaper(paper);selectPilot(selectedPilot);root.dataset.map=selectedMap;
     if(new URLSearchParams(location.search).get('selection')==='map')show(3,{keyboard:true});
     // The title screen is typography only: defer the 3D renderer until selection.

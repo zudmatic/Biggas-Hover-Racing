@@ -13,8 +13,25 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
   const lamps=Array.from({length:mobile?3:5},()=>{const light=new THREE.PointLight(0xffca7d,0,24,2);root.add(light);return light;});
   const headlights=headlightMounts.map(([x,y,z])=>{const light=new THREE.SpotLight(0xd8f4ff,0,55,.48,.65,1.2);light.userData.offset=x;light.userData.height=y;light.userData.forward=z;root.add(light,light.target);return light;});
   const engine=new THREE.PointLight(0x64e9ff,12,9,2);root.add(engine);
-  const fixtures=[],matrix=new THREE.Matrix4();let night=false,blend=0,headlightsEnabled=false;
+  const fixtures=[],matrix=new THREE.Matrix4();let night=false,blend=0,headlightsEnabled=false,predictiveShadows=false;
+  function refreshTrackLights(track){
+    if(!track.configureLighting)return;
+    const lights=[];scene.traverse(object=>{if(object.isLight&&!object.userData.biggasFixedLight&&!lamps.includes(object))lights.push(object);});
+    track.configureLighting(lights);
+  }
   function setTrack(track){
+    predictiveShadows=track.map==='biggas-city';
+    if(predictiveShadows){
+      dayFog.set(0xc7d9dc);daySky.set(0xb5d9ed);dayGround.set(0xa47d50);daySun.set(0xffead0);
+      scene.fog.near=300;scene.fog.far=1400;
+      // Render well beyond the next few seconds of travel, including high
+      // skyline casters. No lighting switches at the vehicle's position.
+      sun.shadow.mapSize.set(mobile?1024:2048,mobile?1024:2048);
+      Object.assign(sun.shadow.camera,{left:-180,right:180,top:180,bottom:-180,near:1,far:1000});
+      sun.shadow.camera.updateProjectionMatrix();sun.shadow.needsUpdate=true;
+    }
+    refreshTrackLights(track);
+    if(track.authoredLighting)return;
     const count=Math.floor(track.length/28),poleGeometry=new THREE.CylinderGeometry(.08,.12,4.5,6),capGeometry=new THREE.BoxGeometry(.7,.16,.7);
     const poles=new THREE.InstancedMesh(poleGeometry,new THREE.MeshStandardMaterial({color:0x385258,roughness:.8}),count);
     const caps=new THREE.InstancedMesh(capGeometry,new THREE.MeshBasicMaterial({color:0xffd79e}),count);
@@ -27,15 +44,22 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
     poles.instanceMatrix.needsUpdate=true;caps.instanceMatrix.needsUpdate=true;
   }
   const dayFog=new THREE.Color(0xb6c6bd),nightFog=new THREE.Color(0x182c43),daySky=new THREE.Color(0xc4dcf2),nightSky=new THREE.Color(0x668fce),dayGround=new THREE.Color(0x927b59),nightGround=new THREE.Color(0x305468);
+  const shadowFocus=new THREE.Vector3(),shadowOffset=new THREE.Vector3(-220,360,140),shadowDirection=shadowOffset.clone().normalize(),shadowRight=new THREE.Vector3().crossVectors(new THREE.Vector3(0,1,0),shadowDirection).normalize(),shadowUp=new THREE.Vector3().crossVectors(shadowDirection,shadowRight);
   const daySun=new THREE.Color(0xffd8a0),nightSun=new THREE.Color(0xa9c8ff),anchor=new THREE.Vector3();
   function update(state,time,{dt=0,reducedMotion=false,paused=false}={}){
     // User changes remain available while paused; decorative light movement stops.
     blend=reducedMotion?Number(night):THREE.MathUtils.damp(blend,Number(night),5,dt);
-    sky.color.copy(daySky).lerp(nightSky,blend);sky.groundColor.copy(dayGround).lerp(nightGround,blend);sky.intensity=1.7-blend*.8;
-    sun.color.copy(daySun).lerp(nightSun,blend);sun.intensity=3.4-blend*2.7;fill.intensity=.45-blend*.23;
+    sky.color.copy(daySky).lerp(nightSky,blend);sky.groundColor.copy(dayGround).lerp(nightGround,blend);sky.intensity=(predictiveShadows?1.35:1.7)-blend*.8;
+    sun.color.copy(daySun).lerp(nightSun,blend);sun.intensity=predictiveShadows?4.1-blend*3.4:3.4-blend*2.7;fill.intensity=predictiveShadows?1-blend:.45-blend*.23;
     scene.background.copy(dayFog).lerp(nightFog,blend);scene.fog.color.copy(scene.background);
-    const arc=reducedMotion?0:Math.sin(time*.018)*18;
-    sun.position.set(state.x-110+arc,state.y+180,state.z+70);sun.target.position.set(state.x,state.y,state.z);
+    const arc=predictiveShadows||reducedMotion?0:Math.sin(time*.018)*18;
+    if(predictiveShadows){
+      const speed=Math.hypot(state.vx??0,state.vz??0),ahead=30+Math.min(50,speed*.8),dx=speed>1?state.vx/speed:Math.sin(state.yaw),dz=speed>1?state.vz/speed:Math.cos(state.yaw);
+      const focus=shadowFocus.set(state.x+dx*ahead,state.y,state.z+dz*ahead),right=shadowRight,up=shadowUp,texel=360/sun.shadow.mapSize.x;
+      // Snap in the light's plane, so shadow edges stay steady while driving.
+      focus.addScaledVector(right,Math.round(focus.dot(right)/texel)*texel-focus.dot(right));focus.addScaledVector(up,Math.round(focus.dot(up)/texel)*texel-focus.dot(up));
+      sun.target.position.copy(focus);sun.position.copy(focus).add(shadowOffset);
+    }else{sun.position.set(state.x-110+arc,state.y+180,state.z+70);sun.target.position.set(state.x,state.y,state.z);}
     anchor.set(state.x,state.y,state.z);
     const nearest=fixtures.map((position,index)=>({position,index,distance:position.distanceToSquared(anchor)})).sort((a,b)=>a.distance-b.distance).slice(0,lamps.length);
     lamps.forEach((light,i)=>{const fixture=nearest[i];if(!fixture){light.intensity=0;return;}light.position.copy(fixture.position);light.intensity=(70+blend*230)*THREE.MathUtils.clamp((40-Math.sqrt(fixture.distance))/12,0,1);});
@@ -47,5 +71,5 @@ export function createCircuitLighting(scene,{mobile=false,headlightMounts=[[-.8,
     const pulse=reducedMotion||paused?1:1+Math.sin(time*19)*.04;
     engine.intensity=(state.boosting?38:state.drifting?25:12)*pulse;
   }
-  return {root,setTrack,update,get headlightsEnabled(){return headlightsEnabled;},setHeadlights(value){headlightsEnabled=!!value;if(!headlightsEnabled)headlights.forEach(light=>light.intensity=0);},sky,sun,lamps,headlights,engine,get night(){return night;},setNight(value){night=!!value;},dispose(){root.traverse(object=>{if(object.isLight)object.dispose();if(object.isMesh){object.geometry.dispose();object.material.dispose();}});root.removeFromParent();}};
+  return {root,setTrack,refreshTrackLights,update,get headlightsEnabled(){return headlightsEnabled;},setHeadlights(value){headlightsEnabled=!!value;if(!headlightsEnabled)headlights.forEach(light=>light.intensity=0);},sky,sun,lamps,headlights,engine,get night(){return night;},setNight(value){night=!!value;},dispose(){root.traverse(object=>{if(object.isLight)object.dispose();if(object.isMesh){object.geometry.dispose();object.material.dispose();}});root.removeFromParent();}};
 }

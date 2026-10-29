@@ -38,7 +38,18 @@ export function createCircuitLandscape(route,gameplay){
   const extent=Math.max(...samples.map(s=>Math.max(Math.abs(s.position[0]),Math.abs(s.position[2]))))+28;
   return {type:'circuit',seed:gameplay.road_width_m===18?35:34,samples,length,gates,spawn,yaw:Math.atan2(grid.forward_gltf[0],grid.forward_gltf[2]),roadAt,atDistance,mapHalf:extent,height:(x,z)=>roadAt(x,z).y};
 }
-export function createHoverState(landscape){return {...landscape.spawn,yaw:landscape.yaw,pitch:0,roll:0,speed:0,throttle:0,energy:1,boosting:false,boostLocked:false,cooldown:0,hoverTime:0,wallHit:false,vx:0,vz:0,yawRate:0,hover:HOVER_HEIGHT,hoverVelocity:0,slip:0,impact:0,impactSerial:0,acceleration:0,braking:false,drifting:false,driftBlend:0,offTrackTime:0,recoverNeeded:false,oilFactor:1,oilContact:false};}
+export function createHoverState(landscape){return {...landscape.spawn,yaw:landscape.yaw,pitch:0,roll:0,speed:0,throttle:0,energy:1,boosting:false,boostLocked:false,cooldown:0,hoverTime:0,wallHit:false,vx:0,vz:0,yawRate:0,hover:HOVER_HEIGHT,hoverVelocity:0,slip:0,impact:0,impactSerial:0,acceleration:0,braking:false,drifting:false,driftBlend:0,offTrackTime:0,unsupportedTime:0,collisionRecoilTime:0,recoverNeeded:false,oilFactor:1,oilContact:false,airborne:false,airTime:0,verticalVelocity:0,landingSeverity:0,landingSerial:0};}
+// Relative impact speed matters on an uphill landing. A clean touchdown keeps
+// momentum; a hard or sideways one compresses the suspension and sheds speed.
+export function landHover(state,surface,road){
+  const groundVelocity=road.grade*(state.vx*road.nx+state.vz*road.nz)+(road.bank??0)*(-state.vx*road.nz+state.vz*road.nx);
+  const impact=Math.max(0,groundVelocity-state.verticalVelocity),sideways=Math.abs(state.vx*Math.cos(state.yaw)-state.vz*Math.sin(state.yaw))/Math.max(1,state.speed);
+  const severity=clamp((impact-11.5)/10+Math.max(0,sideways-.22),0,1),retention=1-severity*.4;
+  state.vx*=retention;state.vz*=retention;state.speed=Math.hypot(state.vx,state.vz);
+  if(severity>.1){state.throttle=Math.min(state.throttle,state.speed);state.impact=severity*9;state.impactSerial++;state.impactX=state.x;state.impactZ=state.z;}
+  state.hover=Math.max(.43,state.hover-Math.min(.18,impact*.012));state.hoverVelocity=-Math.min(1.3,impact*.09);
+  state.y=surface+state.hover;state.airborne=false;state.verticalVelocity=0;state.airTime=0;state.landingSeverity=severity;state.landingSerial++;state.unsupportedTime=0;
+}
 export function recoverHover(landscape,gateIndex){
   if(gateIndex===0)return {...createHoverState(landscape),cooldown:1.2};
   const road=landscape.atDistance(landscape.gates[gateIndex-1].distance+5);
@@ -61,11 +72,16 @@ export function advanceHover(state,input,dt,landscape,surfaceHeight=landscape.he
   const desiredYaw=-turn*(2.65-.9*state.speed/CIRCUIT_BOOST)*(1+state.driftBlend*.18);
   state.yawRate+=(desiredYaw-state.yawRate)*(1-Math.exp(-dt*13));state.yaw+=state.yawRate*dt;
   const fx=Math.sin(state.yaw),fz=Math.cos(state.yaw),rx=-fz,rz=fx;
-  let longitudinal=Math.max(0,state.vx*fx+state.vz*fz),lateral=state.vx*rx+state.vz*rz;
+  // Keep the short backwards impulse from a wall impact. Clamping forward
+  // speed to zero immediately would erase the rebound on the following frame.
+  state.collisionRecoilTime=Math.max(0,(state.collisionRecoilTime??0)-dt);
+  const forwardSpeed=state.vx*fx+state.vz*fz;
+  let longitudinal=state.airborne||state.collisionRecoilTime>0?forwardSpeed:Math.max(0,forwardSpeed),lateral=state.vx*rx+state.vz*rz;
   // Limit the total propulsion energy while sideways: drift must not grant speed.
   const forwardTarget=Math.sqrt(Math.max(0,target*target-lateral*lateral));
-  longitudinal+=clamp(forwardTarget-longitudinal,-acceleration*dt,acceleration*dt);
-  const grip=state.braking?9:9-6.7*state.driftBlend;
+  const propulsion=acceleration*(state.airborne?.12:1);
+  longitudinal+=clamp(forwardTarget-longitudinal,-propulsion*dt,propulsion*dt);
+  const grip=state.airborne?.65:state.braking?9:9-6.7*state.driftBlend;
   lateral*=Math.exp(-grip*dt);
   state.vx=fx*longitudinal+rx*lateral;state.vz=fz*longitudinal+rz*lateral;
   state.x+=state.vx*dt;state.z+=state.vz*dt;
@@ -91,15 +107,23 @@ export function advanceHover(state,input,dt,landscape,surfaceHeight=landscape.he
   const hoverTarget=HOVER_HEIGHT+(input.reducedMotion?0:Math.sin(state.hoverTime*3)*.025)+(state.boosting?.06:0);
   state.hoverVelocity+=((hoverTarget-state.hover)*100-state.hoverVelocity*14)*dt;
   state.hover=clamp(state.hover+state.hoverVelocity*dt,.43,.92);
-  const surface=surfaceHeight(state.x,state.z)??road.y;state.y=surface+state.hover;
-  const pitchTarget=Math.atan(road.grade*Math.cos(heading))-clamp(state.acceleration*.0007,-.045,.035);
+  const actualSurface=surfaceHeight(state.x,state.z),surface=actualSurface??road.y;
+  const launch=!state.airborne&&landscape.launchAt?.(previous,state);
+  if(launch){state.airborne=true;state.airTime=0;state.verticalVelocity=launch.velocity;state.y=launch.height+state.hover;state.landingSeverity=0;}
+  if(state.airborne){
+    state.airTime+=dt;state.y+=state.verticalVelocity*dt-11*dt*dt;state.verticalVelocity-=22*dt;
+    if(actualSurface!==null&&state.airTime>.04&&state.y<=surface+state.hover)landHover(state,surface,road);
+  }else state.y=surface+state.hover;
+  const surfaceGrade=landscape.surfaceGradeAt?.(state.x,state.z,state.yaw)??(road.grade*Math.cos(heading)-(road.bank??0)*Math.sin(heading));
+  const pitchTarget=state.airborne?Math.atan2(state.verticalVelocity,Math.max(12,state.speed)):Math.atan(surfaceGrade)-clamp(state.acceleration*.0007,-.045,.035);
   state.pitch+=(pitchTarget-state.pitch)*(1-Math.exp(-dt*10));
-  const rollTarget=clamp(turn*.16*Math.min(1,state.speed/12)+state.slip*.18,-.28,.28);
+  const rollTarget=-Math.atan(road.bank??0)*Math.cos(heading)+clamp(turn*.16*Math.min(1,state.speed/12)+state.slip*.18,-.28,.28);
   state.roll+=(rollTarget-state.roll)*(1-Math.exp(-dt*8));
   state.cooldown=Math.max(0,state.cooldown-dt);
   return previous;
 }
 export function crossesCircuitGate(a,b,gate){
+  if(gate.alternatives?.some(alternative=>crossesCircuitGate(a,b,alternative)))return true;
   const da=(a.x-gate.x)*gate.nx+(a.z-gate.z)*gate.nz,db=(b.x-gate.x)*gate.nx+(b.z-gate.z)*gate.nz;
   if(da>=0||db<0)return false;
   const t=-da/(db-da),x=a.x+(b.x-a.x)*t-gate.x,z=a.z+(b.z-a.z)*t-gate.z,y=a.y+(b.y-a.y)*t-gate.y;

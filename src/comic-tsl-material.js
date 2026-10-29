@@ -85,6 +85,7 @@ export function createComicMaterials(root,style){
       if(src.isNodeMaterial||!src.color||src.isShaderMaterial||src.isMeshBasicMaterial||src.isShadowMaterial||src.userData.characterEyeSurface)return src;
       if(cache.has(src))return cache.get(src);
       const m=new ComicMaterial();m.comicStyle=style;
+      m.lightsNode=src.lightsNode??null;
       for(const key of ['map','alphaMap','normalMap','bumpMap','bumpScale','normalScale','emissiveMap','emissiveIntensity','aoMap','aoMapIntensity','side','transparent','opacity','alphaTest','depthWrite','depthTest','vertexColors','flatShading','wireframe','polygonOffset','polygonOffsetFactor','polygonOffsetUnits'])if(src[key]!==undefined)m[key]=src[key];
       m.color=src.color;m.emissive=src.emissive??new Color();
       m.name=`TSL · ${src.name}`;
