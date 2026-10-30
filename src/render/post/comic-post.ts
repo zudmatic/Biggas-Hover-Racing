@@ -32,9 +32,11 @@ export class ComicPipeline extends RenderPipeline {
   private readonly exposure = uniform(1.05);
   private readonly paper = uniform(new Color());
   private readonly size = new Vector2();
+  private readonly environmentGlow: UniformNode<number>;
 
   constructor(context: PipelineContext, quality: PipelineQuality) {
     super(context, quality);
+    this.environmentGlow = context.environmentGlow ?? uniform(0);
     this.near = uniform(context.camera.near);
     this.far = uniform(context.camera.far);
   }
@@ -205,7 +207,7 @@ export class ComicPipeline extends RenderPipeline {
 
     // `comic` 0 is the plain developed frame on the same paper.
     const base = source.sample(uv);
-    const plain = mix(rimPaper, toSRGB(acesFilmic(exposure, lensed(unpremultiply(base)))), base.a);
+    const plain = mix(rimPaper, toSRGB(acesFilmic(exposure, lensed(unpremultiply(base)))), base.a).add(glow.mul(this.environmentGlow));
     return new PostChain(renderer, scenePass, heat, vec4(mix(plain, color, comic), 1));
   }
 }

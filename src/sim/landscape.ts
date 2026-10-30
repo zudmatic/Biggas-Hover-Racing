@@ -87,6 +87,7 @@ export class Landscape {
   allowJumps = false;
   jumpSettings: JumpSettings | null = null;
   shortcut: Vec3Array[] | null = null;
+  shortcuts: Vec3Array[][] = [];
 
   private readonly grid: Map<number, number[]>;
   private readonly gridMin: [number, number];

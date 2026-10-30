@@ -1,5 +1,10 @@
 # Biggas Hover Racing
 
+**Tokyo Highway** está disponible como mapa de prueba nocturno en
+`http://localhost:5173/?selection=map&map=tokyo-highway&pilot=zudmatic`.
+El panel **Tokyo · iluminación nocturna** permite ajustar sodio, túnel, torre,
+ventanas y luz de luna. Ver [ajustes y alcance del prototipo](docs/tracks/tokyo-highway.md).
+
 Carreras hover en 3D con cinco personajes, seis vehículos y cuatro circuitos: Ruinas, Nexus, Mario Raceway y Desert Valley. TypeScript estricto, Vite y Three.js; WebGPU con fallback WebGL2, materiales TSL y UI sin framework.
 
 ## Ejecutar

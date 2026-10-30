@@ -118,7 +118,7 @@ export class RaceSession implements Disposable {
   private constructor(private readonly entryTransition?: EntryTransition) {
     const {query, trackConfig, vehicleConfig, choice} = this;
     const pilot = characters.resolve(choice.pilot);
-    this.comic = query.has('comic') ? query.get('comic') !== '0' : !this.naturalLook;
+    this.comic = query.has('comic') ? query.get('comic') !== '0' : this.trackConfig.look === 'comic';
     audio.music.setRaceTrack(this.trackConfig.music);
     document.title = `Biggas Hover Racing · ${trackConfig.name} ${trackConfig.number}`;
     const canonical = new URL(location.href);
@@ -174,6 +174,7 @@ export class RaceSession implements Disposable {
       underglow: vehicleConfig.lights.underglow,
     });
     this.sky = createCircuitSky(this.scene, {mobile: this.mobile, map: trackConfig.id});
+    this.sky.root.visible = !trackConfig.authoredSky;
     this.atmosphere = new SpeedAtmosphere(this.scene, {mobile: this.mobile});
     this.quality = new QualityController({
       width: innerWidth,
@@ -269,6 +270,7 @@ export class RaceSession implements Disposable {
       }
       this.graphics = await this.graphicsModule.FlightGraphics.create(renderer, scene, this.camera, vehicle, this.oil, {
         naturalDesert: this.naturalLook,
+        environmentGlow: track.glow,
         boostPads: this.boostPads,
       });
       this.graphics.setQuality(this.quality.settings);
@@ -339,6 +341,10 @@ export class RaceSession implements Disposable {
     this.track = track;
     this.scene.add(track.root);
     this.lighting.setTrack(track.landscape);
+    this.lighting.setNight(!!this.trackConfig.night, true);
+    track.initLighting?.(this.lighting);
+    screen.get('#flight-light').setAttribute('aria-pressed', String(this.lighting.night));
+    screen.setText(screen.get('#flight-light-state'), this.lighting.night ? 'Noche' : 'Día');
     track.textures.applyRoot(this.lighting.root);
     await track.initWater?.(this.lighting.sun);
     screen.app.dataset.water = track.water ? 'animated' : 'none';
@@ -371,7 +377,7 @@ export class RaceSession implements Disposable {
         return session.phase;
       },
       get look() {
-        return session.naturalLook && !session.comic ? 'sunlit' : 'comic';
+        return session.comic ? 'comic' : session.trackConfig.night ? 'night' : 'sunlit';
       },
       get state() {
         return session.player.state;
@@ -390,8 +396,8 @@ export class RaceSession implements Disposable {
       teleport: (x, z, yaw) => this.teleport(x, z, yaw),
       overview: () => {
         this.cameraRig.mode = 3;
-        this.camera.position.set(575, 570, 650);
-        this.camera.lookAt(0, 15, 0);
+        this.camera.position.set(...this.trackConfig.overview);
+        this.camera.lookAt(...this.trackConfig.lookAt);
         this.camera.updateMatrixWorld();
       },
     });

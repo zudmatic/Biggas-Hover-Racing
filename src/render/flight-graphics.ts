@@ -1,5 +1,5 @@
 import type {Object3D, PerspectiveCamera, Scene} from 'three';
-import type {WebGPURenderer} from 'three/webgpu';
+import type {UniformNode, WebGPURenderer} from 'three/webgpu';
 import {attribute} from 'three/tsl';
 import type {Disposable} from '@/core/disposable';
 import type {GamePhase} from '@/core/types';
@@ -37,6 +37,7 @@ export interface BoostPadHeat {
 }
 
 export interface FlightGraphicsOptions {
+  environmentGlow?: UniformNode<number>;
   /** Desert Valley: the natural (non-comic) look uses the PS2 desert pipeline. */
   naturalDesert?: boolean;
   boostPads?: BoostPadHeat | null;
@@ -79,6 +80,7 @@ const BOT_FLAME: FlameLookSettings & FlameTrailSettings = {
 const NO_PADS: readonly PadHeatField[] = [];
 
 interface FlightGraphicsParts {
+  environmentGlow?: UniformNode<number>;
   renderer: WebGPURenderer;
   scene: Scene;
   camera: PerspectiveCamera;
@@ -106,7 +108,7 @@ export class FlightGraphics implements Disposable {
     camera: PerspectiveCamera,
     vehicle: FlightVehicle,
     oil: BotFlameSource,
-    {naturalDesert = false, boostPads = null}: FlightGraphicsOptions = {},
+    {naturalDesert = false, boostPads = null, environmentGlow}: FlightGraphicsOptions = {},
   ): Promise<FlightGraphics> {
     preventShadowVersionChurn(scene);
     // Order matters: the desert look binds the scene's materials after the
@@ -123,7 +125,7 @@ export class FlightGraphics implements Disposable {
       baseline.dispose();
       throw error;
     }
-    return new FlightGraphics({renderer, scene, camera, vehicle, oil, boostPads, naturalDesert, baseline, look, lens, engine});
+    return new FlightGraphics({renderer, scene, camera, vehicle, oil, boostPads, naturalDesert, baseline, look, lens, engine, environmentGlow});
   }
 
   readonly stats: FlightGraphicsStats = {glowSamples: 12, samples: 4};
@@ -132,6 +134,7 @@ export class FlightGraphics implements Disposable {
   readonly engine: ExhaustEngine;
 
   private readonly renderer: WebGPURenderer;
+  private readonly environmentGlow?: UniformNode<number>;
   private readonly scene: Scene;
   private readonly camera: PerspectiveCamera;
   private readonly vehicle: FlightVehicle;
@@ -151,6 +154,7 @@ export class FlightGraphics implements Disposable {
   private postOn = true;
 
   private constructor(parts: FlightGraphicsParts) {
+    this.environmentGlow = parts.environmentGlow;
     this.renderer = parts.renderer;
     this.scene = parts.scene;
     this.camera = parts.camera;
@@ -245,7 +249,7 @@ export class FlightGraphics implements Disposable {
     let pipeline = this.pipelines.get(lookId);
     if (!pipeline) {
       const {renderer, scene, camera, lens} = this;
-      pipeline = createPipeline(lookId, {renderer, scene, camera, lens, warmth: this.look?.warmth}, this.quality);
+      pipeline = createPipeline(lookId, {renderer, scene, camera, lens, warmth: this.look?.warmth, environmentGlow: this.environmentGlow}, this.quality);
       this.pipelines.set(lookId, pipeline);
     }
     pipeline.setQuality(this.quality);
