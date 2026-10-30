@@ -1,0 +1,22 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="22.3628" height="22.3628" viewBox="0 0 22.3628 22.3628" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="Paleta=Matcha">
+<g id="Borde">
+<path d="M22.3628 11.1814C22.3628 17.3567 17.3567 22.3628 11.1814 22.3628C5.00608 22.3628 0 17.3567 0 11.1814C0 5.00608 5.00608 0 11.1814 0C17.3567 0 22.3628 5.00608 22.3628 11.1814Z" fill="white"/>
+<use xlink:href="#stroke0_0_126" stroke="#111111"/>
+<use xlink:href="#stroke0_0_126" stroke="url(#paint0_linear_0_126)"/>
+</g>
+<circle id="Colores de paleta" cx="11.1814" cy="11.1814" r="7.98671" fill="#8CAA68"/>
+<path id="Detalle" d="M3.19468 11.1814C3.19468 9.92101 3.49298 8.67852 4.06518 7.5555C4.63739 6.43249 5.46725 5.46085 6.48693 4.72001C7.5066 3.97917 8.68713 3.49018 9.932 3.29301C11.1769 3.09585 12.4507 3.1961 13.6494 3.58558L11.1814 11.1814L3.19468 11.1814Z" fill="#315C4B"/>
+<path id="Acento" d="M13.6494 3.58558C15.2535 4.10678 16.6514 5.12242 17.6428 6.48693C18.6342 7.85144 19.1681 9.49477 19.1681 11.1814L11.1814 11.1814L13.6494 3.58558Z" fill="#EEE7C9"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_126" x1="0" y1="11.1814" x2="22.3628" y2="11.1814" gradientUnits="userSpaceOnUse">
+<stop stop-color="#949EB7"/>
+<stop offset="0.46016" stop-color="#ADBCD3"/>
+<stop offset="0.607079" stop-color="#D7E0F1"/>
+<stop offset="0.715333" stop-color="#BBC9E3"/>
+<stop offset="1" stop-color="#62708A"/>
+</linearGradient>
+<path id="stroke0_0_126" d="M21.3628 11.1814C21.3628 16.8044 16.8044 21.3628 11.1814 21.3628C5.55837 21.3628 1 16.8044 1 11.1814C1 5.55837 5.55837 1 11.1814 1C16.8044 1 21.3628 5.55837 21.3628 11.1814Z" stroke-width="2"/>
+</defs>
+</svg>

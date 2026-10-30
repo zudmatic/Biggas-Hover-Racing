@@ -11,6 +11,7 @@ export function createMenuMotion(root: HTMLElement, {reduced, signal}: {reduced:
     ghost?.remove();
     ghost = null;
     delete root.dataset.transitioning;
+    delete root.dataset.landingTransition;
   }
   function animate(element: HTMLElement | null, frames: Keyframe[], duration = 240, delay = 0) {
     if (!element || element.hidden) return;
@@ -30,17 +31,21 @@ export function createMenuMotion(root: HTMLElement, {reduced, signal}: {reduced:
       delay,
     );
   }
-  function arrive(stage: number, direction = 1) {
+  function arrive(stage: number, direction = 1, fromLanding = false) {
     const screen = root.querySelector<HTMLElement>(`[data-screen="${stage}"]`)!;
     if (stage === 0) {
-      enter(screen.querySelector('.lobby-title-mark'), {y: 18, duration: 280});
+      enter(screen.querySelector('.landing-effect-stage'), {y: 18, duration: 280});
       enter(screen.querySelector('.lobby-start'), {y: 12, delay: 45});
       enter(screen.querySelector('.lobby-start-hint'), {delay: 70});
-    } else if (stage < 3) {
-      enter(screen.querySelector('.lobby-section-title'), {x: 18 * direction});
+    } else if (stage === 1) {
+      const delay = fromLanding ? 140 : 0;
+      enter(screen.querySelector('.lobby-section-title'), {x: 18 * direction, delay});
       screen
         .querySelectorAll<HTMLElement>('.lobby-slot')
-        .forEach((slot, i) => enter(slot, {y: 14, delay: Math.min(i * 12, 72), duration: 200}));
+        .forEach((slot, i) => enter(slot, {y: 14, delay: delay + Math.min(i * 12, 72), duration: 200}));
+      screen
+        .querySelectorAll<HTMLElement>('.entry-card')
+        .forEach((card, i) => enter(card, {y: fromLanding ? 32 : 16, delay: delay + Math.min(i * 35, 140), duration: fromLanding ? 360 : 240}));
       enter(screen.querySelector('.lobby-selected-name'), {x: -42 * direction, duration: 260});
       enter(screen.querySelector('.lobby-profile'), {y: 14, delay: 35});
       enter(root.querySelector('.lobby-preview'), {x: 32 * direction, delay: 25, duration: 260});
@@ -67,10 +72,23 @@ export function createMenuMotion(root: HTMLElement, {reduced, signal}: {reduced:
     },
     before(from: number, to: number, keyboard: boolean) {
       clear();
-      if (reduced.matches || keyboard || from === to) return;
+      if (reduced.matches || (keyboard && from !== 0 && to !== 0) || from === to) return;
       root.dataset.transitioning = 'true';
+      if (from === 0) root.dataset.landingTransition = 'true';
       const source = root.querySelector<HTMLElement>(`[data-screen="${from}"]`)!;
       ghost = source.cloneNode(true) as HTMLElement;
+      // Canvas pixels are not copied by cloneNode. Preserve the rendered shader
+      // during the landing exit instead of revealing an empty canvas mid-fade.
+      source.querySelectorAll('canvas').forEach((canvas, index) => {
+        const copy = ghost!.querySelectorAll('canvas')[index];
+        if (!copy) return;
+        const snapshot = document.createElement('img');
+        snapshot.className = copy.className;
+        snapshot.alt = '';
+        snapshot.style.cssText = copy.style.cssText;
+        snapshot.src = canvas.toDataURL();
+        copy.replaceWith(snapshot);
+      });
       ghost.removeAttribute('data-screen');
       ghost.removeAttribute('aria-labelledby');
       ghost.removeAttribute('id');
@@ -86,9 +104,9 @@ export function createMenuMotion(root: HTMLElement, {reduced, signal}: {reduced:
         exiting,
         [
           {opacity: 1, transform: 'translateX(0)'},
-          {opacity: 0, transform: `translateX(${to > from ? -22 : 22}px)`},
+          {opacity: 0, transform: `translateX(${from === 0 ? -48 : to > from ? -22 : 22}px)`},
         ],
-        130,
+        from === 0 ? 360 : 130,
       );
       animation?.finished
         .catch(() => {})
@@ -98,10 +116,13 @@ export function createMenuMotion(root: HTMLElement, {reduced, signal}: {reduced:
         });
     },
     after(from: number, to: number, keyboard: boolean) {
-      if (reduced.matches || keyboard || from === to) return;
-      arrive(to, to > from ? 1 : -1);
+      if (reduced.matches || (keyboard && from !== 0 && to !== 0) || from === to) return;
+      arrive(to, to > from ? 1 : -1, from === 0);
       Promise.allSettled([...animations].map((animation) => animation.finished)).then(() => {
-        if (!animations.size) delete root.dataset.transitioning;
+        if (!animations.size) {
+          delete root.dataset.transitioning;
+          delete root.dataset.landingTransition;
+        }
       });
     },
   };

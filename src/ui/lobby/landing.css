@@ -1,0 +1,39 @@
+/* Figma 1375:11526. Assets and shader parameters retain the authored geometry. */
+:root .race-lobby[data-stage='0']{border:0;background:#24282a}
+:root .race-lobby[data-stage='0'] :is(.lobby-header,.lobby-footer,.lobby-paper-surface,.lobby-title-ribbon,.lobby-title-checkers){display:none}
+:root .race-lobby .lobby-landing{inset:0;display:block;overflow:hidden;background:#24282a}
+.landing-effect-stage{position:absolute;left:-23.293333%;top:-23.29335%;width:146.586667%;height:146.5867%;pointer-events:none}
+.landing-shader-host,.landing-shader,.landing-render-content,.landing-scene{width:100%;height:100%}
+.landing-scene{position:relative;overflow:hidden;background-image:url("data:image/svg+xml;utf8,<svg viewBox='0 0 2110.8 1465.9' xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none'><g transform='matrix(118.9 -0.46953 21.17 69.082 1086.2 768.94)' opacity='1'><rect x='-0.01' y='-0.01' height='201.98' width='170.17' fill='url(%23grad)' id='quad' shape-rendering='crispEdges'/><use href='%23quad' transform='scale(1 -1)'/><use href='%23quad' transform='scale(-1 1)'/><use href='%23quad' transform='scale(-1 -1)'/></g><defs><linearGradient id='grad' gradientUnits='userSpaceOnUse' x2='5' y2='5'><stop stop-color='rgba(255,255,255,1)' offset='0.11058'/><stop stop-color='rgba(186,203,250,1)' offset='1'/></linearGradient></defs></svg>");background-size:100% 100%}
+.landing-design-plane{position:absolute;left:50%;top:50%;width:2110.848px;height:1465.867px;transform:translate(-50%,-50%) scale(var(--landing-scale,1));pointer-events:none}
+.landing-grid-plane{position:absolute;left:50%;top:50%;width:2110.848px;height:1465.867px;transform:translate(-50%,-50%) scale(var(--landing-cover-scale,1));mix-blend-mode:overlay}
+.landing-grid{position:absolute;left:-702.07px;top:-3.44px;max-width:none}
+:root .lobby-landing .lobby-title-mark{position:absolute;inset:0;margin:0;text-align:left}
+.landing-logo-layer{position:absolute;display:block;max-width:none;pointer-events:none;user-select:none}
+.landing-logo-shadow{left:731.19775px;top:687.63821px}
+.landing-logo-orbit{left:613.18px;top:567.34px}
+.landing-logo-wordmark,.landing-logo-highlight{left:678.32655px;top:669.90122px}
+.landing-logo-detail{left:933.43949px;top:846.03445px}
+.landing-logo-caption{position:absolute;white-space:nowrap;font:400 13.204px 'Pro Racing Slant',sans-serif;line-height:1;background:linear-gradient(86deg,#24282a 0%,#7b8990 111.43%);background-clip:text;color:transparent;text-box-trim:trim-both;text-box-edge:cap alphabetic}
+.landing-logo-series{left:1009.53px;top:833px;transform:translateY(-50%)}
+.landing-logo-trademark{left:1376.92px;top:673.95px;transform:translateY(-50%);background-image:linear-gradient(89.194deg,#24282a70 0%,#7b8990ad 111.43%)}
+.landing-logo-subtitle{left:937.43868px;top:797.43165px;font-size:22.058px}
+.landing-start-art{position:absolute;left:50%;top:985.43px;translate:-50% 0;display:flex;align-items:center;justify-content:center;width:max-content;min-height:calc(44px / var(--landing-scale,1));padding:14.214px 52.119px;border:2.369px solid #949eb7;border-radius:4.146px;background:linear-gradient(100.086deg,#fff0cd 69.887%,#ffe29f 12.832%,#fff0cd 49.549%,#f3bf46 97.746%);color:#24282a;font:400 max(26.059px,calc(16px / var(--landing-scale,1))) 'Pro Racing',sans-serif;line-height:normal;letter-spacing:0}
+.landing-metal-bar{position:absolute;left:0;right:0;height:8.2%;border-top:2.932px solid #0007;background:linear-gradient(90deg,#949eb7 0%,#adbcd3 46.016%,#d7e0f1 60.708%,#bbc9e3 71.533%,#62708a 100%)}
+.landing-metal-top{top:0;transform:scaleY(-1)}.landing-metal-bottom{bottom:-.73px}
+:root .race-lobby .lobby-landing .lobby-start{position:absolute;translate:-50% -50%;display:block;min-width:44px;min-height:44px;padding:0;border:0;border-radius:5px;background:transparent;box-shadow:none;color:transparent;cursor:pointer;transition:background-color 160ms ease,box-shadow 160ms ease}
+:root .race-lobby .lobby-landing .lobby-start:focus-visible{outline:3px solid #1064ff;outline-offset:5px}
+@media (hover:hover){
+:root .race-lobby .lobby-landing .lobby-start:hover{background:#fff4;box-shadow:inset 0 0 0 2px #fff8,0 0 22px 4px #ffdc7b80}
+}
+@media (prefers-reduced-motion:reduce){
+:root .race-lobby .lobby-landing .lobby-start{transition:none}
+}
+:root .race-lobby .lobby-landing.lobby-exit{z-index:10}
+
+/* Keep the measured DOM composition available for sizing; show its portable lens canvas. */
+.landing-shader-host{position:relative}
+.landing-shader-host>.landing-shader{position:absolute;inset:0;display:block}
+.landing-shader-host:has(>.landing-shader)>.landing-render-content{visibility:hidden}
+/* Capture pointer movement over the background as well as over Start. */
+:root .race-lobby .lobby-landing:not(.lobby-exit){pointer-events:auto}

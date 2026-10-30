@@ -43,7 +43,7 @@ export const bulldog039: VehicleDefinition = {
   image: '039',
   model: 'models/spaceship/bulldog-039.glb',
   hull: {halfWidth: 1.7, halfLength: 2.82, capsuleRadius: 1.4, capsuleSpacing: 1.3, capsuleBottom: 1.45, capsuleTop: 1.9},
-  seat: {fit: 'cockpit', offset: [0, 0.66, -0.52]},
+  seat: {fit: 'cockpit', offset: [0, 0.66, -0.52], defaultPilot: 'mr-kerry-capija', offsets: {'mr-kerry-capija': [0, 1.55, -0.52]}},
   engine: {
     kind: 'flame',
     exhausts: [

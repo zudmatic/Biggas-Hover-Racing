@@ -1,0 +1,106 @@
+/* Arcade player entry. Scoped to this step so the vehicle and map screens keep their layout. */
+.race-lobby[data-stage='1']{
+  background:repeating-linear-gradient(0deg,#ffffff08 0 2px,transparent 2px 5px),linear-gradient(125deg,#087dc7,#64c9ff 55%,#0871c8);
+  color:#fff;border-color:#111a20;
+}
+.race-lobby[data-stage='1'] .lobby-header{
+  height:70px;padding-inline:3vw;background:linear-gradient(#252f36,#101a22);border-bottom:3px solid #58bdff;
+}
+.race-lobby[data-stage='1'] .lobby-brand>span{color:#48c8ff}
+.race-lobby[data-stage='1'] .lobby-steps button{color:#a2b1bd}
+.race-lobby[data-stage='1'] .lobby-steps button[aria-current=step]{color:#fff}
+.race-lobby[data-stage='1'] .lobby-steps button[aria-current=step]>span{background:#00d9b4;border-color:#07161f;color:#041b25}
+.race-lobby[data-stage='1'] #lobby-paper{color:#111}
+.race-lobby .lobby-character-select{inset:70px 0 82px;display:flex;flex-direction:column;pointer-events:auto}
+.lobby-character-select .lobby-section-title{flex:none;width:100%;min-height:79px;padding:12px 3vw;background:linear-gradient(115deg,#18242d 0 43%,#16477b 43%,#2976b6);border-bottom:3px solid #7ed5ff}
+.lobby-character-select .lobby-section-title h1{font-size:clamp(28px,3.4vw,48px);font-style:italic;font-weight:950;letter-spacing:-1.7px;line-height:1;text-shadow:3px 3px #000;-webkit-text-stroke:1px #10161b}
+.lobby-character-select .lobby-section-title h1 small{display:block;font-size:9px;letter-spacing:2.5px;font-style:normal;margin-top:8px;-webkit-text-stroke:0;text-shadow:none;color:#8bdcff}
+.lobby-character-select .lobby-section-title>span{font-size:14px;font-weight:900;color:#d1efff;letter-spacing:2px}
+.lobby-character-select .lobby-roster-panel{position:static;width:100%;flex:none;background:#1b252d;border-bottom:3px solid #82d8ff;padding:9px 3vw}
+.lobby-character-select .lobby-roster{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:12px;padding:4px;overflow:visible}
+.lobby-character-select .lobby-slot{height:68px;min-width:0;border:2px solid #0a141b!important;border-radius:10px;background:var(--entry-color,linear-gradient(#f5f8fb,#acbccb));box-shadow:inset 0 0 0 2px #ffffff80}
+.lobby-character-select .lobby-slot.is-selected{outline:3px solid #6efff3;outline-offset:1px;box-shadow:0 0 16px #00c8ff,inset 0 0 0 2px #fff}
+.lobby-character-select .lobby-slot img{width:100%;height:100%;inset:0;object-fit:cover}
+.lobby-character-select .lobby-slot .entry-portrait{object-position:50% 30%}
+.lobby-character-select .lobby-slot-name{font-size:8px;background:#081b34d9;color:#fff;border:0;padding:3px}
+.lobby-character-select .lobby-slot-player{left:auto;right:3px;top:3px;background:#082e7f;color:#fff;border-color:#c0ffff;font-size:13px;font-style:italic}
+.lobby-character-select .lobby-mystery{font-size:52px;color:#00e7e8;-webkit-text-stroke:2px #0b1720;text-shadow:2px 3px #fff}
+.entry-card-grid{flex:1;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:max(220px,calc((100% - 14px)/2));align-content:start;gap:14px;padding:14px 3vw 20px;overflow-y:auto;overscroll-behavior:contain;scrollbar-color:#073e6b #5fbeef;scrollbar-width:thin}
+.race-lobby .entry-card{--cut:22px;position:relative;isolation:isolate;padding:4px;background:#07131d;text-align:left;min-width:0;clip-path:polygon(var(--cut) 0,calc(100% - var(--cut)) 0,100% var(--cut),100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,var(--cut) 100%,0 calc(100% - var(--cut)),0 var(--cut));transition:background 150ms}
+.entry-card-inner{position:relative;display:block;width:100%;height:100%;overflow:hidden;background:var(--entry-color);clip-path:polygon(20px 0,calc(100% - 20px) 0,100% 20px,100% calc(100% - 20px),calc(100% - 20px) 100%,20px 100%,0 calc(100% - 20px),0 20px)}
+.entry-card-inner::before{content:'';position:absolute;inset:0;background:repeating-conic-gradient(from 35deg at 65% 70%,transparent 0 13deg,#ffffffb0 14deg 18deg,transparent 19deg 38deg)}
+.entry-card-art{position:absolute;right:0;top:-12%;width:auto;height:160%;object-fit:contain;mask-image:linear-gradient(90deg,transparent,#000 13%)}
+.entry-card-copy{position:absolute;left:0;top:14%;display:flex;align-items:flex-start;flex-direction:column;width:55%;pointer-events:none}
+.entry-card-number{padding:5px 18px;background:#07131de0;color:#fff;font-size:9px;font-weight:800;letter-spacing:2px}
+.entry-card-copy>strong{max-width:100%;padding:5px 28px 8px 17px;color:white;background:#050b10;clip-path:polygon(5% 0,100% 0,92% 100%,0 100%);font-size:clamp(25px,3vw,44px);font-weight:950;font-style:italic;line-height:1.1;letter-spacing:-1.5px;text-transform:uppercase}
+.entry-card-footer{position:absolute;bottom:0;left:0;right:0;height:37px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;background:#071624b8;color:#fff;border-top:1px solid #ffffff75}
+.entry-card-series{font-size:8px;font-weight:800;letter-spacing:1.5px}
+.entry-card .lobby-slot-player{position:static;padding:0;border:0;border-radius:0;background:none;color:#fff;font-size:26px;font-weight:950;font-style:italic;text-shadow:2px 2px #000}
+.entry-card .lobby-slot-player small{font-size:9px;letter-spacing:1px;vertical-align:middle;margin-left:10px}
+.entry-card.is-selected{background:#a5fff4}.entry-card.is-selected .entry-card-footer{background:#073fcded}
+.lobby-character-select .lobby-selected-name{position:static;flex:none;width:100%!important;justify-content:flex-start;padding:10px 3vw;gap:10px;background:#142b44;min-height:47px}
+.lobby-character-select .lobby-selected-name>span{font-size:10px;min-width:25px;padding:4px;border-color:#65d9ff;border-radius:4px}
+.race-lobby .lobby-character-select .lobby-selected-name strong{font-size:18px;font-weight:950;letter-spacing:0}
+.race-lobby[data-stage='1'] .lobby-character-select .lobby-profile{position:absolute;inset:auto 3vw 0 auto;width:auto;max-width:65%;height:47px;display:flex;align-items:center;pointer-events:auto}
+.lobby-character-select .lobby-profile dl,.lobby-character-select .lobby-profile-brand{display:none}
+.lobby-character-select :is(.lobby-hats,.lobby-palettes){display:flex;align-items:center;margin:0;padding:0}
+.lobby-character-select :is(.lobby-hats,.lobby-palettes) legend{float:left;margin:0 14px 0 0;font-size:8px;letter-spacing:1px}
+.lobby-character-select :is(.lobby-hat-name,.lobby-palette-name){display:none}
+.race-lobby .lobby-character-select :is(.lobby-hats,.lobby-palettes) button{width:28px;height:28px;padding:2px}.lobby-character-select .lobby-hats svg{width:18px;height:18px}
+.race-lobby[data-stage='1'] .lobby-footer{height:82px;padding-inline:3vw;background:linear-gradient(#325a7d,#122332 70%);border-top:3px solid #8ddcff;box-shadow:inset 0 3px 0 #07131d}
+.race-lobby[data-stage='1'] .lobby-back>span{background:#ff414b;color:#0e1a28;border-color:#082234}
+.race-lobby[data-stage='1'] .lobby-key-hint{color:#c7e2f5}
+.race-lobby[data-stage='1'] .lobby-key-hint kbd{color:#fff;border-color:#6f96b6}
+.race-lobby[data-stage='1'] .lobby-next{background:linear-gradient(#33f0d7,#00b7a1);box-shadow:inset 0 0 0 2px #b4fff1;border:2px solid #061b29;border-radius:7px;color:#051c2b;min-height:48px;font-style:italic}
+@media(hover:hover){.lobby-character-select .lobby-slot:hover{filter:brightness(1.12)}}
+@media(min-width:1600px){.entry-card-grid{padding-inline:6vw}.lobby-character-select .lobby-roster-panel{padding-inline:6vw}}
+@media(max-width:900px){
+  .race-lobby[data-stage='1'] .lobby-steps{display:none}
+  .lobby-character-select .lobby-roster{gap:7px}.lobby-character-select .lobby-slot{height:60px}
+  .entry-card-copy>strong{font-size:28px}.entry-card-series{display:none}
+}
+@media(max-width:600px){
+  .race-lobby[data-stage='1'] .lobby-header{height:58px}
+  .race-lobby .lobby-character-select{inset:58px 0 72px}
+  .lobby-character-select .lobby-section-title{min-height:69px}.lobby-character-select .lobby-section-title h1{font-size:31px}
+  .lobby-character-select .lobby-roster-panel{padding:7px 3vw}
+  .lobby-character-select .lobby-roster{display:flex;overflow-x:auto;padding:4px;gap:8px}
+  .lobby-character-select .lobby-slot{flex:0 0 66px;height:57px}
+  .entry-card-grid{grid-template-columns:1fr;grid-auto-rows:260px;gap:12px;padding-top:12px}
+  .entry-card-copy>strong{font-size:31px}
+  .lobby-character-select .lobby-selected-name{min-height:76px;align-items:flex-start;padding-top:10px}
+  .race-lobby[data-stage='1'] .lobby-character-select .lobby-profile{inset:auto 3vw 8px auto;max-width:100%;height:28px}
+  .lobby-character-select :is(.lobby-hats,.lobby-palettes) legend{font-size:7px}
+  .race-lobby[data-stage='1'] .lobby-footer{height:72px}.race-lobby[data-stage='1'] .lobby-key-hint{display:none}
+}
+@media(max-height:600px) and (min-width:601px){
+  .race-lobby[data-stage='1'] .lobby-header{height:48px}.race-lobby .lobby-character-select{top:48px;bottom:62px}
+  .lobby-character-select .lobby-section-title{min-height:50px;padding-block:7px}.lobby-character-select .lobby-section-title h1{font-size:27px}.lobby-character-select .lobby-section-title h1 small{display:none}
+  .lobby-character-select .lobby-slot{height:45px}.lobby-character-select .lobby-roster-panel{padding-block:4px}.entry-card-grid{grid-auto-rows:210px}
+  .race-lobby[data-stage='1'] .lobby-footer{height:62px}
+}
+@media(prefers-reduced-motion:reduce){.race-lobby .entry-card{transition:none}}
+
+/* Cards belong to players, not characters. Empty seats are passive closed panels. */
+.entry-card.is-closed{background:#233544}
+.entry-card-closed{display:grid;place-items:center;background:linear-gradient(130deg,#c2d2dfed,#8babc4ed);color:#334958}
+.entry-card-closed::before{inset:-30%;background:repeating-conic-gradient(from 20deg,#ffffff18 0deg 30deg,transparent 30deg 60deg);border-radius:50%}
+.entry-closed-seal{position:relative;display:grid;place-items:center;width:clamp(100px,12vw,155px);aspect-ratio:1;border:12px solid #60798880;border-radius:50%;box-shadow:inset 3px 4px 5px #3349584d,3px 4px 0 #e9f6ff66;color:#405463;font-size:clamp(30px,4vw,49px);font-weight:950;font-style:italic;text-shadow:1px 2px #d5e4ed;margin-bottom:25px}
+.entry-closed-number{position:absolute;right:22px;bottom:36px;font-size:76px;font-weight:950;font-style:italic;color:#38566b26}
+.entry-card-closed .entry-card-footer{justify-content:center;gap:20px;background:#d1e2ef75;color:#344e62;border-top:3px solid #233544;font-weight:900;font-size:15px}
+.entry-card-closed .entry-card-series{position:absolute;right:18px;font-size:8px;letter-spacing:1px}
+.entry-other-players{position:absolute;left:4px;bottom:19px;background:#121b30d9;color:#fff08a;font-size:11px;font-weight:900;border-radius:3px;padding:1px 3px;white-space:nowrap}
+.entry-other-players:empty{display:none}
+.entry-card[data-player-slot='2'].is-selected .entry-card-footer{background:#af1839ed}
+.entry-card[data-player-slot='3'].is-selected .entry-card-footer{background:#b07800ed}
+.entry-card[data-player-slot='4'].is-selected .entry-card-footer{background:#087d59ed}
+@media(max-width:1100px){.entry-card-closed .entry-card-series{display:none}}
+
+/* Quiet invitation to join; keep the panel and separator steady. */
+.entry-connect-prompt{animation:entry-connect-pulse 3s ease-in-out infinite}
+@keyframes entry-connect-pulse{0%,100%{opacity:1}50%{opacity:.3}}
+@media(prefers-reduced-motion:reduce){.entry-connect-prompt{animation:none}}
+
+.entry-coming-soon{position:absolute;left:0;right:0;bottom:0;z-index:3;padding:3px 2px;background:#15121ee8;color:#fff;font:700 9px Arial,sans-serif;text-align:center;text-transform:uppercase;letter-spacing:.3px;pointer-events:none}
+.race-lobby .lobby-next:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.65)}
+.entry-card[data-pilot=mr-kerry-capija] .entry-card-copy>strong{font-size:clamp(22px,2.6vw,36px)}

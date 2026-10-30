@@ -2,6 +2,7 @@ import {shipLiveryChoice} from '@/content/vehicles/zudoneta-037/liveries';
 import {ACESFilmicToneMapping, Color, Fog, PCFShadowMap, PerspectiveCamera, Scene} from 'three';
 import type {WebGPURenderer} from 'three/webgpu';
 import {audio} from '@/audio/audio-system';
+import {bindMenuHover, playUISound} from '@/audio/ui-sounds';
 import {GameRenderer, isWebGPUBackend} from '@/render/game-renderer';
 import {AssetLoader} from '@/core/assets/asset-loader';
 import {DisposableGroup, type Disposable} from '@/core/disposable';
@@ -299,7 +300,7 @@ export class RaceSession implements Disposable {
       if (this.intro) this.playIntro();
       else {
         this.start();
-        if (document.hidden) this.pause();
+        if (document.hidden) this.pause(false);
       }
       if (this.artReview) await this.mountArtReview();
     } catch (error) {
@@ -450,9 +451,13 @@ export class RaceSession implements Disposable {
     this.updateCamera(1, true);
   }
 
-  private pause(): void {
-    if (this.phase === 'flying') this.setPhase('paused');
+  private pause(userInitiated = true): void {
+    if (this.phase === 'flying') {
+      if (userInitiated) playUISound('pause');
+      this.setPhase('paused');
+    }
     else if (this.phase === 'paused') {
+      if (userInitiated) playUISound('select');
       audio.unlock();
       this.setPhase('flying');
     }
@@ -774,23 +779,26 @@ export class RaceSession implements Disposable {
         link.href = url.href;
       });
     }
+    resources.add(bindMenuHover(screen.get<HTMLElement>('.flight-menu')));
     const options = screen.get<HTMLDetailsElement>('.flight-options');
     resources.listen(options, 'toggle', () => {
       if (!options.open) this.soundControl.close();
     });
     const quality = screen.get<HTMLSelectElement>('#flight-quality');
     quality.value = this.quality.mode;
-    resources.listen(quality, 'change', () => this.quality.setMode(quality.value));
+    resources.listen(quality, 'change', () => { playUISound('select'); this.quality.setMode(quality.value); });
     screen.get<HTMLButtonElement>('#flight-resume').onclick = () => this.pause();
-    screen.get<HTMLButtonElement>('#flight-restart').onclick = () => this.start();
-    screen.get<HTMLButtonElement>('#flight-camera').onclick = () => this.changeCamera();
+    screen.get<HTMLButtonElement>('#flight-restart').onclick = () => { playUISound('start'); this.start(); };
+    screen.get<HTMLButtonElement>('#flight-camera').onclick = () => { playUISound('navigate'); this.changeCamera(); };
     screen.get<HTMLButtonElement>('#flight-light').onclick = (event) => {
+      playUISound('select');
       const {lighting} = this;
       lighting.setNight(!lighting.night);
       (event.currentTarget as HTMLElement).setAttribute('aria-pressed', String(lighting.night));
       screen.setText(screen.get('#flight-light-state'), lighting.night ? 'Noche' : 'Día');
     };
     screen.get<HTMLButtonElement>('#flight-comic').onclick = (event) => {
+      playUISound('select');
       this.comic = !this.comic;
       (event.currentTarget as HTMLElement).setAttribute('aria-pressed', String(this.comic));
       screen.setText(screen.get('#flight-comic-state'), this.comic ? 'Activado' : 'Desactivado');
@@ -803,7 +811,7 @@ export class RaceSession implements Disposable {
     const suspend = () => {
       audio.setPhase('paused');
       this.input.clear();
-      if (this.phase === 'flying') this.pause();
+      if (this.phase === 'flying') this.pause(false);
     };
     resources.listen(window, 'blur', suspend);
     resources.listen(document, 'visibilitychange', () => {
