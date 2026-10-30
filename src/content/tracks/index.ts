@@ -4,6 +4,7 @@ import {desertValley} from './desert-valley';
 import {ruins} from './ruins';
 import {nexus} from './nexus';
 import {marioRaceway} from './mario-raceway';
+import {tokyoHighway} from './tokyo-highway';
 
 export type {TrackDefinition, TrackLoadOptions, TrackLook, FxMaterialFactory} from './track-definition';
 export {Track} from './track';
@@ -12,6 +13,7 @@ export type {TrackUpdateContext, TrackTextures, TrackWarmupOptions, WaterStats, 
 /** Every track, in menu order. Unknown ids fall back to Ruins. */
 export const tracks = new Registry<TrackDefinition>('Pista', 'ruins');
 tracks.register(desertValley);
+tracks.register(tokyoHighway);
 tracks.register(ruins);
 tracks.register(nexus);
 tracks.register(marioRaceway);

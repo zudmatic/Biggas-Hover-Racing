@@ -28,6 +28,8 @@ export interface PipelineContext {
   readonly lens?: LensUniforms | null;
   /** The natural look's desert warmth (0: none); owned by the desert look. */
   readonly warmth?: UniformNode<number>;
+  /** Emissive halo in the natural night view; absent for existing tracks. */
+  readonly environmentGlow?: UniformNode<number>;
 }
 
 /** One compiled chain: a scene pass and its output graph, at one quality. */

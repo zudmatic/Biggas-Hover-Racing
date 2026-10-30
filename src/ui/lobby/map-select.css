@@ -9,7 +9,7 @@
   .lobby-team{display:flex;gap:10px;max-width:100%;min-width:0;padding:0;border:0;border-radius:0;background:none;color:#333b4b;font:400 16px 'Pro Racing Slant',sans-serif}
   .lobby-team>span{line-height:1.5}
   .lobby-team img{width:42px;height:42px;flex:none}
-  .lobby-map-list{flex:1;min-height:0;min-width:0;width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));align-content:center;gap:14px;padding:18px 3vw 24px;margin:0;border:0}
+  .lobby-map-list{flex:1;min-height:0;min-width:0;width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:minmax(180px,1fr);overflow-y:auto;align-content:stretch;gap:14px;padding:18px 3vw 24px;margin:0;border:0}
   .lobby-map-card{--map-cut:22px;position:relative;display:block;min-height:0;min-width:0;width:100%;padding:4px;border:0;border-radius:0;box-shadow:none;background:var(--entry-metal);clip-path:polygon(var(--map-cut) 0,calc(100% - var(--map-cut)) 0,100% var(--map-cut),100% calc(100% - var(--map-cut)),calc(100% - var(--map-cut)) 100%,var(--map-cut) 100%,0 calc(100% - var(--map-cut)),0 var(--map-cut));transition:background 120ms ease}
   .lobby-map-card:has(input:checked){background:#ffc011;box-shadow:none}
   .lobby-map-card:has(input:focus-visible){background:#1064ff;outline:none}
@@ -38,7 +38,7 @@
   :root .race-lobby[data-entry-theme=figma][data-stage='2']{--map-header-height:58px;--map-footer-height:72px;
     .lobby-map-toolbar{min-height:66px;gap:8px;padding-block:6px}
     .lobby-team{max-width:100%;gap:5px;padding:0;font-size:12px}.lobby-team img{width:28px;height:34px}
-    .lobby-map-list{grid-template-columns:minmax(0,1fr);grid-template-rows:repeat(4,minmax(0,1fr));gap:10px;padding:12px 3vw}
+    .lobby-map-list{grid-template-columns:minmax(0,1fr);grid-template-rows:none;grid-auto-rows:160px;gap:10px;padding:12px 3vw}
     .lobby-map-card{--map-cut:14px;padding:3px}
     .lobby-map-shell{grid-template-rows:minmax(0,1fr) 27px;clip-path:polygon(12px 0,calc(100% - 12px) 0,100% 12px,100% calc(100% - 12px),calc(100% - 12px) 100%,12px 100%,0 calc(100% - 12px),0 12px)}
     .lobby-map-copy strong{font-size:20px;padding:3px 20px 4px 12px;letter-spacing:-.6px}
@@ -62,7 +62,7 @@
   :root .race-lobby[data-entry-theme=figma][data-stage='2']{
     .lobby-map-heading{height:50px;min-height:50px}.lobby-map-heading h1{font-size:25px}
     .lobby-map-toolbar{min-height:52px}
-    .lobby-map-list{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:8px;padding-block:10px}
+    .lobby-map-list{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:none;grid-auto-rows:150px;gap:8px;padding-block:10px}
     .lobby-map-shell{grid-template-rows:minmax(0,1fr) 32px}
     .lobby-map-copy{max-width:calc(100% - 5px)}.lobby-map-copy strong{font-size:15px;padding-inline:10px 14px;margin-left:0;letter-spacing:-.5px}
     .lobby-map-check{top:7px;right:6px;width:19px;height:19px;font-size:11px}

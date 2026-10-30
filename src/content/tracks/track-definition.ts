@@ -40,6 +40,10 @@ export interface TrackDefinition {
   /** Collision meshes bound the track: no virtual walls from the route width. */
   readonly physicalBoundaries: boolean;
   readonly look: TrackLook;
+  /** Start at night; a painted backdrop may remain nocturnal when comparing day lighting. */
+  readonly night?: boolean;
+  /** The GLB includes its own sky/background. */
+  readonly authoredSky?: boolean;
   /** Music cue id from audio/catalog. */
   readonly music: string;
   /** localStorage key for best times. */

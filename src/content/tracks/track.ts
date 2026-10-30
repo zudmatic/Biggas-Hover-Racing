@@ -10,6 +10,8 @@ import type {DesertLod} from './desert-valley/desert-lod';
 import type {DesertTrain} from './desert-valley/desert-train';
 import type {Water} from './desert-valley/water/water';
 import {isInstancedMesh} from './scene-utils';
+import type {TrackLighting} from '@/render/lighting/track-lighting';
+import type {UniformNode} from 'three/webgpu';
 
 /** Drift smoke, sparks and hover marks shared by every track. */
 export type FlightFx = DriftFx;
@@ -104,6 +106,10 @@ export abstract class Track implements Disposable {
   }
   /** Builds the animated water; it shares the sun's shadow map. */
   initWater?(sun: DirectionalLight): Promise<void>;
+  /** Optional authored light rig and live art controls. */
+  initLighting?(lighting: TrackLighting): void;
+  /** Optional bloom strength for a track's unprinted night look. */
+  readonly glow?: UniformNode<number>;
   resetWaterFx?(): void;
 
   /** Fixed-step collision against the track (60 Hz). `previous` is the pose before the step. */

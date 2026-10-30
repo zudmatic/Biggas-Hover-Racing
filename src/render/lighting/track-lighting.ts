@@ -65,6 +65,12 @@ export interface LightingUpdateOptions {
   paused?: boolean;
 }
 
+export interface NightLightingProfile {
+  sky: Color; ground: Color; sun: Color; fog: Color;
+  skyIntensity: number; sunIntensity: number; fillIntensity: number;
+  direction: Vector3;
+}
+
 interface Headlight {
   light: SpotLight;
   offset: number;
@@ -86,6 +92,7 @@ const isLinearFog = (fog: Fog | FogExp2 | null): fog is Fog => fog !== null && (
  * near the player. Actual Lambert-compatible lights also work in comic mode.
  */
 export class TrackLighting implements Disposable {
+  nightProfile: NightLightingProfile | null = null;
   readonly root = new Group();
   readonly sky = new HemisphereLight(0xc4dcf2, 0x927b59, 1.7);
   readonly sun = new DirectionalLight(0xffd8a0, 3.4);
@@ -158,8 +165,9 @@ export class TrackLighting implements Disposable {
     return this.nightOn;
   }
 
-  setNight(value: boolean): void {
+  setNight(value: boolean, immediate = false): void {
     this.nightOn = !!value;
+    if (immediate) this.blend = Number(value);
   }
 
   get headlightsEnabled(): boolean {
@@ -174,6 +182,12 @@ export class TrackLighting implements Disposable {
   /** Dresses the lights for a track: desert palette and shadows, or lamp posts along the road. */
   setTrack(track: LightingTrack): void {
     const {sun, scene, mobile} = this;
+    // Tokyo's GLB already contains its fixtures. Its track owns the local pool.
+    if (track.map === 'tokyo-highway') {
+      if (isLinearFog(scene.fog)) { scene.fog.near = 280; scene.fog.far = 1800; }
+      sun.shadow.mapSize.set(mobile ? 1024 : 2048, mobile ? 1024 : 2048);
+      return;
+    }
     if (track.map === 'desert-valley') {
       this.desert = true;
       this.dayFog.set(0xc7d9dc);
@@ -245,6 +259,18 @@ export class TrackLighting implements Disposable {
     const arc = reducedMotion || desert ? 0 : Math.sin(time * 0.018) * 18;
     sun.position.set(state.x + (desert ? -160 : -110) + arc, state.y + (desert ? 220 : 180), state.z + (desert ? -120 : 70));
     sun.target.position.set(state.x, state.y, state.z);
+    const profile = this.nightProfile;
+    if (profile) {
+      sky.color.copy(this.daySky).lerp(profile.sky, blend);
+      sky.groundColor.copy(this.dayGround).lerp(profile.ground, blend);
+      sky.intensity = MathUtils.lerp(1.7, profile.skyIntensity, blend);
+      sun.color.copy(this.daySun).lerp(profile.sun, blend);
+      sun.intensity = MathUtils.lerp(3.4, profile.sunIntensity, blend);
+      fill.intensity = MathUtils.lerp(0.45, profile.fillIntensity, blend);
+      sun.position.copy(profile.direction).add(sun.target.position);
+      if (isColor(scene.background)) scene.background.copy(this.dayFog).lerp(profile.fog, blend);
+      scene.fog?.color.copy(this.dayFog).lerp(profile.fog, blend);
+    }
 
     this.anchor.set(state.x, state.y, state.z);
     const found = this.selectNearestFixtures();
