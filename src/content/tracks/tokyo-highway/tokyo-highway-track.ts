@@ -4,13 +4,13 @@ import {DriftFx} from '@/fx/drift/drift-fx';
 import type {TrackLighting} from '@/render/lighting/track-lighting';
 import {Landscape} from '@/sim/landscape';
 import type {HoverState, Position3} from '@/sim/hover-state';
-import type {GameplayData, RouteData} from '@/sim/route-data';
+import type {GameplayData, RouteData, Vec3Array} from '@/sim/route-data';
 import {TrackCollision} from '@/sim/track-collision';
 import {Track, effectsFrame, type EffectsFrame, type TrackUpdateContext} from '../track';
 import {trackFile, type TrackDefinition, type TrackLoadOptions} from '../track-definition';
 import {isMesh, isTexture, materialsOf} from '../scene-utils';
 import {TokyoLighting, type TokyoFixture} from './tokyo-lighting';
-import {extractTokyoCollision, type TokyoSurface} from './tokyo-surface';
+import {extractTokyoCollision, isTokyoFloor, type TokyoSurface} from './tokyo-surface';
 
 export class TokyoHighwayTrack extends Track {
   readonly textures = {count: 9, applyRoot() {}};
@@ -38,23 +38,29 @@ export class TokyoHighwayTrack extends Track {
 
   static async load(definition: TrackDefinition, options: TrackLoadOptions): Promise<TokyoHighwayTrack> {
     const loader = AssetLoader.shared;
-    const [asset, route, gameplay, fixtures] = await Promise.all([
+    const [asset, colliderAsset, route, gameplay, fixtures, testSpawns] = await Promise.all([
       loader.gltf(trackFile(definition, definition.model), {onProgress: options.onProgress}),
+      loader.gltf(trackFile(definition, 'tokyo-collision.glb')),
       loader.json<RouteData>(trackFile(definition, 'route_gltf.json')),
       loader.json<GameplayData>(trackFile(definition, 'gameplay.json')),
       loader.json<TokyoFixture[]>(trackFile(definition, 'lights.json')),
+      loader.json<Record<string, {position: Vec3Array; forward: Vec3Array}>>(trackFile(definition, 'test-spawns.json')),
     ]);
     const root = asset.scene;
     const landscape = new Landscape(route, gameplay);
     landscape.map = definition.id;
     landscape.physicalBoundaries = true;
+    landscape.allowJumps = true;
+    landscape.shortcuts = route.shortcuts ?? [];
+    // The authored elevation is unambiguous even where the spiral overlaps.
+    const grid = gameplay.spawn_positions[0].position_gltf;
+    landscape.spawn = {x: grid[0], y: grid[1] + 0.65, z: grid[2]};
     if (import.meta.env.DEV) {
-      const sections: Record<string, number> = {tower: 0, tunnel: 370, bridge: 510, underpass: 295};
-      const index = sections[new URLSearchParams(location.search).get('testSpawn') ?? ''];
-      if (index !== undefined) {
-        const road = landscape.atDistance(route.samples[index].distance_m);
-        landscape.spawn = {x: road.x, y: road.y + 0.65, z: road.z};
-        landscape.yaw = Math.atan2(road.nx, road.nz);
+      const section = testSpawns[new URLSearchParams(location.search).get('testSpawn') ?? ''];
+      if (section) {
+        const [x, y, z] = section.position;
+        landscape.spawn = {x, y: y + 0.65, z};
+        landscape.yaw = Math.atan2(section.forward[0], section.forward[2]);
       }
     }
     root.traverse(object => {
@@ -68,10 +74,11 @@ export class TokyoHighwayTrack extends Track {
         for (const value of Object.values(material)) if (isTexture(value)) value.anisotropy = options.anisotropy;
       }
     });
-    const extracted = extractTokyoCollision(root);
+    const extracted = extractTokyoCollision(colliderAsset.scene);
     extracted.surface.referenceHeight = landscape.spawn.y - 0.65;
-    const collision = new TrackCollision(extracted.root, {isFloor: () => false, exploration: true, surfaceHeightOverride: extracted.surface.height});
-    extracted.dispose();
+    const collision = new TrackCollision(extracted.root, {isFloor: isTokyoFloor, exploration: true, surfaceHeightOverride: extracted.surface.height});
+    disposeScene(colliderAsset.scene);
+    loader.evict(trackFile(definition, 'tokyo-collision.glb'));
     const lights = new TokyoLighting(root, fixtures, options.mobile);
     try {
       const fx = await DriftFx.load(root, {surfaceHeight: extracted.surface.height, mobile: options.mobile, materialFactory: options.fxMaterialFactory});

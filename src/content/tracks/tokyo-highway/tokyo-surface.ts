@@ -1,5 +1,5 @@
-import {BufferGeometry, Float32BufferAttribute, Group, Mesh, MeshBasicMaterial, Vector3, type Object3D} from 'three';
-import {isMesh, materialsOf} from '../scene-utils';
+import {Vector3, type Object3D} from 'three';
+import {isMesh} from '../scene-utils';
 
 type Triangle = readonly [Vector3, Vector3, Vector3];
 const CELL = 16;
@@ -33,6 +33,9 @@ export class TokyoSurface {
       // Millimetre-rounded route points can land just outside a Draco seam.
       if (u < -0.0002 || v < -0.0002 || u + v > 1.0002) continue;
       const y = u * a.y + v * b.y + (1 - u - v) * c.y;
+      // A falling vehicle below an overpass cannot land on its upper face.
+      // One metre allows the local rise of ramps and the suspension travel.
+      if (y > this.referenceHeight + 1) continue;
       const d = Math.abs(y - this.referenceHeight);
       if (d < delta) { best = y; delta = d; }
     }
@@ -40,47 +43,27 @@ export class TokyoSurface {
   };
 }
 
-/**
- * The export joins road, tunnel and guardrails. Its atlas reserves U < .64
- * for asphalt. Split only the highway/bridge, keeping upward asphalt as the
- * floor and the remaining authored geometry as walls/ceiling for this test.
- * Buildings, the tower and the backdrop never become a driving surface.
- */
-export function extractTokyoCollision(root: Object3D): {root: Group; surface: TokyoSurface; dispose(): void} {
+/** Floor/solid roles are authored in Blender, independently of render materials. */
+export const isTokyoFloor = (object: Object3D): boolean =>
+  object.userData.collision_role === 'floor' || object.name.startsWith('COL_FLOOR_');
+
+export function extractTokyoCollision(root: Object3D): {root: Object3D; surface: TokyoSurface} {
   const triangles: Triangle[] = [];
-  const solids: number[] = [];
-  const a = new Vector3(), b = new Vector3(), c = new Vector3();
-  const ab = new Vector3(), ac = new Vector3(), normal = new Vector3();
+  let solidCount = 0;
   root.updateMatrixWorld(true);
   root.traverse(object => {
     if (!isMesh(object)) return;
-    const material = materialsOf(object.material)[0];
-    const road = /MAT_HW_Shared_Grit/.test(material.name);
-    const bridge = /MAT_Drawbridge_Diffuse/.test(material.name);
-    if (!road && !bridge) return;
-    const geometry = object.geometry;
+    const {geometry} = object;
     const positions = geometry.attributes.position, index = geometry.index;
-    // Bridge asphalt uses TEXCOORD_1; BufferAttribute getters decode normalized UVs.
-    const channel = (material as MeshBasicMaterial).map?.channel ?? 0;
-    const uv = geometry.getAttribute(channel ? `uv${channel}` : 'uv');
     const count = index?.count ?? positions.count;
+    if (!isTokyoFloor(object)) { solidCount += count / 3; return; }
     for (let i = 0; i < count; i += 3) {
-      const ids = [0, 1, 2].map(k => index ? index.getX(i + k) : i + k);
-      a.fromBufferAttribute(positions, ids[0]).applyMatrix4(object.matrixWorld);
-      b.fromBufferAttribute(positions, ids[1]).applyMatrix4(object.matrixWorld);
-      c.fromBufferAttribute(positions, ids[2]).applyMatrix4(object.matrixWorld);
-      normal.crossVectors(ab.subVectors(b, a), ac.subVectors(c, a)).normalize();
-      if (road && uv && normal.y > 0.75 && ids.every(id => uv.getX(id) < 0.64)) {
-        triangles.push([a.clone(), b.clone(), c.clone()]);
-      } else {
-        solids.push(a.x, a.y, a.z, b.x, b.y, b.z, c.x, c.y, c.z);
-      }
+      const points = [0, 1, 2].map(k => new Vector3()
+        .fromBufferAttribute(positions, index ? index.getX(i + k) : i + k)
+        .applyMatrix4(object.matrixWorld));
+      triangles.push(points as unknown as Triangle);
     }
   });
-  if (triangles.length < 1000) throw new Error('Tokyo: no se pudo identificar la calzada del export.');
-  const geometry = new BufferGeometry().setAttribute('position', new Float32BufferAttribute(solids, 3));
-  const material = new MeshBasicMaterial();
-  const colliders = new Group();
-  colliders.add(new Mesh(geometry, material));
-  return {root: colliders, surface: new TokyoSurface(triangles), dispose() { geometry.dispose(); material.dispose(); }};
+  if (!triangles.length || !solidCount) throw new Error('Tokyo: faltan superficies o paredes en el archivo de colisión.');
+  return {root, surface: new TokyoSurface(triangles)};
 }

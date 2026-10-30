@@ -8,6 +8,8 @@ export interface RouteData {
   samples: RouteSample[];
   /** Desert Valley: optional shortcut polyline drawn on the minimap. */
   shortcut?: Vec3Array[];
+  /** Multiple alternate routes, in race direction. */
+  shortcuts?: Vec3Array[][];
 }
 
 export interface RouteSample {

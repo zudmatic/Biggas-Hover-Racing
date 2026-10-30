@@ -58,12 +58,12 @@ export class Minimap {
     ctx.strokeStyle = palette.dark;
     ctx.stroke();
     this.ready = true;
-    if (landscape.shortcut) {
+    for (const shortcut of landscape.shortcuts.length ? landscape.shortcuts : landscape.shortcut ? [landscape.shortcut] : []) {
       ctx.strokeStyle = palette.yellow;
       ctx.lineWidth = 3;
       ctx.setLineDash([3, 2]);
       ctx.beginPath();
-      landscape.shortcut.forEach((p, i) => {
+      shortcut.forEach((p, i) => {
         const x = project(p[0]);
         const y = project(p[2]);
         if (i === 0) ctx.moveTo(x, y);

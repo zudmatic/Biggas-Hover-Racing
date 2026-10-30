@@ -1,18 +1,18 @@
-import {mkdir, copyFile, writeFile} from 'node:fs/promises';
+import {mkdir, copyFile, writeFile, readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {Matrix4, Vector3} from 'three';
 import {createIO} from './io.js';
 
-// Keep the authored GLB intact. Only derive small, reviewable runtime data.
-// Usage: pnpm exec tsx scripts/assets/prepare-tokyo.ts <source.glb>
-const source = process.argv[2];
-if (!source) throw new Error('Supply the Tokyo Highway GLB path.');
+// Import the Blender playtest bundle, preserving its authored collision and route.
+// Usage: pnpm exec tsx scripts/assets/prepare-tokyo.ts <bundle-folder>
+const bundle = process.argv[2];
+if (!bundle) throw new Error('Supply the Blender playtest bundle folder.');
+const source = resolve(bundle, 'tokyo-highway.glb');
 const folder = resolve('public/models/tokyo-highway');
 await mkdir(folder, {recursive: true});
 const document = await (await createIO()).read(source);
 type Point = [number, number, number];
 const fixtures: {kind: string; position: Point}[] = [];
-const stations = new Map<string, Point>();
 const point = new Vector3();
 const value: number[] = [];
 for (const node of document.getRoot().listNodes()) {
@@ -20,27 +20,10 @@ for (const node of document.getRoot().listNodes()) {
   for (const primitive of node.getMesh()?.listPrimitives() ?? []) {
     const name = primitive.getMaterial()?.getName() ?? '';
     const position = primitive.getAttribute('POSITION')!;
-    const uv = primitive.getAttribute('TEXCOORD_0');
     const indices = primitive.getIndices()!.getArray()!;
     const positions: Point[] = [];
-    const uvs: number[][] = [];
     for (let i = 0; i < position.getCount(); i++) {
       positions.push(point.fromArray(position.getElement(i, value)).applyMatrix4(matrix).toArray());
-      if (uv) uvs.push([...uv.getElement(i, value)]);
-    }
-    if (node.getName() === 'HW_Sketch_Circuit' && name === 'MAT_HW_Shared_Grit_v07') {
-      for (let i = 0; i < indices.length; i += 3) {
-        const ids = [indices[i], indices[i + 1], indices[i + 2]];
-        if (ids.some((id) => uvs[id][0] > 0.64)) continue;
-        const [a, b, c] = ids.map((id) => positions[id]);
-        if ((b[2] - a[2]) * (c[0] - a[0]) - (b[0] - a[0]) * (c[2] - a[2]) <= 0) continue;
-        for (let k = 0; k < 3; k++) {
-          const x = ids[k], y = ids[(k + 1) % 3];
-          if (Math.abs(uvs[x][0] - uvs[y][0]) < 0.5 || Math.abs(uvs[x][1] - uvs[y][1]) > 0.01) continue;
-          const middle = positions[x].map((v, axis) => (v + positions[y][axis]) / 2) as Point;
-          stations.set(middle.map((v) => v.toFixed(2)).join(','), middle);
-        }
-      }
     }
     const kind = /Sodium_Emitter/.test(name) ? 'sodium' : /Tunnel_Light/.test(name) ? 'tunnel'
       : /TokyoTower_Beacons/.test(name) ? 'beacon'
@@ -74,47 +57,49 @@ for (const node of document.getRoot().listNodes()) {
     }
   }
 }
-// Follow one continuous carriageway. The only gap is the separately exported
-// straight drawbridge; interpolate that span at the authored deck height.
-const remaining = [...stations.values()];
-const first = remaining.findIndex(p => Math.hypot(p[0] - 204, p[2] + 174) < 1);
-if (first < 0) throw new Error('Tokyo export changed: could not locate the east bridge approach.');
-const route = [remaining.splice(first, 1)[0]];
-while (remaining.length) {
-  const previous = route.at(-1)!;
-  let nearest = -1, distance = Infinity;
-  remaining.forEach((p, i) => {
-    const d = Math.hypot(...p.map((v, axis) => v - previous[axis]));
-    if (d < distance) { distance = d; nearest = i; }
-  });
-  if (distance > 8) break;
-  route.push(remaining.splice(nearest, 1)[0]);
-}
-if (route.length < 400 || Math.hypot(route.at(-1)![0] + 30, route.at(-1)![2] - 14) > 3) {
-  throw new Error('Tokyo export changed: inspect the road before rebuilding the route.');
-}
-const end = route.at(-1)!;
-const span = Math.ceil(Math.hypot(...end.map((v, axis) => v - route[0][axis])) / 5);
-for (let i = 1; i < span; i++) route.push(end.map((v, axis) => v + (route[0][axis] - v) * i / span) as Point);
-let length = 0;
-const samples = route.map((position, index) => {
-  if (index) length += Math.hypot(...position.map((v, axis) => v - route[index - 1][axis]));
-  return {distance_m: length, position: position.map(v => +v.toFixed(3)), width_m: 16};
+// Do not infer road topology from triangle or UV ordering. Blender exports the
+// editable centreline and checkpoints on the common parts of both alternatives.
+const route = JSON.parse(await readFile(resolve(bundle, 'route_gltf.json'), 'utf8'));
+const collision = await (await createIO()).read(resolve(bundle, 'tokyo-collision.glb'));
+const roles = new Set(collision.getRoot().listNodes().map(n => n.getExtras().collision_role));
+if (!roles.has('floor') || !roles.has('solid')) throw new Error('Collision bundle needs explicit floor and solid roles.');
+if (route.samples.length < 100 || route.length_m < 1000) throw new Error('Invalid route bundle.');
+// Keep the racing guide in the outer carriageway, away from the median.
+// Checkpoint planes stay centred on the whole highway so either carriageway
+// and both alternate routes remain legal.
+const centerlineLength = route.length_m;
+const guide: Point[] = route.samples.map((s: {position: Point; forward: Point}) => {
+  const [x,y,z] = s.position, [fx,,fz] = s.forward;
+  const n = Math.hypot(fx,fz);
+  return [x + fz/n*8, y, z - fx/n*8];
 });
-length += Math.hypot(...route[0].map((v, axis) => v - route.at(-1)![axis]));
-const direction = (i: number): Point => {
-  const a = route[i], b = route[(i + 1) % route.length];
-  return new Vector3(...b).sub(new Vector3(...a)).normalize().toArray();
-};
-await copyFile(source, resolve(folder, 'tokyo-highway.glb'));
-await writeFile(resolve(folder, 'route_gltf.json'), JSON.stringify({length_m: length, samples}));
-await writeFile(resolve(folder, 'gameplay.json'), JSON.stringify({
-  name: 'Tokyo Highway · lighting test', road_width_m: 16,
-  spawn_positions: [{position_gltf: route[0], forward_gltf: direction(0)}],
-  checkpoints: Array.from({length: 16}, (_, order) => {
-    const i = Math.floor(order * route.length / 16);
-    return {order, route_index: i, position_gltf: route[i], forward_gltf: direction(i), width_m: 32};
-  }),
-}));
+let distance=0;
+route.samples=guide.map((position,i) => {
+  const next=guide[(i+1)%guide.length];
+  const delta=next.map((v,k)=>v-position[k]);
+  const length=Math.hypot(...delta);
+  const sample={distance_m:distance,position,forward:delta.map(v=>v/length),width_m:16};
+  distance+=length;
+  return sample;
+});
+route.length_m=distance;
+route.centerline_length_m=centerlineLength;
+route.racing_line_offset_m=-8;
+const gameplay=JSON.parse(await readFile(resolve(bundle,'gameplay.json'),'utf8'));
+gameplay.lap_length_m=distance;
+gameplay.spawn_positions[0].position_gltf=route.samples[0].position;
+gameplay.spawn_positions[0].forward_gltf=route.samples[0].forward;
+const spawns=JSON.parse(await readFile(resolve(bundle,'test-spawns.json'),'utf8'));
+for (const [name,spawn] of Object.entries(spawns) as [string,{position:Point;forward:Point}][]) {
+  if (!['start','bridge','spiral','tunnel'].includes(name)) continue;
+  const [fx,,fz]=spawn.forward,n=Math.hypot(fx,fz),offset=name==='tunnel'?5:8;
+  spawn.position=[spawn.position[0]+fz/n*offset,spawn.position[1],spawn.position[2]-fx/n*offset];
+}
+for (const file of ['tokyo-highway.glb', 'tokyo-collision.glb']) {
+  await copyFile(resolve(bundle, file), resolve(folder, file));
+}
+await writeFile(resolve(folder,'route_gltf.json'),JSON.stringify(route));
+await writeFile(resolve(folder,'gameplay.json'),JSON.stringify(gameplay));
+await writeFile(resolve(folder,'test-spawns.json'),JSON.stringify(spawns));
 await writeFile(resolve(folder, 'lights.json'), JSON.stringify(fixtures));
-console.log({routeSamples: route.length, length, fixtures: Object.fromEntries(['sodium', 'tunnel', 'beacon'].map(k => [k, fixtures.filter(f => f.kind === k).length]))});
+console.log({routeSamples: route.samples.length, length: route.length_m, fixtures: Object.fromEntries(['sodium', 'tunnel', 'beacon'].map(k => [k, fixtures.filter(f => f.kind === k).length]))});

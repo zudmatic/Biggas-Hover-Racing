@@ -1,0 +1,63 @@
+{
+  "visual": {
+    "objects": 62,
+    "triangles": 147111
+  },
+  "collision": {
+    "objects": 5,
+    "triangles": 50457
+  },
+  "route_length_m": 3180.806204379402,
+  "bridge_length_m": 299.9999869791664,
+  "scenes_in_master": [
+    "Fuentes_Generadores",
+    "Tokyo_Editable"
+  ],
+  "authoring_modifiers_intact": true,
+  "solid_max_vertex_deviation_m": 0.14494745433330536,
+  "surface_probes": {
+    "main": {
+      "samples": 1061,
+      "missing_floor": 0,
+      "max_curve_to_surface_m": 0.01091000000000264
+    },
+    "tunnel": {
+      "samples": 207,
+      "missing_floor": 0,
+      "max_curve_to_surface_m": 0.6394199999999977
+    },
+    "entry": {
+      "samples": 14,
+      "missing_floor": 0,
+      "max_curve_to_surface_m": 0.10332000000000008
+    },
+    "alley": {
+      "samples": 79,
+      "missing_floor": 0,
+      "max_curve_to_surface_m": 0.02839999999999998
+    }
+  },
+  "files": {
+    "tokyo-highway.glb": {
+      "bytes": 18243976,
+      "sha256": "7ec93a7179616d6310673a4e5641c61a2fc65ff88e4b85e1ee8cfe3680614a47"
+    },
+    "tokyo-collision.glb": {
+      "bytes": 3063876,
+      "sha256": "6acde5131b98e2fd5c9ce27502c36deecbc8b5474bec8b1ade6ff04b87bfb019"
+    }
+  },
+  "racing_guide_length_m": 3281.052768964008,
+  "runtime_validation": {
+    "surface_queries": 1361,
+    "stacked_road_pairs": 38,
+    "racing_guide_clear_samples": 1061,
+    "guardrails": "both sides passed",
+    "overhead_floor_rejection": "passed",
+    "browser_load_and_straight_driving": [
+      "webgl2",
+      "webgpu"
+    ],
+    "console_errors": 0
+  }
+}
