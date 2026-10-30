@@ -3,6 +3,7 @@ import type {CharacterDefinition} from './character';
 import {ajo} from './ajo';
 import {bluleet} from './bluleet';
 import {lomi} from './lomi';
+import {mrKerryCapija} from './mr-kerry-capija';
 import {zud} from './zud';
 import {zudmatic} from './zudmatic';
 
@@ -15,3 +16,5 @@ characters.register(zudmatic);
 characters.register(ajo);
 characters.register(bluleet);
 characters.register(lomi);
+
+characters.register(mrKerryCapija);

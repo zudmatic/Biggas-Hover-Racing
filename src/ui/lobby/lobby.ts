@@ -1,5 +1,4 @@
-import {shipLivery, shipLiveryChoice} from '@/content/vehicles/zudoneta-037/liveries';
-import {shipLiveryMarkup} from '../vehicle-livery/vehicle-livery';
+import {shipLiveryChoice} from '@/content/vehicles/zudoneta-037/liveries';
 import '../renderer-navigation';
 import {ZUD_HATS, zudHat} from '../../content/characters/hats/hat-catalog';
 import {vehicles} from '@/content/vehicles';
@@ -8,18 +7,23 @@ import {ZUDMATIC_PALETTES} from '@/content/characters/zudmatic/palettes';
 import {characters} from '@/content/characters';
 import {tracks} from '@/content/tracks';
 import './lobby.css';
+import './character-select.css';
+import './map-select.css';
+import {characterCards, characterOrder, characterRoster, characterSlotCount} from './character-cards';
+import {createPlayerEntry} from './player-entry';
+import {createEntryTheme} from './entry-theme';
+import {selectionAsset} from './figma-character-cards';
 import {audio} from '@/audio/audio-system';
-import type {createFlightPreview} from './lobby-preview';
+import {bindMenuHover, playUISound, preloadUISounds} from '@/audio/ui-sounds';
+import {lobbyCharacter, characterCardImage} from '@/content/characters/lineup';
 import type {PilotChoice} from '@/content/characters/selection';
 import {SoundControl} from '../sound-control/sound-control';
 import {createMenuMotion, createRaceEntryTransition} from './menu-motion';
+import {landingMarkup, fitLanding} from './landing';
 
-const lock =
-  '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>';
-const steps = ['Inicio', 'Personaje', 'Vehículo', 'Mapa'];
-const available = {pilot: characters.list().map((character) => ({...character, image: character.portrait})), vehicle: vehicles.list()};
+const steps = ['Inicio', 'Personaje', 'Mapa'];
 const plainImages = new Set(
-  available.pilot.filter((pilot) => pilot.paperImages === false).flatMap((pilot) => [pilot.image, pilot.preview]),
+  characters.list().filter((pilot) => pilot.paperImages === false).flatMap((pilot) => [pilot.portrait, pilot.preview]),
 );
 const hatSwatches: Record<string, {color: string; path: string}> = {
   beanie: {color: '#f9670d', path: 'M5 15V12a7 7 0 0 1 14 0v3M4 15h16v5H4zM10 4a2 2 0 1 0 4 0 2 2 0 1 0-4 0'},
@@ -28,11 +32,6 @@ const hatSwatches: Record<string, {color: string; path: string}> = {
   crescent_wizard: {color: '#8584c4', path: 'M5 17 11 4l6 3-4 1 6 9M3 17h18v3H3zM12 11l-2 3h3'},
 };
 
-function roster(kind: 'pilot' | 'vehicle', base: string) {
-  const items = available[kind];
-  return `<div class="lobby-roster" role="group" aria-label="${kind === 'pilot' ? 'Personajes' : 'Vehículos'}">${items.map((item, i) => `<button class="lobby-slot ${i === 0 ? 'is-selected' : ''}" type="button" ${kind === 'vehicle' ? `data-vehicle-choice="${item.id}"` : `data-pilot-choice="${item.id}"`} aria-pressed="${i === 0}" aria-label="${item.name}${i === 0 ? ', seleccionado' : ''}"><img data-lobby-image="${item.image}" src="${base}images/flight/${item.image}.png" alt=""><span class="lobby-slot-player" ${i ? 'hidden' : ''}>P1</span><span class="lobby-slot-name">${item.name}</span></button>`).join('')}${Array.from({length: 9 - items.length}, (_, i) => `<button class="lobby-slot is-locked" type="button" disabled aria-label="${kind === 'pilot' ? 'Personaje' : 'Vehículo'} ${i + items.length + 1}, bloqueado"><span class="lobby-slot-index">${String(i + items.length + 1).padStart(2, '0')}</span><span class="lobby-mystery" aria-hidden="true">?</span><span class="lobby-slot-lock">${lock}</span></button>`).join('')}</div>`;
-}
-
 interface LobbyChoice extends PilotChoice {
   map: string;
   vehicle: string;
@@ -40,7 +39,6 @@ interface LobbyChoice extends PilotChoice {
   livery: string;
   entryTransition: ReturnType<typeof createRaceEntryTransition>;
 }
-type Preview = NonNullable<Awaited<ReturnType<typeof createFlightPreview>>>;
 
 export function chooseFlight(): Promise<LobbyChoice> {
   const base = import.meta.env.BASE_URL,
@@ -48,14 +46,18 @@ export function chooseFlight(): Promise<LobbyChoice> {
     controller = new AbortController(),
     {signal} = controller;
   let {pilot: selectedPilot, palette: selectedPalette, hat: selectedHat} = pilotChoice();
-  let selectedVehicle = vehicles.resolve(new URLSearchParams(location.search).get('vehicle')).id;
+  let selectedVehicle: string;
   const lookQuery = new URLSearchParams(location.search);
-  let selectedLivery = shipLiveryChoice(lookQuery);
+  // Start the illustrated roster at Lomi; each pilot owns a fixed vehicle.
+  if (!lookQuery.has('pilot') && !lookQuery.has('vehicle')) {
+    selectedPilot = 'lomi';
+  }
+  if (!characterOrder.includes(selectedPilot)) selectedPilot = characterOrder[0];
+  if (lookQuery.get('pilot') === 'mr-kerry-capija') selectedPilot = 'mr-kerry-capija';
+  const selectedLivery = shipLiveryChoice(lookQuery);
   let paperChosen = lookQuery.has('comic');
   let stage = 0,
     selectedMap = tracks.resolve(lookQuery.get('map')).id,
-    preview: Preview | null = null,
-    previewStarted = false,
     leaving = false,
     paper = paperChosen ? lookQuery.get('comic') !== '0' : selectedMap !== 'desert-valley' && selectedPilot !== 'bluleet';
   document.title = 'Biggas Hover Racing';
@@ -65,18 +67,16 @@ export function chooseFlight(): Promise<LobbyChoice> {
     .join(
       '',
     )}</nav><div class="lobby-header-actions">${SoundControl.markup('lobby-sound')}<button type="button" id="lobby-paper" aria-label="Papel" aria-pressed="true" title="Shader de papel"><span aria-hidden="true">◐</span> Papel</button><a class="lobby-hangar" href="${base}spaceship.html">Hangar</a></div></header>
-    <div class="lobby-preview" aria-label="Vista del modelo seleccionado" hidden><img class="lobby-preview-fallback" data-lobby-image="zud" src="${base}images/flight/zud.png" alt="Zud"><canvas class="lobby-preview-canvas" role="img" aria-label="Modelo 3D. Arrastra para girar."></canvas><span class="lobby-preview-loading" role="status">Cargando vista…</span><span class="lobby-drag-hint">↔ Girar</span></div>
-    <section class="lobby-screen lobby-landing" data-screen="0" aria-labelledby="lobby-title-0"><div class="lobby-title-mark"><span class="lobby-title-orbit" aria-hidden="true">✳</span><h1 id="lobby-title-0" tabindex="-1"><span class="lobby-title-biggas">BIGGAS</span><span class="lobby-title-racing">HOVER<br>RACING</span></h1><span class="lobby-title-edition">037 / ORIGINAL SERIES</span></div><button class="race-primary lobby-primary lobby-start" type="button">Jugar <span aria-hidden="true">▶</span></button><span class="lobby-start-hint"><kbd>ENTER</kbd> PARA JUGAR</span></section>
-    <section class="lobby-screen lobby-selection" data-screen="1" aria-labelledby="lobby-title-1" hidden><div class="lobby-section-title"><h1 id="lobby-title-1" tabindex="-1">ELIGE TU PERSONAJE</h1><span>01 / 09</span></div><div class="lobby-roster-panel">${roster('pilot', base)}</div><div class="lobby-selected-name"><span>P1</span><strong>ZUD</strong></div><div class="lobby-profile"><fieldset class="lobby-hats"><legend>SOMBRERO <span class="lobby-hat-name">${zudHat(selectedHat).name}</span></legend><div>${ZUD_HATS.map((hat) => `<button type="button" data-hat="${hat.id}" aria-label="Sombrero ${hat.name}" aria-pressed="${hat.id === selectedHat}" title="${hat.name}" style="--hat-color:${hatSwatches[hat.id].color}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${hatSwatches[hat.id].path}"/></svg></span></button>`).join('')}</div></fieldset><fieldset class="lobby-palettes" hidden><legend>COLOR <span class="lobby-palette-name">Original</span></legend><div>${ZUDMATIC_PALETTES.map((p) => `<button type="button" data-palette="${p.name}" aria-label="Color ${p.name}" aria-pressed="${p.name === selectedPalette}" title="${p.name}" style="--palette-main:${p.colors.orange};--palette-detail:${p.colors.blue};--palette-accent:${p.parts?.part_015 ?? p.colors.ivory}"><span></span></button>`).join('')}</div></fieldset><div class="lobby-profile-brand">BIGGAS<span>HOVER RACING</span></div><dl><div><dt>Vehículo</dt><dd>Zudoneta</dd></div><div><dt>Estado</dt><dd>Listo</dd></div></dl></div></section>
-    <section class="lobby-screen lobby-selection" data-screen="2" aria-labelledby="lobby-title-2" hidden><div class="lobby-section-title"><h1 id="lobby-title-2" tabindex="-1">ELIGE TU VEHÍCULO</h1><span>01 / 09</span></div><div class="lobby-roster-panel">${roster('vehicle', base)}</div><div class="lobby-selected-name"><span>037</span><strong>ZUDONETA</strong></div><div class="lobby-profile">${shipLiveryMarkup(selectedLivery)}<div class="lobby-profile-brand">037<span>HOVERCRAFT</span></div><dl class="lobby-specs"><div><dt>Velocidad</dt><dd>187 <small>km/h</small></dd></div><div><dt>Turbo</dt><dd>259 <small>km/h</small></dd></div><div><dt>Flotación</dt><dd>0,65 <small>m</small></dd></div></dl></div></section>
-    <section class="lobby-screen lobby-maps" data-screen="3" aria-labelledby="lobby-title-3" hidden><div class="lobby-map-heading"><div><span class="lobby-kicker">03 / DESTINO</span><h1 id="lobby-title-3" tabindex="-1">ELIGE TU <em>CIRCUITO.</em></h1></div><div class="lobby-team"><img data-lobby-image="zud-face" src="${base}images/flight/zud-face.png" alt=""><span>ZUD <b>×</b> 037</span><img data-lobby-image="037" src="${base}images/flight/037.png" alt=""></div></div><fieldset class="lobby-map-list"><legend class="lobby-sr-only">Mapa</legend>${tracks
+    ${landingMarkup(base)}
+    <section class="lobby-screen lobby-selection lobby-character-select" data-screen="1" aria-labelledby="lobby-title-1" hidden><div class="lobby-section-title"><img class="figma-title-wedge" src="${selectionAsset(base, 'selected-BandaAmarillaDiagonal.svg')}" alt=""><h1 id="lobby-title-1" tabindex="-1">Player Entry<small>ELIGE TU PERSONAJE</small></h1><span>01 / 08</span></div><div class="lobby-roster-panel">${characterRoster(base)}</div><div class="entry-card-grid" role="group" aria-label="Jugadores">${characterCards(base)}</div><div class="lobby-selected-name"><span>P1</span><strong>ZUD</strong></div><div class="lobby-profile"><fieldset class="lobby-hats"><legend>SOMBRERO <span class="lobby-hat-name">${zudHat(selectedHat).name}</span></legend><div>${ZUD_HATS.map((hat) => `<button type="button" data-hat="${hat.id}" aria-label="Sombrero ${hat.name}" aria-pressed="${hat.id === selectedHat}" title="${hat.name}" style="--hat-color:${hatSwatches[hat.id].color}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${hatSwatches[hat.id].path}"/></svg></span></button>`).join('')}</div></fieldset><fieldset class="lobby-palettes" hidden><legend>COLOR <span class="lobby-palette-name">Original</span></legend><div>${ZUDMATIC_PALETTES.map((p) => `<button type="button" data-palette="${p.name}" aria-label="Color ${p.name}" aria-pressed="${p.name === selectedPalette}" title="${p.name}" style="--palette-main:${p.colors.orange};--palette-detail:${p.colors.blue};--palette-accent:${p.parts?.part_015 ?? p.colors.ivory}"><span></span></button>`).join('')}</div></fieldset><div class="lobby-profile-brand">BIGGAS<span>HOVER RACING</span></div><dl><div><dt>Vehículo</dt><dd>Zudoneta</dd></div><div><dt>Estado</dt><dd>Listo</dd></div></dl></div></section>
+    <section class="lobby-screen lobby-maps" data-screen="2" aria-labelledby="lobby-title-2" hidden><div class="lobby-map-heading lobby-section-title"><img class="figma-title-wedge" src="${selectionAsset(base, 'selected-BandaAmarillaDiagonal.svg')}" alt=""><h1 id="lobby-title-2" tabindex="-1">Course Select<small>ELIGE TU CIRCUITO</small></h1></div><div class="lobby-map-toolbar"><div class="lobby-team"><img data-lobby-image="zud-face" src="${base}images/flight/zud-face.png" alt=""><span>ZUD</span></div></div><fieldset class="lobby-map-list"><legend class="lobby-sr-only">Mapa</legend>${tracks
       .list()
       .map(
         (map) =>
-          `<label class="lobby-map-card race-panel"><input type="radio" name="map" value="${map.id}" ${selectedMap === map.id ? 'checked' : ''}><span class="lobby-map-art"><img data-lobby-image="${map.id}" src="${base}images/flight/${map.id}.png" alt="${map.description}"><span class="lobby-map-number">${map.number}</span><span class="lobby-map-check" aria-hidden="true">✓</span></span><span class="lobby-map-info"><strong>${map.name}</strong><span>${map.summary}</span></span></label>`,
+          `<label class="lobby-map-card"><input type="radio" name="map" value="${map.id}" aria-label="${map.name}, ${map.summary}" ${selectedMap === map.id ? 'checked' : ''}><span class="lobby-map-shell"><span class="lobby-map-art"><img data-lobby-image="${map.id}" src="${base}images/flight/${map.id}.png" alt="${map.description}"><span class="lobby-map-copy"><strong>${map.name}</strong></span><span class="lobby-map-check" aria-hidden="true">✓</span></span><span class="lobby-map-info"><span>${map.summary}</span></span></span></label>`,
       )
       .join('')}</fieldset></section>
-    <footer class="lobby-footer"><div class="lobby-footer-brand"><span class="lobby-checker" aria-hidden="true"></span> HOVER CLUB / 037</div><button type="button" class="lobby-back" hidden><span aria-hidden="true">←</span> Volver</button><span class="lobby-key-hint" hidden><kbd>ENTER</kbd> CONFIRMAR <kbd>ESC</kbd> VOLVER</span><button type="button" class="race-primary lobby-primary lobby-next" hidden>Confirmar Zud <span aria-hidden="true">→</span></button><span class="lobby-edition">VOL. 01</span></footer><div class="lobby-launching" role="status" hidden><span class="lobby-kicker">ZUD × 037</span><strong>Preparando pista<span>…</span></strong><span class="lobby-launch-track"></span></div>
+    <footer class="lobby-footer"><div class="lobby-footer-brand"><span class="lobby-checker" aria-hidden="true"></span> HOVER CLUB / 037</div><button type="button" class="lobby-back" aria-label="Volver" hidden><span aria-hidden="true">←</span> Volver</button><span class="lobby-key-hint" hidden><kbd>ENTER</kbd> CONFIRMAR <kbd>ESC</kbd> VOLVER</span><button type="button" class="race-primary lobby-primary lobby-next" hidden>Confirmar Zud <span aria-hidden="true">→</span></button><span class="lobby-edition">VOL. 01</span></footer><div class="lobby-launching" role="status" hidden><span class="lobby-kicker">ZUD × 037</span><strong>Preparando pista<span>…</span></strong><span class="lobby-launch-track"></span></div>
   </main>`;
   const root = document.querySelector<HTMLElement>('.race-lobby')!;
   const $ = <T extends HTMLElement = HTMLElement>(selector: string): T => {
@@ -84,23 +84,62 @@ export function chooseFlight(): Promise<LobbyChoice> {
     if (!element) throw new Error(`Missing lobby element: ${selector}`);
     return element;
   };
+  createEntryTheme(root);
+  bindMenuHover(root, signal);
+  $('.sound-trigger').insertAdjacentHTML('beforeend', `<img class="figma-sound-icon" src="${selectionAsset(base, 'selected-IconoSonido.svg')}" alt="">`);
+  function updateEntryAction() {
+    const character = lobbyCharacter(selectedPilot);
+    const ready = stage === 1 && root.dataset.primaryReady === 'true';
+    $<HTMLButtonElement>('.lobby-next').disabled = character.comingSoon || ready;
+    if (stage === 1) $('.lobby-next').textContent = character.comingSoon ? 'Próximamente' : ready ? root.dataset.allReady === 'true' ? 'Ready!' : 'Esperando jugadores…' : 'Ready';
+  }
   const motion = createMenuMotion(root, {reduced, signal});
+  fitLanding(root, signal);
   motion.intro();
   audio.setPhase('lobby');
   const {toggleSound} = new SoundControl($('.sound-control'), {signal});
   root.addEventListener(
     'pointerdown',
     (event) => {
-      if (!(event.target instanceof Element && event.target.closest('.sound-control'))) audio.unlock();
+      if (!(event.target instanceof Element && event.target.closest('.sound-control'))) {
+        audio.unlock();
+        preloadUISounds();
+      }
     },
     {signal},
   );
   return new Promise<LobbyChoice>((resolve) => {
+    let readyTimer: ReturnType<typeof setTimeout> | undefined;
+    let readyKeyboard = false;
+    function cancelReadyCountdown() {
+      clearTimeout(readyTimer);
+      readyTimer = undefined;
+    }
+    signal.addEventListener('abort', cancelReadyCountdown, {once: true});
+    function updateReadiness() {
+      const allReady = playerEntry.allReady;
+      root.dataset.allReady = String(allReady);
+      updateEntryAction();
+      if (stage !== 1 || leaving || !allReady) { cancelReadyCountdown(); return; }
+      if (readyTimer !== undefined) return;
+      readyTimer = setTimeout(() => {
+        readyTimer = undefined;
+        if (!signal.aborted && stage === 1 && playerEntry.allReady) show(2, {keyboard: readyKeyboard});
+      }, 1500);
+    }
+    function goBack(keyboard: boolean) {
+      if (leaving || root.dataset.landingTransition || stage === 0) return;
+      if (stage === 1 && playerEntry.primaryReady) { playUISound('back'); playerEntry.setPrimaryReady(false); }
+      else show(Math.max(0, stage - 1), {keyboard});
+    }
     function show(next: number, {keyboard = false} = {}) {
-      if (leaving) return;
+      if (leaving || root.dataset.landingTransition || next === stage) return;
       const previous = stage;
+      if (next < previous) playUISound('back');
+      cancelReadyCountdown();
       motion.before(previous, next, keyboard);
       stage = next;
+      if (previous !== stage) playerEntry.resetReady();
       root.dataset.stage = String(stage);
       root.dataset.keyboard = String(keyboard);
       root.querySelectorAll<HTMLElement>('[data-screen]').forEach((screen) => (screen.hidden = Number(screen.dataset.screen) !== stage));
@@ -117,28 +156,26 @@ export function chooseFlight(): Promise<LobbyChoice> {
         else button.removeAttribute('aria-current');
       });
       $('.lobby-next').innerHTML =
-        `${stage === 1 ? `Confirmar ${characters.require(selectedPilot).name}` : stage === 2 ? 'Confirmar nave' : 'Volar'} <span aria-hidden="true">→</span>`;
-      const pilot = stage === 1;
-      $('.lobby-preview').hidden = stage !== 1 && stage !== 2;
-      if (stage === 1 || stage === 2) loadPreview();
-      preview?.setKind(pilot ? 'pilot' : 'vehicle');
-      $<HTMLImageElement>('.lobby-preview-fallback').dataset.lobbyImage = pilot
-        ? characters.require(selectedPilot).preview
-        : selectedVehicle;
+        `${stage === 1 ? `Confirmar ${lobbyCharacter(selectedPilot).name}` : 'Volar'} <span aria-hidden="true">→</span>`;
+      updateEntryAction();
       updatePaperImages();
-      $<HTMLImageElement>('.lobby-preview-fallback').alt = pilot
-        ? characters.require(selectedPilot).name
-        : `${vehicles.require(selectedVehicle).name} con ${characters.require(selectedPilot).name} al mando`;
       $(`#lobby-title-${stage}`).focus({preventScroll: true});
       motion.after(previous, stage, keyboard);
     }
     async function advance(event?: Pick<MouseEvent, 'detail'>) {
-      if (leaving) return;
+      if (leaving || root.dataset.landingTransition) return;
       audio.unlock();
-      if (stage < 3) {
-        show(stage + 1, {keyboard: event?.detail === 0});
+      preloadUISounds();
+      if (stage > 0 && lobbyCharacter(selectedPilot).comingSoon) { playUISound('denied'); return; }
+      if (stage === 0) { playUISound('start'); show(1, {keyboard: event?.detail === 0}); return; }
+      if (stage === 1) {
+        if (!playerEntry.primaryReady) {
+          readyKeyboard = event?.detail === 0;
+          playerEntry.setPrimaryReady(true);
+        }
         return;
       }
+      playUISound('start');
       audio.setPhase('loading');
       leaving = true;
       root.dataset.launching = 'true';
@@ -147,9 +184,8 @@ export function chooseFlight(): Promise<LobbyChoice> {
       const entryTransition = createRaceEntryTransition($('.lobby-launching'), {reduced, keyboard: event?.detail === 0});
       root.inert = true;
       await entryTransition.covered;
-      // Release the preview once the cover is opaque, before loading the circuit.
+      // Release the lobby once the cover is opaque, before loading the circuit.
       controller.abort();
-      preview?.dispose();
       resolve({
         map: selectedMap,
         vehicle: selectedVehicle,
@@ -163,7 +199,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
     }
     $('.lobby-start').addEventListener('click', advance, {signal});
     $('.lobby-next').addEventListener('click', advance, {signal});
-    $<HTMLButtonElement>('.lobby-back').addEventListener('click', (event) => show(Math.max(0, stage - 1), {keyboard: event.detail === 0}), {
+    $<HTMLButtonElement>('.lobby-back').addEventListener('click', (event) => goBack(event.detail === 0), {
       signal,
     });
     root
@@ -175,6 +211,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
       input.addEventListener(
         'change',
         () => {
+          playUISound('select');
           selectedMap = input.value;
           root.dataset.map = selectedMap;
           if (!paperChosen) setPaper(selectedMap !== 'desert-valley' && selectedPilot !== 'bluleet');
@@ -182,9 +219,11 @@ export function chooseFlight(): Promise<LobbyChoice> {
         {signal},
       ),
     );
+    const playerEntry = createPlayerEntry(root, base, signal, () => stage === 1 && !leaving, palette => { selectedPalette = palette; selectPilot(selectedPilot); }, updateReadiness);
     function selectPilot(id: string | undefined) {
-      selectedPilot = characters.resolve(id).id;
-      const config = characters.require(selectedPilot);
+      selectedPilot = id && characterOrder.includes(id) ? id : characterOrder[0];
+      playerEntry.selectPilot(selectedPilot, selectedPalette);
+      const config = lobbyCharacter(selectedPilot);
       root.dataset.pilot = selectedPilot;
       root.dataset.palette = selectedPalette;
       root.dataset.hat = selectedHat;
@@ -192,11 +231,11 @@ export function chooseFlight(): Promise<LobbyChoice> {
         const selected = button.dataset.pilotChoice === selectedPilot;
         button.classList.toggle('is-selected', selected);
         button.setAttribute('aria-pressed', String(selected));
-        button.setAttribute('aria-label', `${characters.resolve(button.dataset.pilotChoice).name}${selected ? ', seleccionado' : ''}`);
+        button.setAttribute('aria-label', `${lobbyCharacter(button.dataset.pilotChoice!).name}${lobbyCharacter(button.dataset.pilotChoice!).comingSoon ? ', próximamente' : ''}${selected ? ', seleccionado' : ''}`);
         button.querySelector<HTMLElement>('.lobby-slot-player')!.hidden = !selected;
       });
       $('[data-screen="1"] .lobby-section-title>span').textContent =
-        `${String(characters.ids.indexOf(selectedPilot) + 1).padStart(2, '0')} / 09`;
+        `${String(characterOrder.indexOf(selectedPilot) + 1).padStart(2, '0')} / ${String(characterSlotCount).padStart(2, '0')}`;
       $('[data-screen="1"] .lobby-selected-name strong').textContent = config.name.toUpperCase();
       $('.lobby-hats').hidden = !config.customization.hats;
       $('.lobby-hat-name').textContent = zudHat(selectedHat).name;
@@ -208,22 +247,21 @@ export function chooseFlight(): Promise<LobbyChoice> {
       root
         .querySelectorAll<HTMLButtonElement>('button[data-palette]')
         .forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.palette === selectedPalette)));
-      $<HTMLImageElement>('.lobby-team img:first-child').dataset.lobbyImage = config.portrait;
-      if (stage === 1) {
-        $('.lobby-next').innerHTML = `Confirmar ${config.name} <span aria-hidden="true">→</span>`;
-        $<HTMLImageElement>('.lobby-preview-fallback').dataset.lobbyImage = config.preview;
-        $<HTMLImageElement>('.lobby-preview-fallback').alt = config.name;
-      }
-      preview?.setPilot(selectedPilot, selectedPalette, selectedHat);
-      selectVehicle(selectedVehicle);
+      const portrait = $<HTMLImageElement>('.lobby-team img:first-child');
+      if (config.portrait) portrait.dataset.lobbyImage = config.portrait;
+      else { delete portrait.dataset.lobbyImage; portrait.src = characterCardImage(base, selectedPilot); }
+      updateEntryAction();
+      updateAssignedVehicle();
     }
     root.querySelectorAll<HTMLButtonElement>('[data-pilot-choice]').forEach((button) =>
       button.addEventListener(
         'click',
         () => {
+          playUISound('select');
           selectPilot(button.dataset.pilotChoice);
-          const character = characters.require(selectedPilot);
-          audio.speak(character.name, character.voice);
+          $('[data-player-slot="1"]').scrollIntoView({block: 'nearest', inline: 'nearest', behavior: 'instant'});
+          const character = lobbyCharacter(selectedPilot);
+          audio.speak(character.spokenName ?? character.name, character.voice);
         },
         {signal},
       ),
@@ -232,6 +270,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
       button.addEventListener(
         'click',
         () => {
+          playUISound('navigate');
           selectedPalette = button.dataset.palette ?? 'Original';
           selectPilot(selectedPilot);
         },
@@ -242,94 +281,54 @@ export function chooseFlight(): Promise<LobbyChoice> {
       button.addEventListener(
         'click',
         () => {
+          playUISound('navigate');
           selectedHat = zudHat(button.dataset.hat).id;
           selectPilot(selectedPilot);
         },
         {signal},
       ),
     );
-    $('[data-screen="1"] .lobby-roster').addEventListener(
+    $('[data-screen="1"]').addEventListener(
       'keydown',
       (event) => {
-        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
+        if (!(event.target instanceof Element && event.target.closest('[data-pilot-choice]'))) return;
+        if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End'].includes(event.key)) return;
         event.preventDefault();
-        const ids = characters.ids,
+        const delta = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
+        const ids = characterOrder,
           current = ids.indexOf(selectedPilot),
           next =
             event.key === 'Home'
               ? 0
               : event.key === 'End'
                 ? ids.length - 1
-                : (current + (event.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length;
+                : (current + delta + ids.length) % ids.length;
+        if (ids[next] !== selectedPilot) playUISound('navigate');
         selectPilot(ids[next]);
-        audio.speak(characters.require(selectedPilot).name, characters.require(selectedPilot).voice);
-        $(`[data-pilot-choice="${ids[next]}"]`).focus();
+        const character = lobbyCharacter(selectedPilot);
+        audio.speak(character.spokenName ?? character.name, character.voice);
+        $(`.lobby-slot[data-pilot-choice="${ids[next]}"]`).focus();
+        $('[data-player-slot="1"]').scrollIntoView({block: 'nearest', inline: 'nearest', behavior: 'instant'});
       },
       {signal},
     );
-    function selectVehicle(id: string | undefined) {
-      selectedVehicle = vehicles.resolve(id).id;
+    function updateAssignedVehicle() {
+      const character = lobbyCharacter(selectedPilot);
+      selectedVehicle = character.vehicle;
       const config = vehicles.require(selectedVehicle);
       root.dataset.vehicle = selectedVehicle;
       root.dataset.livery = selectedLivery;
-      $('.ship-liveries').hidden = !config.paint;
-      $('.ship-livery-name').textContent = shipLivery(selectedLivery).name;
-      root.querySelectorAll<HTMLButtonElement>('button[data-livery]').forEach((button) =>
-        button.setAttribute('aria-pressed', String(button.dataset.livery === selectedLivery)),
-      );
-      root.querySelectorAll<HTMLButtonElement>('[data-vehicle-choice]').forEach((button) => {
-        const selected = button.dataset.vehicleChoice === selectedVehicle;
-        button.classList.toggle('is-selected', selected);
-        button.setAttribute('aria-pressed', String(selected));
-        button.setAttribute('aria-label', `${vehicles.resolve(button.dataset.vehicleChoice).name}${selected ? ', seleccionado' : ''}`);
-        button.querySelector<HTMLElement>('.lobby-slot-player')!.hidden = !selected;
-      });
-      $('[data-screen="2"] .lobby-section-title>span').textContent =
-        `${String(vehicles.ids.indexOf(selectedVehicle) + 1).padStart(2, '0')} / 09`;
-      $('[data-screen="2"] .lobby-selected-name>span').textContent = config.id;
-      $('[data-screen="2"] .lobby-selected-name strong').textContent = config.title.toUpperCase();
-      $('[data-screen="2"] .lobby-profile-brand').innerHTML = `${config.id}<span>HOVERCRAFT</span>`;
-      $('[data-screen="1"] .lobby-profile dd').textContent = config.name;
-      $('.lobby-team>span').innerHTML = `${characters.require(selectedPilot).name.toUpperCase()} <b>×</b> ${config.id}`;
-      $<HTMLImageElement>('.lobby-team img:last-child').dataset.lobbyImage = config.image;
-      $('.lobby-launching .lobby-kicker').textContent = `${characters.require(selectedPilot).name.toUpperCase()} × ${config.id}`;
-      $<HTMLAnchorElement>('.lobby-hangar').href =
-        `${base}spaceship.html?vehicle=${config.id}&${pilotQuery({pilot: selectedPilot, palette: selectedPalette, hat: selectedHat})}&livery=${selectedLivery}`;
-      if (stage === 2) {
-        $<HTMLImageElement>('.lobby-preview-fallback').dataset.lobbyImage = config.image;
-        $<HTMLImageElement>('.lobby-preview-fallback').alt = `${config.name} con ${characters.require(selectedPilot).name} al mando`;
+      $('[data-screen="1"] .lobby-profile dd').textContent = character.vehicleName;
+      $('.lobby-team>span').textContent = character.name.toUpperCase();
+      $('.lobby-launching .lobby-kicker').textContent = `${character.name.toUpperCase()} × ${character.vehicleName}`;
+      const hangar = $<HTMLAnchorElement>('.lobby-hangar');
+      if (character.comingSoon) { hangar.removeAttribute('href'); hangar.setAttribute('aria-disabled', 'true'); }
+      else {
+        hangar.removeAttribute('aria-disabled');
+        hangar.href = `${base}spaceship.html?vehicle=${config.id}&${pilotQuery({pilot: selectedPilot, palette: selectedPalette, hat: selectedHat})}&livery=${selectedLivery}`;
       }
-      preview?.setLivery(selectedLivery);
-      preview?.setVehicle(selectedVehicle);
       updatePaperImages();
     }
-    root
-      .querySelectorAll<HTMLButtonElement>('[data-vehicle-choice]')
-      .forEach((button) => button.addEventListener('click', () => selectVehicle(button.dataset.vehicleChoice), {signal}));
-    root.querySelectorAll<HTMLButtonElement>('button[data-livery]').forEach((button) =>
-      button.addEventListener('click', () => {
-        selectedLivery = shipLivery(button.dataset.livery).id;
-        selectVehicle(selectedVehicle);
-      }, {signal}),
-    );
-    $('[data-screen="2"] .lobby-roster').addEventListener(
-      'keydown',
-      (event) => {
-        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-        event.preventDefault();
-        const ids = vehicles.ids,
-          current = ids.indexOf(selectedVehicle),
-          next =
-            event.key === 'Home'
-              ? 0
-              : event.key === 'End'
-                ? ids.length - 1
-                : (current + (event.key === 'ArrowRight' ? 1 : -1) + ids.length) % ids.length;
-        selectVehicle(ids[next]);
-        $(`[data-vehicle-choice="${ids[next]}"]`).focus();
-      },
-      {signal},
-    );
     document.addEventListener(
       'keydown',
       (event) => {
@@ -342,7 +341,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
         audio.unlock();
         if (event.key === 'Escape' && stage > 0) {
           event.preventDefault();
-          show(stage - 1, {keyboard: true});
+          goBack(true);
         }
         if (event.key === 'Enter' && !(event.target instanceof Element && event.target.closest('button,a,input'))) {
           event.preventDefault();
@@ -364,12 +363,12 @@ export function chooseFlight(): Promise<LobbyChoice> {
       paper = enabled;
       root.dataset.paper = String(paper);
       $('#lobby-paper').setAttribute('aria-pressed', String(paper));
-      preview?.setPaper(paper);
       updatePaperImages();
     }
     $('#lobby-paper').addEventListener(
       'click',
       () => {
+        playUISound('select');
         paperChosen = true;
         setPaper(!paper);
       },
@@ -378,50 +377,7 @@ export function chooseFlight(): Promise<LobbyChoice> {
     setPaper(paper);
     selectPilot(selectedPilot);
     root.dataset.map = selectedMap;
-    if (new URLSearchParams(location.search).get('selection') === 'map') show(3, {keyboard: true});
-    // The title screen is typography only: defer the 3D renderer until selection.
-    function loadPreview() {
-      if (previewStarted) return;
-      previewStarted = true;
-      import('./lobby-preview')
-        .then(({createFlightPreview}) =>
-          createFlightPreview($<HTMLCanvasElement>('.lobby-preview-canvas'), {
-            reducedMotion: reduced,
-            signal,
-            initialKind: stage === 1 ? 'pilot' : 'vehicle',
-            paper,
-            vehicle: selectedVehicle,
-            pilot: selectedPilot,
-            palette: selectedPalette,
-            hat: selectedHat,
-            livery: selectedLivery,
-            onStatus: (status) => {
-              if (!leaving)
-                root.dataset.preview =
-                  $<HTMLCanvasElement>('.lobby-preview-canvas').dataset.pilot !== selectedPilot ||
-                  (stage === 2 && $<HTMLCanvasElement>('.lobby-preview-canvas').dataset.vehicle !== selectedVehicle)
-                    ? 'loading'
-                    : status;
-            },
-          }),
-        )
-        .then((result) => {
-          if (!result) return;
-          if (leaving) {
-            result.dispose();
-            return;
-          }
-          preview = result;
-          preview.setPilot(selectedPilot, selectedPalette, selectedHat);
-          preview.setPaper(paper);
-          preview.setLivery(selectedLivery);
-          preview.setVehicle(selectedVehicle);
-          preview.setKind(stage === 1 ? 'pilot' : 'vehicle');
-        })
-        .catch(() => {
-          root.dataset.preview = 'fallback';
-        });
-    }
+    if (lookQuery.get('selection') === 'map') show(lobbyCharacter(selectedPilot).comingSoon ? 1 : 2, {keyboard: true});
   });
 }
 

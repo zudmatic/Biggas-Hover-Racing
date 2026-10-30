@@ -42,3 +42,14 @@ export const sounds = new Registry<SoundDefinition>('Sonido');
 
 sounds.register({id: 'train.rolling', file: 'audio/train/rolling.mp3', bus: 'world'});
 sounds.register({id: 'train.horn', file: 'audio/train/horn.mp3', bus: 'world'});
+
+sounds.register({id: 'ui.ready', file: 'audio/ui/ready.wav', bus: 'ui'});
+
+/** Menu cues share the effects mixer; Ready retains its separately chosen sample. */
+export const UI_SOUNDS = {
+  start: 'ui.start', select: 'ui.select', back: 'ui.back', pause: 'ui.pause',
+  navigate: 'ui.navigate', denied: 'ui.denied', join: 'ui.join',
+} as const;
+for (const [name, id] of Object.entries(UI_SOUNDS)) {
+  sounds.register({id, file: `audio/ui/${name}.wav`, bus: 'ui', volume: name === 'navigate' ? 0.45 : name === 'select' ? 0.65 : 0.8});
+}

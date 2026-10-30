@@ -1,0 +1,143 @@
+@font-face{font-family:'Pro Racing';src:url('/fonts/pro-racing.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Pro Racing Slant';src:url('/fonts/pro-racing-slant.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap}
+.figma-title-wedge,.figma-sound-icon,.figma-roster-players{display:none}
+/* Figma 1366:10955. The surrounding layout stays fluid; each illustrated card
+   scales its 666.8 × 279 design plane so exported vectors retain their geometry. */
+:root .race-lobby[data-entry-theme=figma]:is([data-stage='1'],[data-stage='2']){
+  --entry-metal:linear-gradient(90deg,#949eb7 0%,#adbcd3 46.016%,#d7e0f1 60.708%,#bbc9e3 71.533%,#62708a 100%);
+  --entry-gold:linear-gradient(99deg,#fff0cd 0%,#ffe29f 13%,#fff0cd 49.5%,#f3bf46 98%);
+  background:#fff;color:#111;border:3px solid #111;
+  .lobby-header{height:70px;padding:0 3vw;background:white;border-bottom:2px solid #111;justify-content:space-between}
+  .lobby-brand,#lobby-paper,.lobby-paper-surface{display:none}
+  .lobby-steps{position:static;transform:none;display:flex;gap:31px}
+  .lobby-steps button{font:400 11px 'Pro Racing Slant',sans-serif;color:#666;gap:7px}
+  .lobby-steps button>span{width:33px;height:26px;border-radius:4px;font:400 9px 'Pro Racing',sans-serif;letter-spacing:1px;border:2px solid #aaa;background:transparent;color:#666}
+  .lobby-steps button[aria-current=step]{color:#111}
+  .lobby-steps button[aria-current=step]>span{background:var(--entry-gold);border-color:#111;color:#111}
+  .lobby-header-actions{gap:24px}
+  #lobby-sound{width:44px;height:44px;border:2px solid #111;border-radius:7px;background:var(--entry-gold);box-shadow:none}
+  .sound-trigger>svg{display:none}
+  .figma-sound-icon{display:block}
+  .lobby-hangar{display:grid;place-items:center;padding:0 16px;min-height:40px;border:2px solid #111;border-radius:7px;font:700 11px Arial,sans-serif;color:#111;background:#fff}
+  .lobby-character-select{inset:70px 0 82px}
+  .lobby-section-title{position:relative;height:92px;min-height:92px;padding:0 3vw;background:#fff;border-bottom:2px solid #111;overflow:hidden}
+  .figma-title-wedge{display:block;position:absolute;right:0;top:0;pointer-events:none}
+  .lobby-section-title h1{position:relative;font:400 48px 'Pro Racing Slant',sans-serif;letter-spacing:-1.7px;line-height:1.25;color:#111;text-shadow:3px 3px #ffc400;-webkit-text-stroke:0}
+  .lobby-section-title h1 small,.lobby-section-title>span{display:none}
+  .lobby-roster-panel{height:97px;min-height:97px;padding:0 calc(3vw + 4px);display:flex;align-items:center;background:#fff;border-bottom:2px solid #111}
+  .lobby-roster{width:100%;gap:14px;padding:0;grid-template-columns:repeat(8,minmax(0,1fr))}
+  .lobby-slot{height:68px;border:2px solid var(--roster-character-color,#62708a)!important;border-radius:10px;box-shadow:none;background:var(--entry-color);overflow:hidden}
+  .lobby-slot.is-selected{outline:none;box-shadow:none}
+  /* Keep the Figma crop centered as the thumbnail's aspect ratio changes. */
+  .lobby-slot{--portrait-width:199.457px;--portrait-height:120.015px;--portrait-x:-22.23px;--portrait-y:4.37px}
+  .lobby-slot .entry-portrait{position:absolute;max-width:none;width:calc(var(--portrait-width)*var(--portrait-scale,1));height:calc(var(--portrait-height)*var(--portrait-scale,1));left:calc(50% + var(--portrait-x)*var(--portrait-scale,1));top:calc(50% + var(--portrait-y)*var(--portrait-scale,1));object-fit:contain;object-position:center;transform:translate(-50%,-50%)}
+  .lobby-slot[data-pilot-choice=bluleet]{--portrait-width:200.48px;--portrait-height:120.631px;--portrait-x:-22.74px;--portrait-y:16px}
+  .lobby-slot[data-pilot-choice=ajo]{--portrait-width:208.766px;--portrait-height:125.616px;--portrait-x:-26.88px;--portrait-y:16px}
+  .lobby-slot[data-pilot-choice=zudmatic]{--portrait-width:204.276px;--portrait-height:122.915px;--portrait-x:-26.64px;--portrait-y:4.31px}
+  .lobby-slot-name{height:16px;padding:0;display:grid;place-items:center;font:400 8px 'Pro Racing Slant',sans-serif;background:var(--entry-metal);color:#111;border:0}
+  .lobby-slot .lobby-slot-player,.entry-other-players{display:none}
+  .figma-roster-players{position:absolute;display:flex;right:0;top:0}
+  .figma-roster-players>span{background:var(--character-color);padding:3px 5px;border-bottom-left-radius:5px;font:400 9.361px 'Pro Racing Slant',sans-serif;letter-spacing:1.337px;color:#fff}
+  .lobby-slot.is-locked{background:linear-gradient(127deg,#fff 9.7%,#c9d7ff 150%)}
+  .lobby-mystery{filter:drop-shadow(3px 3px #ffc011);font:400 48px 'Pro Racing Slant',sans-serif;letter-spacing:-1.7px;background:var(--entry-metal);background-clip:text;color:transparent;-webkit-text-stroke:0;text-shadow:none}
+  .entry-card-grid{--entry-columns:2;--entry-rows:2;grid-template-columns:repeat(2,var(--entry-card-width,minmax(0,1fr)));grid-auto-rows:auto;grid-template-rows:repeat(2,var(--entry-card-height,minmax(0,1fr)));justify-content:center;align-content:center;align-items:start;overflow:hidden;gap:14px;padding:14px 3vw 20px;background:linear-gradient(90deg,#fff,#c9d7ff);scrollbar-color:#949eb7 #fff}
+  .entry-card{width:100%;height:100%;aspect-ratio:666.8/279;min-height:0;padding:0;background:transparent;clip-path:none;border:0;border-radius:0;box-shadow:none;overflow:hidden}
+  .lobby-selected-name{height:47px;min-height:47px;padding:0;background:var(--entry-metal)}
+  .lobby-selected-name>*{display:none}
+  .lobby-character-select .lobby-profile{display:none}
+  .lobby-footer{height:82px;padding-inline:3vw;background:var(--entry-metal);border-top:3px solid #111;box-shadow:none}
+  .lobby-key-hint{display:none}
+  .lobby-back{font-size:0!important;gap:0}
+  .lobby-back>span{display:grid;place-items:center;width:48px;height:40px;border:2px solid #111;border-radius:7px;background:var(--entry-gold);color:#111;font:600 20px Arial,sans-serif}
+  .lobby-next{min-width:0;max-width:none;flex:none;height:48px;min-height:48px;padding:0 40px;border:2px solid #111;border-radius:7px;background:var(--entry-gold);box-shadow:none;color:#111;font:400 16px 'Pro Racing Slant',sans-serif;letter-spacing:-.4px}
+  button:focus-visible,a:focus-visible{outline:3px solid #1064ff;outline-offset:3px}
+}
+.figma-card-design{position:relative;width:666.8px;height:279px;transform:scale(var(--entry-card-scale,1));transform-origin:top left;font:400 15px 'Pro Racing',sans-serif;color:#666}
+.figma-card-design img{display:block;max-width:none;pointer-events:none;user-select:none}
+.figma-card-contour,.figma-card-corners,.figma-card-border{position:absolute;left:0;top:0}
+.figma-card-content{position:absolute;left:4px;top:4px;width:658.8px;height:271px;overflow:hidden;background:var(--character-background,#eee);mask:url('/images/character-select/selected-ContenidoDeTarjeta.svg') no-repeat}
+.figma-card-content.figma-card-empty{background:#eee;mask-image:url('/images/character-select/empty-ContenidoDeTarjeta.svg')}
+.figma-character-art{position:absolute;left:0;top:-49.66px;width:658.801px;height:396.407px}
+[data-character=zudmatic] .figma-character-art{left:-2.83px;top:-83.56px;width:661.633px;height:398.111px}
+[data-character=bluleet] .figma-character-art{top:-30.23px}
+[data-character=ajo] .figma-character-art{left:-2.83px;top:-43.9px;width:661.633px;height:398.111px}
+.figma-card-copy{position:absolute;left:0;top:37.47px}
+.figma-player-number{display:grid;place-items:center;width:62px;height:25px;background:var(--character-color);color:#fff;font:400 14px 'Pro Racing Slant',sans-serif;letter-spacing:2px}
+.figma-character-name{position:relative;margin-left:8.17px;height:53.02px;display:flex;align-items:center;padding-left:14.083px}
+.figma-name-plate{position:absolute;left:0;top:0}
+.figma-character-name strong{position:relative;padding-inline:5px;margin-inline:-5px;font:400 35.788px 'Pro Racing Slant',sans-serif;letter-spacing:-1.2427px;text-transform:uppercase;background:linear-gradient(90deg,#949eb78f 0%,#adbcd38f 46.016%,#d7e0f18f 60.708%,#bbc9e38f 71.533%,#62708a8f 100%),#111;background-clip:text;color:transparent}
+.figma-card-footer{position:absolute;left:0;top:234px;width:658.8px;height:37px;background:#fff;display:flex;align-items:center;justify-content:center}
+.figma-card-footer::before{content:'';position:absolute;top:-3.929px;left:0;right:0;height:3.929px;background:var(--entry-metal)}
+.figma-card-palettes{display:flex;gap:6.389px;align-items:center}
+.race-lobby .figma-card-palettes button{position:relative;display:block;flex:none;width:22.363px;height:22.363px;margin:0;padding:0;border:0;border-radius:50%;background:var(--entry-metal);cursor:pointer}
+.race-lobby .figma-card-palettes button::before{content:'';position:absolute;inset:2px;border-radius:50%;background:#fff}
+.figma-palette-art{position:relative;clip-path:circle(36% at 50% 50%)}
+.race-lobby .figma-card-palettes button[aria-pressed=true]{background:#ffc011}
+.race-lobby .figma-card-palettes button::after{content:'';position:absolute;inset:-3px;border-radius:50%}
+
+/* The ready tab unfolds from the right edge of the player-number frame. */
+.figma-player-number{position:relative;z-index:1}
+.figma-ready{position:absolute;left:61.78px;top:0;width:106.634px;height:25px;transform-origin:left center;pointer-events:none}
+.figma-ready:not([hidden]){animation:entry-ready-reveal 180ms cubic-bezier(.12,.9,.18,1) both}
+.figma-ready-plate{position:absolute;left:0;top:0}
+.figma-ready>span{position:absolute;left:8.99px;top:3.499px;display:flex;align-items:center;width:88.659px;height:19.362px;color:#fff;font:400 14px 'Pro Racing Slant',sans-serif;letter-spacing:2px;white-space:nowrap}
+@keyframes entry-ready-reveal{from{clip-path:inset(0 100% 0 0);transform:translateX(-14px)}to{clip-path:inset(0);transform:translateX(0)}}
+@media(prefers-reduced-motion:reduce){.figma-ready:not([hidden]){animation:none}}
+.figma-closed-rays{position:absolute;left:0;top:0}
+.figma-closed-seal{position:absolute;left:251.9px;top:43px}
+.figma-com{position:absolute;left:277.4px;top:102.5px;font:400 31.298px 'Pro Racing',sans-serif;letter-spacing:-1.0859px}
+.figma-closed-footer{font:400 15px 'Pro Racing',sans-serif}
+.figma-closed-footer::before{top:0;height:3px}
+@media(max-width:900px){
+  :root .race-lobby[data-entry-theme=figma]:is([data-stage='1'],[data-stage='2']){
+    .lobby-steps{gap:12px}.lobby-steps button{font-size:9px}.lobby-header-actions{gap:12px}
+    .lobby-roster{gap:8px}
+  }
+}
+@media(max-width:600px){
+  :root .race-lobby[data-entry-theme=figma]:is([data-stage='1'],[data-stage='2']){
+    .lobby-header{height:58px}.lobby-steps{gap:7px}.lobby-steps button{font-size:0;gap:0}.lobby-steps button>span{font-size:9px}
+    .lobby-header-actions{gap:10px}.lobby-hangar{min-height:36px;padding:0 10px}#lobby-sound{width:36px;height:36px;min-width:36px;min-height:36px}
+    .lobby-character-select{inset:58px 0 72px}.lobby-section-title{height:74px;min-height:74px}.lobby-section-title h1{font-size:clamp(25px,6.7vw,40px);letter-spacing:-1px}
+    .figma-title-wedge{right:-570px}
+    .lobby-roster-panel{height:132px;min-height:132px;padding:8px 3vw}.lobby-roster{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));overflow:hidden;gap:8px;padding:0}.lobby-slot{height:53px}
+    .lobby-mystery{font-size:38px}.entry-card-grid{--entry-columns:1;--entry-rows:4;grid-template-columns:var(--entry-card-width,minmax(0,1fr));grid-template-rows:repeat(4,var(--entry-card-height,minmax(0,1fr)));padding:12px 3vw;gap:12px}
+    .lobby-selected-name{height:20px;min-height:20px}.lobby-footer{height:72px}.lobby-next{padding-inline:25px}
+    .figma-card-palettes{gap:15px;transform:scale(1.25)}
+    .figma-card-palettes button::after{inset:-7px}
+    .figma-card-palettes button[aria-pressed=true]::after{inset:-3px}
+  }
+}
+@media(max-height:600px) and (min-width:601px){
+  :root .race-lobby[data-entry-theme=figma]:is([data-stage='1'],[data-stage='2']){
+    .lobby-header{height:48px}.lobby-character-select{top:48px;bottom:62px}.lobby-footer{height:62px}
+    .lobby-section-title{height:58px;min-height:58px}.lobby-section-title h1{font-size:32px}.lobby-roster-panel{height:70px;min-height:70px}.lobby-slot{height:54px}
+  }
+}
+
+@media(max-width:600px) and (max-height:650px){
+  :root .race-lobby[data-entry-theme=figma]:is([data-stage='1'],[data-stage='2']){
+    .lobby-section-title{height:50px;min-height:50px}.lobby-section-title h1{font-size:25px}
+    .entry-card-grid{--entry-columns:2;--entry-rows:2;grid-template-columns:repeat(2,var(--entry-card-width,minmax(0,1fr)));grid-template-rows:repeat(2,var(--entry-card-height,minmax(0,1fr)));gap:8px}
+  }
+}
+/* Keep the surrounding chrome proportional on shorter desktop windows, leaving
+   most of the available height for the four cards. */
+@media(min-width:601px) and (min-height:601px) and (max-height:999px){
+  :root .race-lobby[data-entry-theme=figma]:is([data-stage='1'],[data-stage='2']){
+    .lobby-header{height:clamp(48px,7vh,70px)}
+    .lobby-character-select{top:clamp(48px,7vh,70px);bottom:clamp(48px,8.2vh,82px)}
+    .lobby-section-title{height:9.2vh;min-height:9.2vh}.lobby-section-title h1{font-size:clamp(28px,4.8vh,48px)}
+    .lobby-roster-panel{height:9.7vh;min-height:9.7vh}.lobby-slot{height:clamp(40px,6.8vh,68px)}
+    .entry-card-grid{gap:clamp(8px,1.4vh,14px);padding-block:1.4vh 2vh}
+    .lobby-selected-name{height:4.7vh;min-height:4.7vh}.lobby-footer{height:clamp(48px,8.2vh,82px)}
+  }
+}
+
+/* Announced racer: keep the complete name inside the plate and the status visible. */
+[data-character=mr-kerry-capija] .figma-character-name{width:245px}
+[data-character=mr-kerry-capija] .figma-name-plate{width:245px;height:53.02px}
+[data-character=mr-kerry-capija] .figma-character-name strong{font-size:25px;letter-spacing:-.8px;max-width:220px;line-height:1.05}
+[data-character=mr-kerry-capija] .figma-character-art{top:-49.66px;height:auto}
+.figma-coming-soon{font:400 15px 'Pro Racing',sans-serif;color:#252030;letter-spacing:.6px;text-transform:uppercase}
+.race-lobby[data-entry-theme=figma] .lobby-slot[data-pilot-choice=mr-kerry-capija]{--portrait-width:204px;--portrait-height:122.43px;--portrait-x:-43px;--portrait-y:7px}

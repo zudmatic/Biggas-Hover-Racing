@@ -159,7 +159,6 @@
 .lobby-palettes button span{width:100%;height:100%;border-radius:50%;background:conic-gradient(var(--palette-main) 0 50%,var(--palette-detail) 50% 80%,var(--palette-accent) 80%)}
 .lobby-palettes button[aria-pressed=true]{box-shadow:0 0 0 3px var(--lobby-yellow)}
 .race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-profile-brand{display:none}
-.race-lobby[data-pilot=zudmatic] [data-screen='1'] .lobby-selected-name strong{font-size:clamp(24px,3.4vw,53px)}
 .lobby-slot img[data-lobby-image=zudmatic-face]{width:100%;height:calc(100% - 18px);left:0;top:0;object-fit:cover}
 .lobby-slot img:is([data-lobby-image=ajo-face],[data-lobby-image=lomi-face]){width:100%;height:calc(100% - 18px);left:0;top:0;object-fit:cover}
 .lobby-slot img[data-lobby-image=bluleet-pilot-face]{width:100%;height:calc(100% - 18px);left:0;top:0;object-fit:contain}

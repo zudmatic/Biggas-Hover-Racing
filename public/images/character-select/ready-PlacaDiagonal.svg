@@ -1,0 +1,16 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="106.634" height="25" viewBox="0 0 106.634 25" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="Placa diagonal">
+<use xlink:href="#stroke0_0_4" fill="#111111"/>
+<use xlink:href="#stroke0_0_4" fill="url(#paint0_linear_0_4)" fill-opacity="0.56"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_4" x1="0.00199068" y1="12.5" x2="106.636" y2="12.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#949EB7"/>
+<stop offset="0.46016" stop-color="#ADBCD3"/>
+<stop offset="0.607079" stop-color="#D7E0F1"/>
+<stop offset="0.715333" stop-color="#BBC9E3"/>
+<stop offset="1" stop-color="#62708A"/>
+</linearGradient>
+<path id="stroke0_0_4" d="M0.00199036 0L106.634 2.89128e-05L99.4986 25H0L0.00199036 0Z"/>
+</defs>
+</svg>

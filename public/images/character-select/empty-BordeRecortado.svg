@@ -1,0 +1,15 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="666.8" height="279" viewBox="0 0 666.8 279" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="Borde recortado">
+<use xlink:href="#stroke0_0_7" stroke="url(#paint0_linear_0_7)"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_0_7" x1="2" y1="139.5" x2="664.8" y2="139.5" gradientUnits="userSpaceOnUse">
+<stop stop-color="#949EB7"/>
+<stop offset="0.46016" stop-color="#ADBCD3"/>
+<stop offset="0.607079" stop-color="#D7E0F1"/>
+<stop offset="0.715333" stop-color="#BBC9E3"/>
+<stop offset="1" stop-color="#62708A"/>
+</linearGradient>
+<path id="stroke0_0_7" d="M22 2H644.8L664.8 22V257L644.8 277H22L2 257V22L22 2Z" stroke-width="4"/>
+</defs>
+</svg>

@@ -1,4 +1,5 @@
 import {audio} from '@/audio/audio-system';
+import {playUISound, preloadUISounds} from '@/audio/ui-sounds';
 import {DisposableGroup, type Disposable} from '@/core/disposable';
 import {settings} from '@/core/settings';
 import './sound-control.css';
@@ -60,11 +61,13 @@ export class SoundControl implements Disposable {
         this.close();
         return;
       }
+      playUISound('navigate');
       this.panel.hidden = false;
       this.button.setAttribute('aria-expanded', 'true');
       this.position();
       onOpen();
       audio.unlock();
+      preloadUISounds();
       this.music.focus({preventScroll: true});
     });
     events.listen(this.music, 'input', () => {
@@ -73,6 +76,8 @@ export class SoundControl implements Disposable {
       if (volume > 0 && !audio.enabled) audio.setEnabled(true);
       audio.unlock();
     });
+    events.listen(this.effects, 'change', () => playUISound('navigate'));
+    events.listen(this.music, 'change', () => playUISound('navigate'));
     events.listen(this.mute, 'click', () => this.toggleSound());
     events.listen(this.effects, 'input', () => {
       audio.setEffectsVolume(Number(this.effects.value) / 100);
@@ -117,10 +122,12 @@ export class SoundControl implements Disposable {
 
   toggleSound(): void {
     audio.setEnabled(!audio.enabled);
+    if (audio.enabled) playUISound('navigate');
     this.render();
   }
 
   close({focus = false}: {focus?: boolean} = {}): void {
+    if (!this.panel.hidden && focus) playUISound('back');
     this.panel.hidden = true;
     this.button.setAttribute('aria-expanded', 'false');
     if (focus) this.button.focus({preventScroll: true});
